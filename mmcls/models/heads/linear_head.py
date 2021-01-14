@@ -109,24 +109,3 @@ class IRClsHead(ClsHead):
         losses = self.loss(cls_score, gt_label)
         return losses
     
-#     def simple_test(self, img):
-#         """Test without augmentation."""
-#         x = self.bn1(img)
-#         x = self.nonlinear(x)
-#         x = self.fc(x)
-#         cls_score = self.bn2(x)
-#         if isinstance(cls_score, list):
-#             cls_score = sum(cls_score) / float(len(cls_score))
-#         pred = F.softmax(cls_score, dim=1) if cls_score is not None else None
-#         if torch.onnx.is_in_onnx_export():
-#             return pred
-#         pred = list(pred.detach().cpu().numpy())
-#         return pred
-
-#     def forward_train(self, x, gt_label):
-#         x = self.bn1(x)
-#         x = self.nonlinear(x)
-#         x = self.fc(x)
-#         cls_score = self.bn2(x)
-#         losses = self.loss(cls_score, gt_label)
-#         return losses
