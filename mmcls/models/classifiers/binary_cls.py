@@ -120,12 +120,3 @@ class BinaryClassifier(BaseClassifier):
 #         return entropy.mean()
 
     
-class STE(Function):
-    @staticmethod
-    def forward(ctx, input):
-        out = torch.relu(input)
-        return out
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        return grad_output

@@ -1,0 +1,7 @@
+*pyc
+*pth
+__pycache__
+work_dirs/*
+tmp/*
+*.ipython_checkpoint/
+.ipython_checkpoint/*

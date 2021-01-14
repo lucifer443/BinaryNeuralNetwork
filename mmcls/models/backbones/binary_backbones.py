@@ -10,6 +10,11 @@ from .base_backbone import BaseBackbone
 from .resnet import ResLayer
 from .binary_utils.binary_blocks import IRNetBlock, RANetBlockA, CM1Block, CM2Block, CM3Block
 
+def build_act(name):
+    name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU}
+    if name.lower() not in name_map:
+        raise ValueError(f'Unknown activation function : {name}')
+    return name_map[name]
 
 @BACKBONES.register_module()
 class ResArch(BaseBackbone):
@@ -43,6 +48,8 @@ class ResArch(BaseBackbone):
                  norm_cfg=dict(type='BN', requires_grad=True),
                  norm_eval=False,
                  with_cp=False,
+                 binary_type=(True, True),
+                 stem_act=None,
                  zero_init_residual=False):
         super(ResArch, self).__init__()
         if arch not in self.arch_settings:
@@ -71,13 +78,9 @@ class ResArch(BaseBackbone):
         # self.expansion = get_expansion(self.block, expansion)
         self.expansion = 1 if not expansion else expansion
 
-#         if "IRNet" in arch:
-#             activation = nn.Hardtanh
-#         else:
-#             activation = nn.Relu
-        activation = nn.Hardtanh
+        self.activation = build_act(stem_act) if stem_act else None
     
-        self._make_stem_layer(in_channels, stem_channels, activation)
+        self._make_stem_layer(in_channels, stem_channels, self.activation)
 
         self.res_layers = []
         _in_channels = stem_channels
@@ -96,6 +99,7 @@ class ResArch(BaseBackbone):
                 style=self.style,
                 avg_down=self.avg_down,
                 with_cp=with_cp,
+                binary_type=binary_type,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg)
             _in_channels = _out_channels
@@ -159,7 +163,7 @@ class ResArch(BaseBackbone):
             self.norm1_name, norm1 = build_norm_layer(
                 self.norm_cfg, stem_channels, postfix=1)
             self.add_module(self.norm1_name, norm1)
-            self.relu = activation(inplace=True)
+            self.stem_act = activation(inplace=True) if activation else None
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
     def _freeze_stages(self):
@@ -201,7 +205,8 @@ class ResArch(BaseBackbone):
         else:
             x = self.conv1(x)
             x = self.norm1(x)
-            x = self.relu(x)
+            if self.stem_act:
+                x = self.stem_act(x)
         x = self.maxpool(x)
         outs = []
         for i, layer_name in enumerate(self.res_layers):

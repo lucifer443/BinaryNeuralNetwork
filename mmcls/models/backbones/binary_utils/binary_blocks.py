@@ -9,10 +9,10 @@ class IRNetBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
         super(IRNetBlock, self).__init__()
-        self.conv1 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.conv1 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.nonlinear = nn.Hardtanh(inplace=True)
-        self.conv2 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv2 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.downsample = downsample
         self.stride = stride
@@ -38,13 +38,6 @@ class IRNetBlock(nn.Module):
         out = self.nonlinear(out)
 
         return out
-    
-    def ede(self, k, t):
-        for m in self.modules():
-            if isinstance(m, IRConv2d):
-                m.k = k
-                m.t = t
-#         print(f"k: {k},  t: {t}")
 
 
 class RANetBlockA(nn.Module):
@@ -54,12 +47,12 @@ class RANetBlockA(nn.Module):
         super(RANetBlockA, self).__init__()
 
         self.move1 = LearnableBias(in_channels)
-        self.conv1 = RAConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.conv1 = RAConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.prelu1 = RPRelu(out_channels)
 
         self.move2 = LearnableBias(out_channels)
-        self.conv2 = RAConv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.conv2 = RAConv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.prelu2 = RPRelu(out_channels)
 
