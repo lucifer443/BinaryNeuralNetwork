@@ -19,6 +19,12 @@ class DistillingImageClassifier(ImageClassifier):
         load_checkpoint(self.teacher_model, distill.teacher_ckpt)
         self.distill_loss_weight = distill.loss_weight
         self.kd_loss = DistributionLoss()
+        self.only_kd = distill.only_kdloss
+        
+        # freeze teacher
+        for m in self.teacher_model.modules():
+            for param in m.parameters():
+                param.requires_grad = False
 
     def init_weights(self, pretrained=None):
         super(DistillingImageClassifier, self).init_weights(pretrained)
@@ -47,11 +53,12 @@ class DistillingImageClassifier(ImageClassifier):
         x = self.extract_feat(img)
         teacher_x = self.teacher_model.extract_feat(img)
         model_output = self.head.fc(x)
-        real_output = self.teacher_model.fc(teacher_x)
+        real_output = self.teacher_model.head.fc(teacher_x)
 
         losses = dict()
-        loss = self.head.forward_train(x, gt_label)
-        losses.update(loss)
+        if not self.only_kd:
+            loss = self.head.forward_train(x, gt_label)
+            losses.update(loss)
         losses['KD_loss'] = self.kd_loss(model_output, real_output)
 
         return losses

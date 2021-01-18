@@ -3,5 +3,5 @@
 __pycache__
 work_dirs/*
 tmp/*
-*.ipython_checkpoint/
-.ipython_checkpoint/*
+*.ipython_checkpoints/
+.ipython_checkpoints/*

@@ -52,7 +52,7 @@ class RANetBlockA(nn.Module):
         self.prelu1 = RPRelu(out_channels)
 
         self.move2 = LearnableBias(out_channels)
-        self.conv2 = RAConv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.conv2 = RAConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.prelu2 = RPRelu(out_channels)
 

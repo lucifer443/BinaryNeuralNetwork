@@ -5,8 +5,9 @@ from mmcv.runner import HOOKS, Hook
 @HOOKS.register_module()
 class EDEHook(Hook):
 
-    def __init__(self, total_epoch):
+    def __init__(self, total_epoch, start_epoch=0):
         self.total_epoch = total_epoch
+        self.start_epoch = start_epoch
         
     def before_epoch(self, runner):
         k, t = get_kt(runner.epoch, self.total_epoch)

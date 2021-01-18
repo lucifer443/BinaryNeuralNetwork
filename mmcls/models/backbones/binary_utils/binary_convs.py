@@ -9,9 +9,9 @@ class BaseBinaryConv2d(nn.Conv2d):
 
     def __init__(self, in_channels, out_channels, kernel_size,
                  stride=1, padding=0, dilation=1, groups=1, bias=True,
-                 mode=(True, True)):
+                 binary_type=(True, True), **kwargs):
         super(BaseBinaryConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias)
-        self.mode = mode
+        self.mode = binary_type
 
     def binary_weight(self, x):
         pass
@@ -30,8 +30,8 @@ class IRConv2d(BaseBinaryConv2d):
 
     def __init__(self, in_channels, out_channels, kernel_size,
                  stride=1, padding=0, dilation=1, groups=1, bias=True,
-                 mode=(True, True)):
-        super(IRConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, mode)
+                 binary_type=(True, True), **kwargs):
+        super(IRConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
         self.k = torch.tensor([10]).float().cuda()
         self.t = torch.tensor([0.1]).float().cuda()
 
@@ -56,8 +56,8 @@ class RAConv2d(BaseBinaryConv2d):
 
     def __init__(self, in_channels, out_channels, kernel_size,
                  stride=1, padding=0, dilation=1, groups=1, bias=True,
-                 mode=(True, True)):
-        super(RAConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, mode)
+                 binary_type=(True, True), **kwargs):
+        super(RAConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
         self.sign_a = RANetActSign()
         self.sign_w = RANetWSign()
 
