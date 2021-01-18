@@ -5,3 +5,5 @@ work_dirs/*
 tmp/*
 *.ipython_checkpoints/
 .ipython_checkpoints/*
+*.ipynb_checkpoints/
+.ipynb_checkpoints/*
