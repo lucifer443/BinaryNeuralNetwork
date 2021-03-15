@@ -58,6 +58,7 @@ class RAConv2d(BaseBinaryConv2d):
                  stride=1, padding=0, dilation=1, groups=1, bias=True,
                  binary_type=(True, True), **kwargs):
         super(RAConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        
         self.sign_a = RANetActSign()
         self.sign_w = RANetWSign()
 

@@ -10,3 +10,6 @@ tmp/*
 
 # work dir
 work_dir/
+
+# vscode settings
+.vscode/

@@ -25,9 +25,6 @@ class RANetActSign(nn.Module):
 
     def forward(self, x):
         out_forward = torch.sign(x)
-        #out_e1 = (x^2 + 2*x)
-        #out_e2 = (-x^2 + 2*x)
-        out_e_total = 0
         mask1 = x < -1
         mask2 = x < 0
         mask3 = x < 1
@@ -58,8 +55,8 @@ class RPRelu(nn.Module):
     def __init__(self, in_channels, **kwargs):
         super(RPRelu, self).__init__()
         self.bias1 = LearnableBias(in_channels)
-        self.bias2 = LearnableBias(in_channels)
         self.prelu = nn.PReLU(in_channels)
+        self.bias2 = LearnableBias(in_channels)
 
     def forward(self, x):
         x = self.bias1(x)
