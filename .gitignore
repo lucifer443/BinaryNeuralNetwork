@@ -11,5 +11,8 @@ tmp/*
 # work dir
 work_dir/
 
+# data dir
+data/
+
 # vscode settings
 .vscode/

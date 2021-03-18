@@ -44,10 +44,10 @@ class ReActNet(BaseBackbone):
             # 除了第一个dw的stride为1，其余stage的stride都为2
             elif self.out_chn[i-1] != self.out_chn[i] and self.out_chn[i] != 64:
                 self.feature.append(
-                    ReActBlock(self.out_chn[i-1], self.out_chn[i], stride=2))
+                    ReActBlock(self.out_chn[i-1], self.out_chn[i], stride=2, binary_type=binary_type))
             else:
                 self.feature.append(
-                    ReActBlock(self.out_chn[i-1], self.out_chn[i], stride=1))
+                    ReActBlock(self.out_chn[i-1], self.out_chn[i], stride=1, binary_type=binary_type))
     
     def init_weights(self, pretrained=None):
         if isinstance(pretrained, str):

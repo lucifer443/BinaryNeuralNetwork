@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/imagenet_bs32.py', '../_base_/default_runtime.py'
+    '../../_base_/datasets/imagenet_bs32.py', '../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -20,6 +20,7 @@ model = dict(
         loss_weight=1.,
         only_kdloss=True))
 
+# schedules for imagenet bs256
 optimizer = dict(
     type='Adam',
     lr=5e-4,
@@ -34,7 +35,8 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = '/lustre/S/zhaozhipeng/workspace/BNN/BinaryNeuralNetwork/work_dir'
+work_dir = 'work_dir/reactnet_a_b32x8_step1_a100'
 
 find_unused_parameters=True
+
 seed = 166
