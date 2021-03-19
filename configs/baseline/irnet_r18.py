@@ -24,6 +24,6 @@ custom_imports = dict(imports=['mmcls.core.utils.ede'], allow_failed_imports=Fal
 custom_hooks = [
     dict(type='EDEHook', total_epoch=100)
 ]
-work_dir = 'work_dirs/baseline/irnet_r18'
+work_dir = '/lustre/S/jiangfei/BinaryNeuralNetwork/workdir/baseline/irnet_r18'
 find_unused_parameters=True
 seed = 166
