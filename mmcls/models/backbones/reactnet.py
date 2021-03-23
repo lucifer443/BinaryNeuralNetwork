@@ -9,7 +9,7 @@ from mmcv.runner import load_checkpoint
 
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
-from .binary_utils.binary_blocks import ReActBlock
+from .binary_utils.reactnet_blocks import ReActBlock
 
 
 class firstconv3x3(nn.Module):

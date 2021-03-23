@@ -35,10 +35,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = 'work_dir/reactnet_a_b32x8_step1_a100'
-
+work_dir = 'work_dir/reactnet_a_b32x8_step2_a100'
 load_from = 'work_dir/reactnet_a_b32x8_step1_a100/epoch_256.pth'
-
 find_unused_parameters=True
-
 seed = 166
