@@ -1,13 +1,13 @@
 _base_ = [
-    '../_base_/datasets/imagenet_bs128.py',
-    '../_base_/schedules/imagenet_bs1024.py', '../_base_/default_runtime.py'
+    '../../_base_/datasets/imagenet_bs128.py',
+    '../../_base_/schedules/imagenet_bs1024.py', '../../_base_/default_runtime.py'
 ]
 
 model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='IRNet',
-        arch='irnet_g4_r18',
+        arch='irnet_g3_r18',
         stem_channels=32,
         num_stages=4,
         out_indices=(3, ),
@@ -25,6 +25,6 @@ model = dict(
 custom_imports = dict(imports=['mmcls.core.utils.ede'], allow_failed_imports=False)
 custom_hooks = [dict(type='EDEHook', total_epoch=100)]
 
-work_dir = 'work_dir/irnet_g4_b128x8_r18'
+work_dir = 'work_dir/irnet_g3_r18_b128x8'
 find_unused_parameters=True
 seed = 166
