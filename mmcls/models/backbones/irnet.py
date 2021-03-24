@@ -8,7 +8,8 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
-from .binary_utils.irnet_blocks import IRNetBlock, IRNetG4Block, IRNetH1Block, IRNetG3Block, IRNetG3aBlock, IRNetH1aBlock, IRNetH2Block, IRNetG4aBlock
+from .binary_utils.irnet_blocks import (IRNetBlock, IRNetG4Block, IRNetH1Block, IRNetG3Block, IRNetH1aBlock, IRNetH2Block,
+                                        IRNetG5Block, IRNetG6Block, IRNetG7Block, IRNetG8Block)
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU}
@@ -22,9 +23,11 @@ class IRNet(BaseBackbone):
     arch_settings = {
         "irnet_r18": (IRNetBlock, (2, 2, 2, 2)),
         "irnet_g3_r18": (IRNetG3Block, (2, 2, 2, 2)),
-        "irnet_g3a_r18": (IRNetG3aBlock, (2, 2, 2, 2)),
         "irnet_g4_r18": (IRNetG4Block, (2, 2, 2, 2)),
-        "irnet_g4a_r18": (IRNetG4aBlock, (2, 2, 2, 2)),
+        "irnet_g5_r18": (IRNetG5Block, (2, 2, 2, 2)),
+        "irnet_g6_r18": (IRNetG6Block, (2, 2, 2, 2)),
+        "irnet_g7_r18": (IRNetG7Block, (2, 2, 2, 2)),
+        "irnet_g8_r18": (IRNetG8Block, (2, 2, 2, 2)),
         "irnet_h1_r18": (IRNetH1Block, (2, 2, 2, 2)),
         "irnet_h1a_r18": (IRNetH1aBlock, (2, 2, 2, 2)),
         "irnet_h2_r18": (IRNetH2Block, (2, 2, 2, 2)),

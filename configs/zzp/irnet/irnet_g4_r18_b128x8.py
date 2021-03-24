@@ -9,6 +9,7 @@ model = dict(
         type='IRNet',
         arch='irnet_g4_r18',
         stem_channels=32,
+        base_channels=32,
         num_stages=4,
         out_indices=(3, ),
         stem_act='hardtanh',
@@ -17,7 +18,7 @@ model = dict(
     head=dict(
         type='IRClsHead',
         num_classes=1000,
-        in_channels=512,
+        in_channels=256,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
         topk=(1, 5),
     ))
