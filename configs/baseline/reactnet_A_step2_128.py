@@ -1,12 +1,12 @@
 _base_ = [
-    '../_base_/datasets/imagenet_bs32.py', '../_base_/default_runtime.py'
+    '../_base_/datasets/imagenet_bs128.py', '../_base_/default_runtime.py'
 ]
 
 model = dict(
     type='DistillingImageClassifier',
     backbone=dict(
         type='reactnet_A',
-        binary_type=(True, False)),
+        binary_type=(True, True)),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -22,7 +22,7 @@ model = dict(
 
 optimizer = dict(
     type='Adam',
-    lr=5e-4,
+    lr=4*5e-4,
     weight_decay=0.00001,
     paramwise_cfg=dict(norm_decay_mult=0))
 optimizer_config = dict(grad_clip=None)
@@ -34,6 +34,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = '/lustre/S/jiangfei/BinaryNeuralNetwork/work_dirs/react_A_32/a100_s1'
+load_from = '/lustre/S/jiangfei/BinaryNeuralNetwork/work_dirs/react_A_128/a100_s1/epoch_256.pth'
+work_dir = '/lustre/S/jiangfei/BinaryNeuralNetwork/work_dirs/react_A_128/a100_s2'
 find_unused_parameters=True
 seed = 166

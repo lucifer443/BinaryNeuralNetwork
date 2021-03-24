@@ -6,7 +6,7 @@ model = dict(
     type='DistillingImageClassifier',
     backbone=dict(
         type='reactnet_A',
-        binary_type=(True, False)),
+        binary_type=(True, True)),        
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -34,6 +34,8 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = '/lustre/S/jiangfei/BinaryNeuralNetwork/work_dirs/react_A_32/a100_s1'
+load_from = '/lustre/S/jiangfei/BinaryNeuralNetwork/work_dirs/react_A_32/a100_s1/epoch_256.pth'
+#work_dir = '/lustre/S/jiangfei/BinaryNeuralNetwork/work_dirs/tmp'
+work_dir = '/lustre/S/jiangfei/BinaryNeuralNetwork/work_dirs/react_A_32/a100_s2_2'
 find_unused_parameters=True
 seed = 166

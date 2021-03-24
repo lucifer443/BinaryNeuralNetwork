@@ -9,4 +9,4 @@ tmp/*
 .ipynb_checkpoints/*
 
 # work dir
-workdir/
+work_dirs/

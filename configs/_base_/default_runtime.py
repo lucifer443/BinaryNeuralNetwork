@@ -5,7 +5,7 @@ log_config = dict(
     interval=100,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
 dist_params = dict(backend='nccl')
