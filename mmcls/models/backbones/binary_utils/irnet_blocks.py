@@ -109,6 +109,11 @@ class IRNetGBlock(nn.Module):
         return out
 
 
+class IRNetG2Block(IRNetGBlock):
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
+        super(IRNetG2Block, self).__init__(in_channels, out_channels, stride, downsample, n=2, **kwargs)
+
+
 class IRNetG3Block(IRNetGBlock):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
         super(IRNetG3Block, self).__init__(in_channels, out_channels, stride, downsample, n=3, **kwargs)
