@@ -68,7 +68,7 @@ class IRNetGBlock(nn.Module):
             self.bn2.append(nn.BatchNorm2d(self.out_channels))
 
     def forward(self, x):
-        print(x.shape)
+        # print('x = ', x.shape)
         if self.downsample is not None:
             identity = self.downsample(x)
         else:
@@ -104,6 +104,7 @@ class IRNetGBlock(nn.Module):
 
         out += identity
         out = self.nonlinear(out)
+        # print('out = ', out.shape)
 
         return out
 

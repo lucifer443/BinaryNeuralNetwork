@@ -1,3 +1,4 @@
+import math
 import torch.nn as nn
 import logging
 from mmcv.cnn import (ConvModule, build_conv_layer, build_norm_layer,
@@ -35,6 +36,7 @@ class IRNet(BaseBackbone):
 
     def __init__(self,
                  arch,
+                 group_stages=None,
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -58,6 +60,9 @@ class IRNet(BaseBackbone):
         if arch not in self.arch_settings:
             raise KeyError(f'invalid arch type {arch} for resnet')
         self.arch = arch
+        self.group_stages=group_stages
+        if self.group_stages:
+            self.groups = int(arch[7:8])
         self.stem_channels = stem_channels
         self.base_channels = base_channels
         self.num_stages = num_stages
@@ -91,8 +96,14 @@ class IRNet(BaseBackbone):
         for i, num_blocks in enumerate(self.stage_blocks):
             stride = strides[i]
             dilation = dilations[i]
+            real_block = self.block
+            if group_stages:
+                if i == self.group_stages[0]:
+                    _out_channels = int(_out_channels / math.sqrt(self.groups))
+                if i not in self.group_stages:
+                    real_block = IRNetBlock
             res_layer = self.make_res_layer(
-                block=self.block,
+                block=real_block,
                 num_blocks=num_blocks,
                 in_channels=_in_channels,
                 out_channels=_out_channels,
