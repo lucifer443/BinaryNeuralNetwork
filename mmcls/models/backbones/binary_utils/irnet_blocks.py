@@ -40,7 +40,7 @@ class IRNetBlock(nn.Module):
 
 
 # group sign
-# 多分支conv，将原来的一个conv拆分成四个conv，每个conv的输入经过不同阈值的sign
+# 多分支conv，将原来的一个conv拆分成几个conv，每个conv的输入经过不同阈值的sign
 class IRNetGBlock(nn.Module):
     expansion = 1
 
@@ -119,6 +119,16 @@ class IRNetG3Block(IRNetGBlock):
         super(IRNetG3Block, self).__init__(in_channels, out_channels, stride, downsample, n=3, **kwargs)
 
 
+# 使用分支conv，但所有分支的sign阈值都是0
+# 用来和channel数是64的多分支不同阈值sign的conv做对比
+class IRNetG3nBlock(IRNetGBlock):
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
+        super(IRNetG3nBlock, self).__init__(in_channels, out_channels, stride, downsample, n=3, **kwargs)
+
+        for i in range(3):
+            self.alpha[i] = 0
+
+
 class IRNetG4Block(IRNetGBlock):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
         super(IRNetG4Block, self).__init__(in_channels, out_channels, stride, downsample, n=4, **kwargs)
@@ -143,249 +153,6 @@ class IRNetG8Block(IRNetGBlock):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
         super(IRNetG8Block, self).__init__(in_channels, out_channels, stride, downsample, n=8, **kwargs)
 
-'''
-# group sign
-# 多分支conv，将原来的一个conv拆分成四个conv，每个conv的输入经过不同阈值的sign
-class IRNetG4Block(nn.Module):
-    expansion = 1
-
-    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(IRNetG4Block, self).__init__()
-
-        self.conv11 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-        self.conv12 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-        self.conv13 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-        self.conv14 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-
-        self.bn11 = nn.BatchNorm2d(out_channels)
-        self.bn12 = nn.BatchNorm2d(out_channels)
-        self.bn13 = nn.BatchNorm2d(out_channels)
-        self.bn14 = nn.BatchNorm2d(out_channels)
-
-        self.conv21 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-        self.conv22 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-        self.conv23 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-        self.conv24 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-
-        self.bn21 = nn.BatchNorm2d(out_channels)
-        self.bn22 = nn.BatchNorm2d(out_channels)
-        self.bn23 = nn.BatchNorm2d(out_channels)
-        self.bn24 = nn.BatchNorm2d(out_channels)
-
-        self.nonlinear = nn.Hardtanh(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-        self.out_channels = out_channels
-
-    def forward(self, x):
-        identity = x
-
-        alpha = torch.max(abs(x))
-        alpha1 = alpha / 5   # 1/5
-        alpha2 = alpha1 * 3  # 3/5
-
-        x1 = x + alpha2
-        x2 = x + alpha1
-        x3 = x - alpha1
-        x4 = x - alpha2
-
-        out1 = self.conv11(x1)
-        out2 = self.conv12(x2)
-        out3 = self.conv13(x3)
-        out4 = self.conv14(x4)
-
-        out1 = self.bn11(out1)
-        out2 = self.bn12(out2)
-        out3 = self.bn13(out3)
-        out4 = self.bn14(out4)
-        out = out1 + out2 + out3 + out4
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-        out += identity
-
-        out = self.nonlinear(out)
-
-        identity = out
-        alpha = torch.max(abs(out))
-        alpha1 = alpha / 5   # 1/5
-        alpha2 = alpha1 * 3  # 3/5
-
-        x1 = out + alpha2
-        x2 = out + alpha1
-        x3 = out - alpha1
-        x4 = out - alpha2
-
-        out1 = self.conv21(x1)
-        out2 = self.conv22(x2)
-        out3 = self.conv23(x3)
-        out4 = self.conv24(x4)
-
-        out1 = self.bn21(out1)
-        out2 = self.bn22(out2)
-        out3 = self.bn23(out3)
-        out4 = self.bn24(out4)
-        out = out1 + out2 + out3 + out4
-
-        out += identity
-        out = self.nonlinear(out)
-
-        return out
-
-
-# group sign
-# 多分支conv，将原来的一个conv拆分成三个conv，每个conv的输入经过不同阈值的sign
-class IRNetG3Block(nn.Module):
-    expansion = 1
-
-    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(IRNetG3Block, self).__init__()
-
-        self.conv11 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-        self.conv12 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-        self.conv13 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-
-        self.bn11 = nn.BatchNorm2d(out_channels)
-        self.bn12 = nn.BatchNorm2d(out_channels)
-        self.bn13 = nn.BatchNorm2d(out_channels)
-
-        self.conv21 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-        self.conv22 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-        self.conv23 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-
-        self.bn21 = nn.BatchNorm2d(out_channels)
-        self.bn22 = nn.BatchNorm2d(out_channels)
-        self.bn23 = nn.BatchNorm2d(out_channels)
-
-        self.nonlinear = nn.Hardtanh(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-        self.out_channels = out_channels
-
-    def forward(self, x):
-        identity = x
-
-        alpha = torch.max(abs(x))
-        alpha = alpha / 3   # 1/3
-
-        x1 = x + alpha
-        x2 = x
-        x3 = x - alpha
-
-        out1 = self.conv11(x1)
-        out2 = self.conv12(x2)
-        out3 = self.conv13(x3)
-
-        out1 = self.bn11(out1)
-        out2 = self.bn12(out2)
-        out3 = self.bn13(out3)
-        out = out1 + out2 + out3
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-        out += identity
-
-        out = self.nonlinear(out)
-
-        identity = out
-        alpha = torch.max(abs(out))
-        alpha = alpha / 3   # 1/3
-
-        x1 = out + alpha
-        x2 = out
-        x3 = out - alpha
-
-        out1 = self.conv21(x1)
-        out2 = self.conv22(x2)
-        out3 = self.conv23(x3)
-
-        out1 = self.bn21(out1)
-        out2 = self.bn22(out2)
-        out3 = self.bn23(out3)
-        out = out1 + out2 + out3
-
-        out += identity
-        out = self.nonlinear(out)
-
-        return out
-
-
-# group sign
-# 多分支conv，将原来的一个conv拆分成三个conv，每个conv的输入经过不同阈值的sign
-class IRNetG3aBlock(nn.Module):
-    expansion = 1
-
-    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(IRNetG3aBlock, self).__init__()
-
-        self.conv11 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-        self.conv12 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-        self.conv13 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
-
-        self.bn11 = nn.BatchNorm2d(out_channels)
-        self.bn12 = nn.BatchNorm2d(out_channels)
-        self.bn13 = nn.BatchNorm2d(out_channels)
-
-        self.conv21 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-        self.conv22 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-        self.conv23 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
-
-        self.bn21 = nn.BatchNorm2d(out_channels)
-        self.bn22 = nn.BatchNorm2d(out_channels)
-        self.bn23 = nn.BatchNorm2d(out_channels)
-
-        self.nonlinear = nn.Hardtanh(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-        self.out_channels = out_channels
-
-    def forward(self, x):
-        identity = x
-
-        alpha = torch.max(abs(x))
-        alpha = alpha / 2   # 1/2
-
-        x1 = x + alpha
-        x2 = x
-        x3 = x - alpha
-
-        out1 = self.conv11(x1)
-        out2 = self.conv12(x2)
-        out3 = self.conv13(x3)
-
-        out1 = self.bn11(out1)
-        out2 = self.bn12(out2)
-        out3 = self.bn13(out3)
-        out = out1 + out2 + out3
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-        out += identity
-
-        out = self.nonlinear(out)
-
-        identity = out
-        alpha = torch.max(abs(out))
-        alpha = alpha / 2   # 1/2
-
-        x1 = out + alpha
-        x2 = out
-        x3 = out - alpha
-
-        out1 = self.conv21(x1)
-        out2 = self.conv22(x2)
-        out3 = self.conv23(x3)
-
-        out1 = self.bn21(out1)
-        out2 = self.bn22(out2)
-        out3 = self.bn23(out3)
-        out = out1 + out2 + out3
-
-        out += identity
-        out = self.nonlinear(out)
-
-        return out
-'''
 
 # hierarchical conv
 # 分层conv，一个block的输出是两个conv输出的拼接的结果

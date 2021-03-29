@@ -9,8 +9,10 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
-from .binary_utils.irnet_blocks import (IRNetBlock, IRNetG4Block, IRNetH1Block, IRNetG3Block, IRNetH1aBlock, IRNetH2Block,
-                                        IRNetG2Block, IRNetG5Block, IRNetG6Block, IRNetG7Block, IRNetG8Block)
+from .binary_utils.irnet_blocks import (IRNetBlock, IRNetH1Block, IRNetH2Block, IRNetH1aBlock,
+                                        IRNetG2Block, IRNetG3Block, IRNetG4Block, IRNetG5Block,
+                                        IRNetG6Block, IRNetG7Block, IRNetG8Block,
+                                        IRNetG3nBlock,)
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU}
@@ -25,6 +27,7 @@ class IRNet(BaseBackbone):
         "irnet_r18": (IRNetBlock, (2, 2, 2, 2)),
         "irnet_g2_r18": (IRNetG2Block, (2, 2, 2, 2)),
         "irnet_g3_r18": (IRNetG3Block, (2, 2, 2, 2)),
+        "irnet_g3n_r18": (IRNetG3nBlock, (2, 2, 2, 2)),
         "irnet_g4_r18": (IRNetG4Block, (2, 2, 2, 2)),
         "irnet_g5_r18": (IRNetG5Block, (2, 2, 2, 2)),
         "irnet_g6_r18": (IRNetG6Block, (2, 2, 2, 2)),
@@ -59,7 +62,7 @@ class IRNet(BaseBackbone):
                  zero_init_residual=False):
         super(IRNet, self).__init__()
         if arch not in self.arch_settings:
-            raise KeyError(f'invalid arch type {arch} for resnet')
+            raise KeyError(f'invalid arch type {arch} for irnet')
         self.arch = arch
         self.group_stages=group_stages
         if self.group_stages:
@@ -99,10 +102,10 @@ class IRNet(BaseBackbone):
             dilation = dilations[i]
             real_block = self.block
             if group_stages:
-                if i == self.group_stages[0]:
-                    _out_channels = int(_out_channels / math.sqrt(self.groups))
                 if i not in self.group_stages:
                     real_block = IRNetBlock
+                elif i == self.group_stages[0]:
+                    _out_channels = int(_out_channels / math.sqrt(self.groups))
             res_layer = self.make_res_layer(
                 block=real_block,
                 num_blocks=num_blocks,
