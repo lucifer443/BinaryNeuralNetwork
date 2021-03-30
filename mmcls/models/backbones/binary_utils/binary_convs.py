@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from .binary_functions import IRNetSign, RANetActSign, RANetWSign
+from .binary_functions import IRNetSign, RANetActSign, RANetWSign, RANetWFATSign
 import torch
 import math
 
@@ -61,6 +61,25 @@ class RAConv2d(BaseBinaryConv2d):
         
         self.sign_a = RANetActSign()
         self.sign_w = RANetWSign()
+
+    def binary_input(self, x):
+        return self.sign_a(x)
+
+    def binary_weight(self, w):
+        bw = self.sign_w(w)
+        sw = torch.mean(torch.mean(torch.mean(abs(w),dim=3,keepdim=True),dim=2,keepdim=True),dim=1,keepdim=True).detach()
+        return bw * sw
+
+
+class RAFATConv2d(BaseBinaryConv2d):
+
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(RAConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        
+        self.sign_a = RANetActSign()
+        self.sign_w = RANetWFATSign()
 
     def binary_input(self, x):
         return self.sign_a(x)

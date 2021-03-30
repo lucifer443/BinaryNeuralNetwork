@@ -64,9 +64,13 @@ class IRNet(BaseBackbone):
         if arch not in self.arch_settings:
             raise KeyError(f'invalid arch type {arch} for irnet')
         self.arch = arch
+        # 多分支conv必须指定需要多分支的stage(形参group_stages不能为None)，否则不会对任何stage进行多分支操作
+        # 多分支conv的stem_channels和base_channels使用默认的64即可
+        # 每个stage的具体通道数会根据分支个数自动调整，以保证总conv计算量与不进行分支的conv一致
+        # 注意需要手动调整config中head的in_channels数值，以匹配实际的输出通道数
         self.group_stages=group_stages
         if self.group_stages:
-            self.groups = int(arch[7:8])
+            self.groups = int(arch[7:8]) # 多分支conv的分支个数由arch中g后面的数字指定
         self.stem_channels = stem_channels
         self.base_channels = base_channels
         self.num_stages = num_stages
@@ -103,8 +107,10 @@ class IRNet(BaseBackbone):
             real_block = self.block
             if group_stages:
                 if i not in self.group_stages:
+                ''' 当前stage不拆成多分支 '''
                     real_block = IRNetBlock
                 elif i == self.group_stages[0]:
+                ''' 根据分支数减少通道数，保证总计算量不变 '''
                     _out_channels = int(_out_channels / math.sqrt(self.groups))
             res_layer = self.make_res_layer(
                 block=real_block,
