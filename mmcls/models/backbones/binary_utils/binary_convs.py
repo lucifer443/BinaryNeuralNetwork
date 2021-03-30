@@ -52,6 +52,47 @@ class IRConv2d(BaseBinaryConv2d):
         self.t = t
 
 
+class IRG3swConv2d(BaseBinaryConv2d):
+    ''' group sign with the same w '''
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(IRG3swConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        self.k = torch.tensor([10]).float().cuda()
+        self.t = torch.tensor([0.1]).float().cuda()
+
+    def binary_input(self, x):
+        return IRNetSign().apply(x, self.k, self.t)
+
+    def binary_weight(self, w):
+        bw = w - w.view(w.size(0), -1).mean(-1).view(w.size(0), 1, 1, 1)
+        bw = bw / bw.view(bw.size(0), -1).std(-1).view(bw.size(0), 1, 1, 1)
+        sw = torch.pow(torch.tensor([2] * bw.size(0)).cuda().float(),
+                       (torch.log(bw.abs().view(bw.size(0), -1).mean(-1)) / math.log(2)).round().float()).view(
+            bw.size(0), 1, 1, 1).detach()
+        bw = IRNetSign().apply(bw, self.k, self.t)
+        return bw * sw
+
+    def ede(self, k, t):
+        self.k = k
+        self.t = t
+    
+    def forward(self, x):
+        x_max = torch.max(abs(x))
+        x1 = x - x_max / 2
+        x2 = x
+        x3 = x + x_max / 2
+        x1 = self.binary_input(x1) if self.mode[0] else x1
+        x2 = self.binary_input(x2) if self.mode[0] else x2
+        x3 = self.binary_input(x3) if self.mode[0] else x3
+        w = self.binary_weight(self.weight) if self.mode[1] else self.weight
+        out1 =  F.conv2d(x1, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
+        out2 =  F.conv2d(x2, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
+        out3 =  F.conv2d(x3, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
+        out = out1 + out2 + out3
+        return out
+
+
 class RAConv2d(BaseBinaryConv2d):
 
     def __init__(self, in_channels, out_channels, kernel_size,

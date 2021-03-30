@@ -12,7 +12,8 @@ from .resnet import ResLayer
 from .binary_utils.irnet_blocks import (IRNetBlock, IRNetH1Block, IRNetH2Block, IRNetH1aBlock,
                                         IRNetG2Block, IRNetG3Block, IRNetG4Block, IRNetG5Block,
                                         IRNetG6Block, IRNetG7Block, IRNetG8Block,
-                                        IRNetG3nBlock,)
+                                        IRNetG3nBlock,
+                                        IRNetG3swBlock,)
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU}
@@ -36,6 +37,7 @@ class IRNet(BaseBackbone):
         "irnet_h1_r18": (IRNetH1Block, (2, 2, 2, 2)),
         "irnet_h1a_r18": (IRNetH1aBlock, (2, 2, 2, 2)),
         "irnet_h2_r18": (IRNetH2Block, (2, 2, 2, 2)),
+        "irnet_g3sw_r18": (IRNetG3swBlock, (2, 2, 2, 2)),
     }
 
     def __init__(self,

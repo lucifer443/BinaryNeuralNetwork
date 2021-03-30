@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .binary_convs import IRConv2d, RAConv2d
+from .binary_convs import IRConv2d, RAConv2d, IRG3swConv2d
 from .binary_functions import RPRelu, LearnableBias
 
 class IRNetBlock(nn.Module):
@@ -152,6 +152,42 @@ class IRNetG7Block(IRNetGBlock):
 class IRNetG8Block(IRNetGBlock):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
         super(IRNetG8Block, self).__init__(in_channels, out_channels, stride, downsample, n=8, **kwargs)
+
+
+class IRNetG3swBlock(nn.Module):
+    expansion = 1
+
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
+        super(IRNetG3swBlock, self).__init__()
+        self.conv1 = IRG3swConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.nonlinear = nn.Hardtanh(inplace=True)
+        self.conv2 = IRG3swConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.downsample = downsample
+        self.stride = stride
+        self.out_channels = out_channels
+
+    def forward(self, x):
+        residual = x
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+
+        if self.downsample is not None:
+            residual = self.downsample(x)
+        out += residual
+
+        out = self.nonlinear(out)
+
+        residual = out
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        out += residual
+        out = self.nonlinear(out)
+
+        return out
 
 
 # hierarchical conv
