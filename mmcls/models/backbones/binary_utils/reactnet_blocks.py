@@ -88,7 +88,7 @@ class ReActFATBlock(nn.Module):
             self.bn2 = nn.BatchNorm2d(out_channels)
         else:
             self.conv_1x1_down1 = RAFATConv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
-            self.conv_1x1_down2 = RFATConv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
+            self.conv_1x1_down2 = RAFATConv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
             self.bn2_1 = nn.BatchNorm2d(in_channels)
             self.bn2_2 = nn.BatchNorm2d(in_channels)
 

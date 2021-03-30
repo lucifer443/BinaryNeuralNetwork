@@ -111,8 +111,8 @@ class IRClsHead(ClsHead):
     
 
 @HEADS.register_module()
-class IR2ClsHead(ClsHead):
-    """Linear classifier head.
+class IRClsHead2(ClsHead):
+    """Linear classifier head with 2 fc layers.
 
     Args:
         num_classes (int): Number of categories excluding the background
@@ -124,10 +124,12 @@ class IR2ClsHead(ClsHead):
     def __init__(self,
                  num_classes,
                  in_channels,
+                 mid_channels,
                  loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
                  topk=(1, )):
-        super(IR2ClsHead, self).__init__(loss=loss, topk=topk)
+        super(IRClsHead2, self).__init__(loss=loss, topk=topk)
         self.in_channels = in_channels
+        self.mid_channels = mid_channels
         self.num_classes = num_classes
 
         if self.num_classes <= 0:
@@ -137,18 +139,19 @@ class IR2ClsHead(ClsHead):
         self._init_layers()
 
     def _init_layers(self):
-        self.fc = nn.Linear(self.in_channels, self.num_classes)
         self.bn1 = nn.BatchNorm1d(self.in_channels)
-#         self.bn2 = nn.BatchNorm1d(self.num_classes)
-#         self.nonlinear = nn.Hardtanh(inplace=True)
+        self.fc1 = nn.Linear(self.in_channels, self.mid_channels)
+        self.fc2 = nn.Linear(self.mid_channels, self.num_classes)
 
     def init_weights(self):
-        normal_init(self.fc, mean=0, std=0.01, bias=0)
+        normal_init(self.fc1, mean=0, std=0.01, bias=0)
+        normal_init(self.fc2, mean=0, std=0.01, bias=0)
 
     def simple_test(self, img):
         """Test without augmentation."""
         x = self.bn1(img)
-        cls_score = self.fc(x)
+        x = self.fc1(x)
+        cls_score = self.fc2(x)
         if isinstance(cls_score, list):
             cls_score = sum(cls_score) / float(len(cls_score))
         pred = F.softmax(cls_score, dim=1) if cls_score is not None else None
@@ -159,6 +162,7 @@ class IR2ClsHead(ClsHead):
 
     def forward_train(self, x, gt_label):
         x = self.bn1(x)
-        cls_score = self.fc(x)
+        x = self.fc1(x)
+        cls_score = self.fc2(x)
         losses = self.loss(cls_score, gt_label)
         return losses

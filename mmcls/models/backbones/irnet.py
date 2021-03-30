@@ -107,10 +107,10 @@ class IRNet(BaseBackbone):
             real_block = self.block
             if group_stages:
                 if i not in self.group_stages:
-                ''' 当前stage不拆成多分支 '''
+                    ''' 当前stage不拆成多分支 '''
                     real_block = IRNetBlock
                 elif i == self.group_stages[0]:
-                ''' 根据分支数减少通道数，保证总计算量不变 '''
+                    ''' 根据分支数减少通道数，保证总计算量不变 '''
                     _out_channels = int(_out_channels / math.sqrt(self.groups))
             res_layer = self.make_res_layer(
                 block=real_block,
