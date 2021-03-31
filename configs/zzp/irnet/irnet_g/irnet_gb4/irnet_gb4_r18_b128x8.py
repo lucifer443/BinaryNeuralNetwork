@@ -26,6 +26,6 @@ model = dict(
 custom_imports = dict(imports=['mmcls.core.utils.ede'], allow_failed_imports=False)
 custom_hooks = [dict(type='EDEHook', total_epoch=100)]
 
-work_dir = 'work_dir/irnet/irnet_g/irnet_g3/irnet_gb4_r18_b128x8'
+work_dir = 'work_dir/irnet/irnet_g/irnet_gb4/irnet_gb4_r18_b128x8'
 find_unused_parameters=True
 seed = 166
