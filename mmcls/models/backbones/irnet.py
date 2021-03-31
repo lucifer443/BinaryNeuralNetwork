@@ -13,7 +13,8 @@ from .binary_utils.irnet_blocks import (IRNetBlock, IRNetH1Block, IRNetH2Block, 
                                         IRNetG2Block, IRNetG3Block, IRNetG4Block, IRNetG5Block,
                                         IRNetG6Block, IRNetG7Block, IRNetG8Block,
                                         IRNetG3nBlock,
-                                        IRNetG3swBlock,)
+                                        IRNetG3swBlock,
+                                        IRNetGB4Block, IRNetGBa4Block,)
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU}
@@ -38,6 +39,8 @@ class IRNet(BaseBackbone):
         "irnet_h1a_r18": (IRNetH1aBlock, (2, 2, 2, 2)),
         "irnet_h2_r18": (IRNetH2Block, (2, 2, 2, 2)),
         "irnet_g3sw_r18": (IRNetG3swBlock, (2, 2, 2, 2)),
+        "irnet_gb4_r18": (IRNetGB4Block, (2, 2, 2, 2)),
+        "irnet_gba4_r18": (IRNetGBa4Block, (2, 2, 2, 2)),
     }
 
     def __init__(self,

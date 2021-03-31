@@ -37,12 +37,12 @@ class ReActNet(BaseBackbone):
         super(ReActNet, self).__init__()
         self.feature = nn.ModuleList()
         for i in range(len(self.out_chn)):
-            # 首层conv stride == 2
             if i == 0:
+                # 首层conv stride == 2
                 self.feature.append(firstconv3x3(3, self.out_chn[i], stride=2))
-            # 输入输出通道数不同，需要升维
-            # 除了第一个dw的stride为1，其余stage的stride都为2
             elif self.out_chn[i-1] != self.out_chn[i] and self.out_chn[i] != 64:
+                # 输入输出通道数不同，需要升维
+                # 除了第一个dw的stride为2，其余stage的stride都为1
                 self.feature.append(
                     ReActBlock(self.out_chn[i-1], self.out_chn[i], stride=2, binary_type=binary_type))
             else:
