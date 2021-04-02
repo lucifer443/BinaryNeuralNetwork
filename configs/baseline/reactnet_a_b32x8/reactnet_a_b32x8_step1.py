@@ -17,7 +17,7 @@ model = dict(
         topk=(1, 5),),
     distill=dict(
         teacher_cfg='configs/_base_/models/resnet34.py',
-        teacher_ckpt='work_dir/resnet34_batch256_imagenet_20200708-32ffb4f7.pth',
+        teacher_ckpt='work_dir/teacher_ckpts/resnet34_batch256_imagenet_20200708-32ffb4f7.pth',
         loss_weight=1.,
         only_kdloss=True))
 

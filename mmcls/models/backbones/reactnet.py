@@ -9,7 +9,8 @@ from mmcv.runner import load_checkpoint
 
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
-from .binary_utils.reactnet_blocks import ReActBlock
+from .binary_utils.reactnet_blocks import (ReActBlock,
+                                           ReActGBa4Block, ReActGS4Block,)
 
 
 class firstconv3x3(nn.Module):
@@ -30,14 +31,17 @@ class firstconv3x3(nn.Module):
 @BACKBONES.register_module()
 class ReActNet(BaseBackbone):
     # stage_out_channels
-    out_chn = [32] + [64] + [128] * 2 + [256] * 2 + [512] * 6 + [1024] * 2
+    out_chn = [1] + [2] + [4] * 2 + [8] * 2 + [16] * 6 + [32] * 2
 
     arch_settings = {
         "reactnet_a": ReActBlock,
+        "reactnet_gba4": ReActGBa4Block,
+        "reactnet_gs4": ReActGS4Block,
     }
 
     def __init__(self,
                  arch,
+                 stem_channels=32,
                  binary_type=(True, True)):
         super(ReActNet, self).__init__()
 
@@ -46,12 +50,16 @@ class ReActNet(BaseBackbone):
         self.arch = arch
         self.block = self.arch_settings[arch]
 
+        self.stem_channels = stem_channels
+        for i in range(len(self.out_chn)):
+            self.out_chn[i] = self.out_chn[i] * self.stem_channels
+
         self.feature = nn.ModuleList()
         for i in range(len(self.out_chn)):
             if i == 0:
                 # 首层conv stride == 2
                 self.feature.append(firstconv3x3(3, self.out_chn[i], stride=2))
-            elif self.out_chn[i-1] != self.out_chn[i] and self.out_chn[i] != 64:
+            elif self.out_chn[i-1] != self.out_chn[i] and self.out_chn[i] != self.stem_channels * 2:
                 # 输入输出通道数不同，需要升维
                 # 除了第一个dw的stride为2，其余stage的stride都为1
                 self.feature.append(

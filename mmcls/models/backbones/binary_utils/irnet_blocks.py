@@ -68,7 +68,6 @@ class IRNetGBlock(nn.Module):
             self.bn2.append(nn.BatchNorm2d(self.out_channels))
 
     def forward(self, x):
-        # print('x = ', x.shape)
         if self.downsample is not None:
             identity = self.downsample(x)
         else:
@@ -104,7 +103,6 @@ class IRNetGBlock(nn.Module):
 
         out += identity
         out = self.nonlinear(out)
-        # print('out = ', out.shape)
 
         return out
 
@@ -220,7 +218,6 @@ class IRNetGBBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(self.out_channels)
 
     def forward(self, x):
-        print('x = ', x.shape)
         if self.downsample is not None:
             identity = self.downsample(x)
         else:
@@ -241,8 +238,6 @@ class IRNetGBBlock(nn.Module):
                 x_list[j] = self.bn1[self.groups * i + j](x_list[j])
                 x_group_list[i] += x_list[j]
         
-        for t in x_group_list:
-            print(t.shape)
         out = torch.cat(x_group_list, dim=1)
         out += identity
         out = self.nonlinear(out)
@@ -253,7 +248,6 @@ class IRNetGBBlock(nn.Module):
 
         out += identity
         out = self.nonlinear(out)
-        print('out = ', out.shape)
 
         return out
 
@@ -290,7 +284,6 @@ class IRNetGBaBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(self.out_channels)
 
     def forward(self, x):
-        print('x = ', x.shape)
         if self.downsample is not None:
             identity = self.downsample(x)
         else:
@@ -302,8 +295,6 @@ class IRNetGBaBlock(nn.Module):
             a = self.alpha[i] * x_max
             x_list.append(x + a)
 
-        for t in x_list:
-            print('x_list = ', t.shape)
         out = 0
         for i in range(self.groups):
             x_list[i] = self.conv1[i](x_list[i])
@@ -319,7 +310,6 @@ class IRNetGBaBlock(nn.Module):
 
         out += identity
         out = self.nonlinear(out)
-        print('out = ', out.shape)
 
         return out
 
