@@ -32,9 +32,20 @@ class ReActNet(BaseBackbone):
     # stage_out_channels
     out_chn = [32] + [64] + [128] * 2 + [256] * 2 + [512] * 6 + [1024] * 2
 
+    arch_settings = {
+        "reactnet_a": ReActBlock,
+    }
+
     def __init__(self,
+                 arch,
                  binary_type=(True, True)):
         super(ReActNet, self).__init__()
+
+        if arch not in self.arch_settings:
+            raise KeyError(f'invalid arch type {arch} for irnet')
+        self.arch = arch
+        self.block = self.arch_settings[arch]
+
         self.feature = nn.ModuleList()
         for i in range(len(self.out_chn)):
             if i == 0:
@@ -44,10 +55,10 @@ class ReActNet(BaseBackbone):
                 # 输入输出通道数不同，需要升维
                 # 除了第一个dw的stride为2，其余stage的stride都为1
                 self.feature.append(
-                    ReActBlock(self.out_chn[i-1], self.out_chn[i], stride=2, binary_type=binary_type))
+                    self.block(self.out_chn[i-1], self.out_chn[i], stride=2, binary_type=binary_type))
             else:
                 self.feature.append(
-                    ReActBlock(self.out_chn[i-1], self.out_chn[i], stride=1, binary_type=binary_type))
+                    self.block(self.out_chn[i-1], self.out_chn[i], stride=1, binary_type=binary_type))
     
     def init_weights(self, pretrained=None):
         if isinstance(pretrained, str):
