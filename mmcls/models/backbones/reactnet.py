@@ -9,7 +9,7 @@ from mmcv.runner import load_checkpoint
 
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
-from .binary_utils.reactnet_blocks import (ReActBlock,
+from .binary_utils.reactnet_blocks import (ReActBlock, ReActBaseBlock,
                                            ReActGBa4Block, ReActGS4Block,)
 
 
@@ -35,6 +35,7 @@ class ReActNet(BaseBackbone):
 
     arch_settings = {
         "reactnet_a": ReActBlock,
+        "reactnet_baseline": ReActBaseBlock,
         "reactnet_gba4": ReActGBa4Block,
         "reactnet_gs4": ReActGS4Block,
     }
