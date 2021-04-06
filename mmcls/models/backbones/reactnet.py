@@ -9,9 +9,10 @@ from mmcv.runner import load_checkpoint
 
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
-from .binary_utils.reactnet_blocks import (ReActBlock, ReActBaseBlock,
-                                           ReActBaseGBa4Block,
-                                           ReActGBa4Block, ReActGS4Block,)
+from .binary_utils.reactnet_blocks import (ReActBlock, ReActGBa4Block, ReActGS4Block,
+                                           ReActBaseBlock, ReActBaseGBa4Block,
+                                           ReAct1Block, ReAct1GBa4Block,
+                                          )
 
 
 class firstconv3x3(nn.Module):
@@ -37,6 +38,8 @@ class ReActNet(BaseBackbone):
     arch_settings = {
         "reactnet_a": ReActBlock,
         "reactnet_baseline": ReActBaseBlock,
+        "reactnet1": ReAct1Block,
+        "reactnet1_gba4": ReAct1GBa4Block,
         "reactnet_baseline_gba4": ReActBaseGBa4Block,
         "reactnet_gba4": ReActGBa4Block,
         "reactnet_gs4": ReActGS4Block,
@@ -49,7 +52,7 @@ class ReActNet(BaseBackbone):
         super(ReActNet, self).__init__()
 
         if arch not in self.arch_settings:
-            raise KeyError(f'invalid arch type {arch} for irnet')
+            raise KeyError(f'invalid arch type {arch} for reactnet')
         self.arch = arch
         self.block = self.arch_settings[arch]
 

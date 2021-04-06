@@ -1,13 +1,14 @@
 _base_ = [
-    '../../../../_base_/datasets/imagenet_bs32.py', '../../../../_base_/default_runtime.py'
+    '../../../_base_/datasets/imagenet_bs128.py', '../../../_base_/default_runtime.py'
 ]
 
 model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='ReActNet',
-        arch='reactnet_baseline_gba4',
-        binary_type=(True, True)),
+        arch='reactnet_baseline',
+        stem_channels=32,
+        binary_type=(True, False)),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -17,11 +18,16 @@ model = dict(
         topk=(1, 5),
     ))
 
+# dataset settings for bs128
+data = dict(
+    workers_per_gpu=2,
+)
+
 # schedules for imagenet bs256
 optimizer = dict(
     type='Adam',
     lr=5e-4,
-    weight_decay=0.,
+    weight_decay=1e-5,
     paramwise_cfg=dict(norm_decay_mult=0))
 optimizer_config = dict(grad_clip=None)
 # learning policy
@@ -32,7 +38,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = 'work_dir/reactnet/reactnet_g/reactnet_baseline_gba4/reactnet_baseline_gba4_b32x8_step2'
-load_from = 'work_dir/reactnet/reactnet_g/reactnet_baseline_gba4/reactnet_baseline_gba4_b32x8_step1/epoch_256.pth'
-find_unused_parameters=True
+work_dir = 'work_dir/reactnet/reactnet_baseline/reactnet_baseline_b128x8_step1'
+find_unused_parameters=False
 seed = 166

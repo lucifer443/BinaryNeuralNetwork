@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/datasets/imagenet_bs32.py', '../../_base_/default_runtime.py'
+    '../../../../_base_/datasets/imagenet_bs32.py', '../../../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -17,7 +17,7 @@ model = dict(
         topk=(1, 5),),
     distill=dict(
         teacher_cfg='configs/_base_/models/resnet34.py',
-        teacher_ckpt='work_dir/resnet34_batch256_imagenet_20200708-32ffb4f7.pth',
+        teacher_ckpt='work_dir/teacher_ckpts/resnet34_batch256_imagenet_20200708-32ffb4f7.pth',
         loss_weight=1.,
         only_kdloss=True))
 
@@ -36,6 +36,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = 'work_dir/reactnet_a_b32x8_step1_a100'
+work_dir = 'work_dir/reactnet/reactnet_a/reactnet_a_b32x8/reactnet_a_b32x8_step1'
 find_unused_parameters=True
 seed = 166

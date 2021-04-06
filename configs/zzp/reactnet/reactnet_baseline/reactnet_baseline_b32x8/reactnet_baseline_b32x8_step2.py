@@ -1,12 +1,12 @@
 _base_ = [
-    '../../../../_base_/datasets/imagenet_bs32.py', '../../../../_base_/default_runtime.py'
+    '../../_base_/datasets/imagenet_bs32.py', '../../_base_/default_runtime.py'
 ]
 
 model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='ReActNet',
-        arch='reactnet_baseline_gba4',
+        arch='reactnet_baseline',
         binary_type=(True, True)),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
@@ -32,7 +32,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = 'work_dir/reactnet/reactnet_g/reactnet_baseline_gba4/reactnet_baseline_gba4_b32x8_step2'
-load_from = 'work_dir/reactnet/reactnet_g/reactnet_baseline_gba4/reactnet_baseline_gba4_b32x8_step1/epoch_256.pth'
+work_dir = 'work_dir/reactnet/reactnet_baseline/reactnet_baseline_b32x8_step2'
+load_from = 'work_dir/reactnet/reactnet_baseline/reactnet_baseline_b32x8_step1/epoch_256.pth'
 find_unused_parameters=True
 seed = 166
