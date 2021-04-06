@@ -10,7 +10,7 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .binary_utils.reactnet_blocks import (ReActBlock, ReActGBa4Block, ReActGS4Block,
-                                           ReActBaseBlock, ReActBaseGBa4Block,
+                                           ReActBaseBlock, ReActBaseGBa4Block, ReAct1GS4Block,
                                            ReAct1Block, ReAct1GBa4Block,
                                           )
 
@@ -40,6 +40,7 @@ class ReActNet(BaseBackbone):
         "reactnet_baseline": ReActBaseBlock,
         "reactnet1": ReAct1Block,
         "reactnet1_gba4": ReAct1GBa4Block,
+        "reactnet1_gs4": ReAct1GS4Block,
         "reactnet_baseline_gba4": ReActBaseGBa4Block,
         "reactnet_gba4": ReActGBa4Block,
         "reactnet_gs4": ReActGS4Block,
