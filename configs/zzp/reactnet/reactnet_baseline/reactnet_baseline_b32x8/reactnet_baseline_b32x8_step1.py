@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
+    '../../../../_base_/datasets/imagenet_bs32.py', '../../../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -33,6 +33,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = 'work_dir/reactnet/reactnet_baseline/reactnet_baseline_b32x8_step1'
+work_dir = 'work_dir/reactnet/reactnet_baseline/reactnet_baseline_b32x8/reactnet_baseline_b32x8_step1'
 find_unused_parameters=False
 seed = 166
