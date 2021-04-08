@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from .binary_convs import IRConv2d, RAConv2d
 from .binary_functions import RPRelu, LearnableBias
-    
+
 
 class ReActBlock(nn.Module):
 
@@ -31,12 +31,19 @@ class ReActBlock(nn.Module):
 
         if self.in_channels != self.out_channels:
             self.pooling = nn.AvgPool2d(2, 2)
+        
+        # from torch.utils.tensorboard import SummaryWriter
+        # self.writer = SummaryWriter('/workspace/S/zhaozhipeng/BinaryNN/BinaryDevelop/work_dir/hist')
 
     def forward(self, x):
         # 3x3 conv
+        # self.writer.add_histogram('input', x, 0)
         out1 = self.move1(x)
+        # self.writer.add_histogram('move1', out1, 0)
         out1 = self.conv_3x3(out1)
+        # self.writer.add_histogram('conv_3x3', out1, 0)
         out1 = self.bn1(out1)
+        # self.writer.add_histogram('bn1', out1, 0)
 
         if self.stride == 2:
             x = self.pooling(x)

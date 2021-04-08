@@ -14,7 +14,9 @@ from .binary_utils.irnet_blocks import (IRNetBlock, IRNetH1Block, IRNetH2Block, 
                                         IRNetG6Block, IRNetG7Block, IRNetG8Block,
                                         IRNetG3nBlock,
                                         IRNetG3swBlock,
-                                        IRNetGB4Block, IRNetGBa4Block,)
+                                        IRNetGB4Block, IRNetGBa4Block,
+                                        IRNetShiftBlock,
+                                       )
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU}
@@ -41,11 +43,13 @@ class IRNet(BaseBackbone):
         "irnet_g3sw_r18": (IRNetG3swBlock, (2, 2, 2, 2)),
         "irnet_gb4_r18": (IRNetGB4Block, (2, 2, 2, 2)),
         "irnet_gba4_r18": (IRNetGBa4Block, (2, 2, 2, 2)),
+        "irnet_shift_r18": (IRNetShiftBlock, (2, 2, 2, 2)),
     }
 
     def __init__(self,
                  arch,
                  group_stages=None,
+                 shift=0.0,
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -76,6 +80,7 @@ class IRNet(BaseBackbone):
         self.group_stages=group_stages
         if self.group_stages:
             self.groups = int(arch[7:8]) # 多分支conv的分支个数由arch中g后面的数字指定
+        self.shift = shift # sign阈值的正向偏移量，实际sign函数为sign(x + shift)
         self.stem_channels = stem_channels
         self.base_channels = base_channels
         self.num_stages = num_stages
@@ -130,7 +135,8 @@ class IRNet(BaseBackbone):
                 with_cp=with_cp,
                 binary_type=binary_type,
                 conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg)
+                norm_cfg=norm_cfg,
+                shift=self.shift)
             _in_channels = _out_channels
             _out_channels *= 2
             layer_name = f'layer{i + 1}'
