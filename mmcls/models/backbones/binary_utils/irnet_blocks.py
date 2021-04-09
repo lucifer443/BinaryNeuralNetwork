@@ -481,10 +481,10 @@ class IRNetShiftBlock(nn.Module):
         if self.downsample is not None:
             residual = self.downsample(x)
         out += residual
-
         out = self.nonlinear(out)
 
         residual = out
+        out = out + self.shift
         out = self.conv2(out)
         out = self.bn2(out)
 
