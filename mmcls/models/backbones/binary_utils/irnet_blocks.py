@@ -10,9 +10,10 @@ class IRNetBlock(nn.Module):
         super(IRNetBlock, self).__init__()
         self.conv1 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.nonlinear = nn.Hardtanh(inplace=True)
+        self.nonlinear1 = nn.Hardtanh(inplace=True)
         self.conv2 = IRConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
+        self.nonlinear2 = nn.Hardtanh(inplace=True)
         self.downsample = downsample
         self.stride = stride
         self.out_channels = out_channels
@@ -27,14 +28,14 @@ class IRNetBlock(nn.Module):
             residual = self.downsample(x)
         out += residual
 
-        out = self.nonlinear(out)
+        out = self.nonlinear1(out)
 
         residual = out
         out = self.conv2(out)
         out = self.bn2(out)
 
         out += residual
-        out = self.nonlinear(out)
+        out = self.nonlinear2(out)
 
         return out
 
@@ -459,7 +460,7 @@ class IRNetH2Block(nn.Module):
 class IRNetShiftBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_channels, out_channels, stride=1, downsample=None, shift=0.0, **kwargs):
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, shift=0.0, ratio=None, **kwargs):
         super(IRNetShiftBlock, self).__init__()
         self.conv1 = IRConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
@@ -470,6 +471,7 @@ class IRNetShiftBlock(nn.Module):
         self.stride = stride
         self.out_channels = out_channels
         self.shift = shift
+        self.ratio = ratio
 
     def forward(self, x):
         residual = x

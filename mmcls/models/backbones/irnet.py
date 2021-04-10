@@ -50,6 +50,7 @@ class IRNet(BaseBackbone):
                  arch,
                  group_stages=None,
                  shift=0.0,
+                 ratio=None,
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -81,6 +82,7 @@ class IRNet(BaseBackbone):
         if self.group_stages:
             self.groups = int(arch[7:8]) # 多分支conv的分支个数由arch中g后面的数字指定
         self.shift = shift # sign阈值的正向偏移量，实际sign函数为sign(x + shift)
+        self.ratio = ratio # 经过sign之后+1与-1的比例，用于调整sign阈值
         self.stem_channels = stem_channels
         self.base_channels = base_channels
         self.num_stages = num_stages
@@ -136,7 +138,8 @@ class IRNet(BaseBackbone):
                 binary_type=binary_type,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
-                shift=self.shift)
+                shift=self.shift,
+                ratio=self.ratio)
             _in_channels = _out_channels
             _out_channels *= 2
             layer_name = f'layer{i + 1}'
