@@ -15,7 +15,7 @@ from .binary_utils.irnet_blocks import (IRNetBlock, IRNetH1Block, IRNetH2Block, 
                                         IRNetG3nBlock,
                                         IRNetG3swBlock,
                                         IRNetGB4Block, IRNetGBa4Block,
-                                        IRNetShiftBlock,
+                                        IRNetShiftBlock, IRNetShiftHalfBlock,
                                        )
 
 def build_act(name):
@@ -44,6 +44,7 @@ class IRNet(BaseBackbone):
         "irnet_gb4_r18": (IRNetGB4Block, (2, 2, 2, 2)),
         "irnet_gba4_r18": (IRNetGBa4Block, (2, 2, 2, 2)),
         "irnet_shift_r18": (IRNetShiftBlock, (2, 2, 2, 2)),
+        "irnet_sh_r18": (IRNetShiftHalfBlock, (2, 2, 2, 2)),
     }
 
     def __init__(self,
