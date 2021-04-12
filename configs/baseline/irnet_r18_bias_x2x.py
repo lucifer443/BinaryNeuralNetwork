@@ -7,7 +7,7 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='ResArch',
-        arch='IRNet-18-bias',
+        arch='IRNet-18-bias-x2x',
         num_stages=4,
         out_indices=(3, ),
         stem_act='hardtanh',
@@ -24,8 +24,7 @@ custom_imports = dict(imports=['mmcls.core.utils.ede'], allow_failed_imports=Fal
 custom_hooks = [
     dict(type='EDEHook', total_epoch=100)
 ]
-
-work_dir = 'work_dirs/irnet18_x2x_float'
 #work_dir = 'work_dirs/tmp'
+work_dir = 'work_dirs/irnet_r18_bias_x2x_c'
 find_unused_parameters=True
 seed = 166
