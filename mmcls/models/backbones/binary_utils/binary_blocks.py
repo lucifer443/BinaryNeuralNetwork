@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .binary_convs import IRConv2d, RAConv2d ,IRConv2d_bias ,IRConv2d_bias_x2
+from .binary_convs import IRConv2d, RAConv2d ,IRConv2d_bias ,IRConv2d_bias_x2,IRConv2d_bias_x2x
 from .binary_functions import RPRelu, LearnableBias
 
 
@@ -79,10 +79,10 @@ class IRNetBlock_bias_x2(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
         super(IRNetBlock_bias_x2, self).__init__()
-        self.conv1 = IRConv2d_bias_x2(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.conv1 = IRConv2d_bias_x2x(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.nonlinear = nn.Hardtanh(inplace=True)
-        self.conv2 = IRConv2d_bias_x2(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = IRConv2d_bias_x2x(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.downsample = downsample
         self.stride = stride

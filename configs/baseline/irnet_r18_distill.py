@@ -6,7 +6,7 @@ model = dict(
     type='DistillingImageClassifier',
     backbone=dict(
         type='ResArch',
-        arch='IRNet-18-bias',
+        arch='IRNet-18-bias-x2',
         num_stages=4,
         out_indices=(3, ),
         stem_act='hardtanh',
@@ -29,6 +29,6 @@ custom_hooks = [
     dict(type='EDEHook', total_epoch=100)
 ]
 
-work_dir = 'work_dirs/irnet_r18_distill'
+work_dir = 'work_dirs/irnet_r18_distill_x2'
 find_unused_parameters=True
 seed = 166
