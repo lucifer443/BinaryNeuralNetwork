@@ -473,11 +473,22 @@ class IRNetShiftBlock(nn.Module):
         self.out_channels = out_channels
         self.shift = shift
         self.ratio = ratio
+        self.ratio_map = {
+            0.3: 2.5,
+        }
 
     def forward(self, x):
         residual = x
 
+        if self.ratio:
+            self.shift = self.ratio * x.std() * self.ratio_map[self.ratio] + x.mean()
         x = x + self.shift
+
+        fea = x.sign().flatten()
+        diff = fea @ torch.ones(fea.shape).T.cuda()
+        total = fea.numel()
+        print(diff / total)
+        
         out = self.conv1(x)
         out = self.bn1(out)
 
@@ -487,6 +498,8 @@ class IRNetShiftBlock(nn.Module):
         out = self.nonlinear1(out)
 
         residual = out
+        if self.ratio:
+            self.shift = self.ratio * out.std() * self.ratio_map[self.ratio] + out.mean()
         out = out + self.shift
         out = self.conv2(out)
         out = self.bn2(out)
@@ -513,10 +526,15 @@ class IRNetShiftHalfBlock(nn.Module):
         self.out_channels = out_channels
         self.shift = shift
         self.ratio = ratio
+        self.ratio_map = {
+            0.3: 2.5,
+        }
 
     def forward(self, x):
         residual = x
 
+        if self.ratio:
+            self.shift = self.ratio * x.std() * self.ratio_map[self.ratio] + x.mean()
         x = x + self.shift
         out = self.conv1(x)
         out = self.bn1(out)
