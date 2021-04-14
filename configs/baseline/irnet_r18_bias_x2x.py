@@ -26,6 +26,6 @@ custom_hooks = [
 ]
 #work_dir = 'work_dirs/tmp'
 work_dir = 'work_dirs/irnet_r18_bias_x2x_c_reload'
-load_from = '/workspace/S/jiangfei/BinaryNeuralNetwork/work_dirs/irnet18_x2x_float/epoch_100.pth'
+load_from = '/lustre/S/jiangfei/BinaryNeuralNetwork/work_dirs/irnet18_x2x_float/epoch_100.pth'
 find_unused_parameters=True
 seed = 166
