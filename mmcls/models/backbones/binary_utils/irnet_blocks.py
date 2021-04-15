@@ -290,7 +290,7 @@ class IRNetGBaBlock(nn.Module):
         else:
             identity = x
 
-        x_max = torch.max(abs(x))
+        x_max = torch.max(abs(x)).detach()
         x_list = []
         for i in range(self.groups):
             a = self.alpha[i] * x_max
