@@ -320,6 +320,106 @@ class IRNetGBa4Block(IRNetGBaBlock):
         super(IRNetGBa4Block, self).__init__(in_channels, out_channels, stride, downsample, n=4, **kwargs)
 
 
+class IRNetGBbBlock(nn.Module):
+    expansion = 1
+
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, g=1, b=1, **kwargs):
+        super(IRNetGBbBlock, self).__init__()
+
+        self.groups = g
+        self.branches = b
+        self.alpha = []
+        self.conv1 = nn.ModuleList()
+        self.bn1 = nn.ModuleList()
+        self.conv2 = nn.ModuleList()
+        self.bn2 = nn.ModuleList()
+
+        self.nonlinear11 = nn.Hardtanh(inplace=True)
+        self.nonlinear12 = nn.Hardtanh(inplace=True)
+        self.nonlinear21 = nn.Hardtanh(inplace=True)
+        self.nonlinear22 = nn.Hardtanh(inplace=True)
+        self.downsample = downsample
+        self.stride = stride
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+
+        for i in range(self.branches):
+            self.alpha.append(-1 + (i + 1) * 2 / (self.branches + 1))
+            self.conv1.append(IRConv2d(self.in_channels, self.out_channels, kernel_size=3,
+                                       stride=self.stride, padding=1, bias=False, groups=self.groups, **kwargs))
+            self.bn1.append(nn.BatchNorm2d(self.out_channels))
+            self.conv2.append(IRConv2d(self.out_channels, self.out_channels, kernel_size=3,
+                                       stride=1, padding=1, bias=False, groups=self.groups, **kwargs))
+            self.bn2.append(nn.BatchNorm2d(self.out_channels))
+        self.conv1_1x1 = IRConv2d(self.out_channels, self.out_channels, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
+        self.bn1_1x1 = nn.BatchNorm2d(self.out_channels)
+        self.conv2_1x1 = IRConv2d(self.out_channels, self.out_channels, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
+        self.bn2_1x1 = nn.BatchNorm2d(self.out_channels)
+
+    def forward(self, x):
+        # 3x3 muti-branch group conv
+        if self.downsample is not None:
+            identity = self.downsample(x)
+        else:
+            identity = x
+
+        x_max = torch.max(abs(x)).detach()
+        x_list = []
+        for i in range(self.branches):
+            a = self.alpha[i] * x_max
+            x_list.append(x + a)
+
+        out = 0
+        for i in range(self.branches):
+            x_list[i] = self.conv1[i](x_list[i])
+            x_list[i] = self.bn1[i](x_list[i])
+            out += x_list[i]
+
+        out += identity
+        out = self.nonlinear11(out)
+
+        # 1x1 conv
+        identity = out
+        out = self.conv1_1x1(out)
+        out = self.bn1_1x1(out)
+
+        out += identity
+        out = self.nonlinear12(out)
+
+        # 3x3 muti-branch group conv
+        identity = out
+
+        out_max = torch.max(abs(out)).detach()
+        out_list = []
+        for i in range(self.branches):
+            a = self.alpha[i] * out_max
+            out_list.append(out + a)
+
+        out = 0
+        for i in range(self.branches):
+            out_list[i] = self.conv2[i](out_list[i])
+            out_list[i] = self.bn2[i](out_list[i])
+            out += out_list[i]
+
+        out += identity
+        out = self.nonlinear21(out)
+
+        # 1x1 conv
+        identity = out
+        out = self.conv2_1x1(out)
+        out = self.bn2_1x1(out)
+
+        out += identity
+        out = self.nonlinear22(out)
+
+        return out
+    
+
+# class IRNetGBb4Block(IRNetGBbBlock):
+#     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
+#         super(IRNetGBb4Block, self).__init__(in_channels, out_channels, stride, downsample, groups, branches, **kwargs)
+
+
 # hierarchical conv
 # 分层conv，一个block的输出是两个conv输出的拼接的结果
 class IRNetH1Block(nn.Module):

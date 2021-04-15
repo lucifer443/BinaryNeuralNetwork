@@ -15,6 +15,7 @@ from .binary_utils.irnet_blocks import (IRNetBlock, IRNetH1Block, IRNetH2Block, 
                                         IRNetG3nBlock,
                                         IRNetG3swBlock,
                                         IRNetGB4Block, IRNetGBa4Block,
+                                        IRNetGBbBlock,
                                         IRNetShiftBlock, IRNetShiftHalfBlock,
                                        )
 
@@ -26,6 +27,31 @@ def build_act(name):
 
 @BACKBONES.register_module()
 class IRNet(BaseBackbone):
+    '''
+    Args:
+        stage_blocks (tuple): 每个stage的block个数
+            如果指定了，则会代替arch_settings中的设置
+            Default: None
+            eg: stage_blocks=(2, 2, 2, 2)
+        group_cfg (tuple): 设置每个stage中的每个block的group conv的group数
+            only for IRNetGBbBlock
+            其中的stage数和block数应与实际使用的arch_setting中的结构相一致
+            Default: None
+            eg: group_cfg=((4, 4), (4, 4), (8, 8), (8, 8))
+        branch_cfg (tuple): 设置每个stage中每个block的不同sign阈值分支的个数
+            only for IRNetGBbBlock
+            Default: None
+            eg: branch_cfg=((4, 4), (4, 4), (4, 4), (4, 4))
+        shift (float): 激活值的强制偏移量，相当于修改了sign阈值
+            sign(x)变为sign(x + shift)
+            only for IRNetShiftHalfBlock and IRNetShiftBlock
+            Default: 0.0
+        ratio (float): 强制调整激活值中+1和-1的比例
+            设置ratio会屏蔽shift，只有ratio起效果
+            ratio = (num(+1) - num(-1)) / (num(+1) + num(-1))
+            only for IRNetShiftHalfBlock and IRNetShiftBlock
+            Default: None
+    '''
 
     arch_settings = {
         "irnet_r18": (IRNetBlock, (2, 2, 2, 2)),
@@ -45,13 +71,17 @@ class IRNet(BaseBackbone):
         "irnet_gba4_r18": (IRNetGBa4Block, (2, 2, 2, 2)),
         "irnet_shift_r18": (IRNetShiftBlock, (2, 2, 2, 2)),
         "irnet_sh_r18": (IRNetShiftHalfBlock, (2, 2, 2, 2)),
+        "irnet_gbb_r18": (IRNetGBbBlock, (2, 2, 2, 2)),
     }
 
     def __init__(self,
                  arch,
+                 stage_blocks=None,
                  group_stages=None,
                  shift=0.0,
                  ratio=None,
+                 group_cfg=None,
+                 branch_cfg=None,
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -79,11 +109,10 @@ class IRNet(BaseBackbone):
         # 多分支conv的stem_channels和base_channels使用默认的64即可
         # 每个stage的具体通道数会根据分支个数自动调整，以保证总conv计算量与不进行分支的conv一致
         # 注意需要手动调整config中head的in_channels数值，以匹配实际的输出通道数
-        self.group_stages=group_stages
+        self.group_stages  = group_stages
         if self.group_stages:
             self.groups = int(arch[7:8]) # 多分支conv的分支个数由arch中g后面的数字指定
-        self.shift = shift # sign阈值的正向偏移量，实际sign函数为sign(x + shift)
-        self.ratio = ratio # 经过sign之后+1与-1的比例，用于调整sign阈值
+
         self.stem_channels = stem_channels
         self.base_channels = base_channels
         self.num_stages = num_stages
@@ -106,6 +135,19 @@ class IRNet(BaseBackbone):
         self.stage_blocks = stage_blocks[:num_stages]
         # self.expansion = get_expansion(self.block, expansion)
         self.expansion = 1 if not expansion else expansion
+
+        # if has set stage_blocks
+        if stage_blocks:
+            self.stage_blocks = stage_blocks
+        # set group and branch configs for IRNetGBbBlock
+        if self.block == IRNetGBbBlock:
+            self.group_cfg = group_cfg
+            self.branch_cfg = branch_cfg
+        else:
+            self.group_cfg = (None,) * num_stages
+            self.branch_cfg = (None,) * num_stages
+        self.shift = shift # sign阈值的正向偏移量，实际sign函数为sign(x + shift)
+        self.ratio = ratio # 经过sign之后+1与-1的比例，用于调整sign阈值
 
         self.activation = build_act(stem_act) if stem_act else None
     
@@ -140,7 +182,9 @@ class IRNet(BaseBackbone):
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
                 shift=self.shift,
-                ratio=self.ratio)
+                ratio=self.ratio,
+                group_cfg=self.group_cfg[i],
+                branch_cfg=self.branch_cfg[i],)
             _in_channels = _out_channels
             _out_channels *= 2
             layer_name = f'layer{i + 1}'

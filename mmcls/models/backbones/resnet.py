@@ -7,6 +7,7 @@ from mmcv.utils.parrots_wrapper import _BatchNorm
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 
+from .binary_utils.irnet_blocks import IRNetGBbBlock
 
 class BasicBlock(nn.Module):
     """BasicBlock for ResNet.
@@ -295,6 +296,7 @@ def get_expansion(block, expansion=None):
 
 class ResLayer(nn.Sequential):
     """ResLayer to build ResNet style backbone.
+    该类已经为了irnet.py的需求进行了修改
 
     Args:
         block (nn.Module): Residual block used to build ResLayer.
@@ -325,9 +327,19 @@ class ResLayer(nn.Sequential):
                  avg_down=False,
                  conv_cfg=None,
                  norm_cfg=dict(type='BN'),
+                 group_cfg=None,
+                 branch_cfg=None,
                  **kwargs):
         self.block = block
         self.expansion = get_expansion(block, expansion)
+
+        # set group and branch configs for IRNetGBb4Block
+        if block == IRNetGBbBlock:
+            self.group_cfg = group_cfg
+            self.branch_cfg = branch_cfg
+        else:
+            self.group_cfg = (None,) * num_blocks
+            self.branch_cfg = (None,) * num_blocks
 
         downsample = None
         if stride != 1 or in_channels != out_channels:
@@ -363,6 +375,8 @@ class ResLayer(nn.Sequential):
                 downsample=downsample,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
+                g=self.group_cfg[0],
+                b=self.branch_cfg[0],
                 **kwargs))
         in_channels = out_channels
         for i in range(1, num_blocks):
@@ -374,6 +388,8 @@ class ResLayer(nn.Sequential):
                     stride=1,
                     conv_cfg=conv_cfg,
                     norm_cfg=norm_cfg,
+                    g=self.group_cfg[i],
+                    b=self.group_cfg[i],
                     **kwargs))
         super(ResLayer, self).__init__(*layers)
 
