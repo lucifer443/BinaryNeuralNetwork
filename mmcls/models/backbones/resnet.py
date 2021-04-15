@@ -366,6 +366,7 @@ class ResLayer(nn.Sequential):
             downsample = nn.Sequential(*downsample)
 
         layers = []
+        # print(num_blocks)
         layers.append(
             block(
                 in_channels=in_channels,

@@ -363,7 +363,7 @@ class IRNetGBbBlock(nn.Module):
         else:
             identity = x
 
-        x_max = torch.max(abs(x)).detach()
+        x_max = torch.max(abs(x))
         x_list = []
         for i in range(self.branches):
             a = self.alpha[i] * x_max
@@ -389,7 +389,7 @@ class IRNetGBbBlock(nn.Module):
         # 3x3 muti-branch group conv
         identity = out
 
-        out_max = torch.max(abs(out)).detach()
+        out_max = torch.max(abs(out))
         out_list = []
         for i in range(self.branches):
             a = self.alpha[i] * out_max

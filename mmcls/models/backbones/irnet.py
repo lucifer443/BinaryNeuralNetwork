@@ -29,10 +29,10 @@ def build_act(name):
 class IRNet(BaseBackbone):
     '''
     Args:
-        stage_blocks (tuple): 每个stage的block个数
+        stage_setting (tuple): 每个stage的block个数
             如果指定了，则会代替arch_settings中的设置
             Default: None
-            eg: stage_blocks=(2, 2, 2, 2)
+            eg: stage_setting=(2, 2, 2, 2)
         group_cfg (tuple): 设置每个stage中的每个block的group conv的group数
             only for IRNetGBbBlock
             其中的stage数和block数应与实际使用的arch_setting中的结构相一致
@@ -76,7 +76,7 @@ class IRNet(BaseBackbone):
 
     def __init__(self,
                  arch,
-                 stage_blocks=None,
+                 stage_setting=None,
                  group_stages=None,
                  shift=0.0,
                  ratio=None,
@@ -136,9 +136,9 @@ class IRNet(BaseBackbone):
         # self.expansion = get_expansion(self.block, expansion)
         self.expansion = 1 if not expansion else expansion
 
-        # if has set stage_blocks
-        if stage_blocks:
-            self.stage_blocks = stage_blocks
+        # set stage_blocks from user config
+        if stage_setting:
+            self.stage_blocks = stage_setting
         # set group and branch configs for IRNetGBbBlock
         if self.block == IRNetGBbBlock:
             self.group_cfg = group_cfg

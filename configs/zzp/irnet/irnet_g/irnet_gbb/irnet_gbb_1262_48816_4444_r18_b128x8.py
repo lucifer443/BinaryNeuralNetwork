@@ -8,9 +8,9 @@ model = dict(
     backbone=dict(
         type='IRNet',
         arch='irnet_gbb_r18',
-        stage_setting=(2, 2, 2, 2),
-        group_cfg=((4, 4), (4, 4), (4, 4), (4, 4)),
-        branch_cfg=((4, 4), (4, 4), (4, 4), (4, 4)),
+        stage_setting=(1, 2, 6, 2),
+        group_cfg=((4,) * 1, (8,) * 2, (8,) * 6, (16,) * 2),
+        branch_cfg=((4,) * 1, (4,) * 2, (4,) * 6, (4,) * 2),
         stem_channels=64,
         base_channels=64,
         num_stages=4,
@@ -29,6 +29,6 @@ model = dict(
 custom_imports = dict(imports=['mmcls.core.utils.ede'], allow_failed_imports=False)
 custom_hooks = [dict(type='EDEHook', total_epoch=100)]
 
-work_dir = 'work_dir/irnet/irnet_g/irnet_gbb/irnet_gbb_2222_4444_4444_r18_b128x8'
+work_dir = 'work_dir/irnet/irnet_g/irnet_gbb/irnet_gbb_2222_48816_4444_r18_b128x8'
 find_unused_parameters=True
 seed = 166
