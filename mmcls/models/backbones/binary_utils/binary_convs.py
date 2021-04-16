@@ -199,7 +199,7 @@ class IRConv2d_bias_x2(BaseBinaryConv2d):
             output = output1 + self.bias_buffer
             return(output)        
         else:
-            output = F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups) +self.bias_buffer
+            output = F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups) +2*self.bias_buffer
             return(output)        
 
 class IRConv2d_bias_x2x(BaseBinaryConv2d):
