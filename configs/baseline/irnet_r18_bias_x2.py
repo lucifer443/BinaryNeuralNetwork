@@ -25,6 +25,6 @@ custom_hooks = [
     dict(type='EDEHook', total_epoch=100)
 ]
 #work_dir = 'work_dirs/tmp'
-work_dir = 'work_dirs/irnet_r18_bias_x2xinference_2bias'
+work_dir = 'work_dirs/irnet_r18_bias_x2xinference_cmnew'
 find_unused_parameters=True
 seed = 166

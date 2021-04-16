@@ -141,7 +141,9 @@ class IRConv2d_bias_x2(BaseBinaryConv2d):
         self.k = torch.tensor([10]).float().cuda()
         self.t = torch.tensor([0.1]).float().cuda()
         self.sign = RANetActSign()
-        self.bias_buffer=0
+        bias_bi = torch.zeros(1,out_channels,1,1)
+        self.aerfa = 0.999
+        self.register_buffer('bias_bi',bias_bi)
 
     def binary_input(self, x):
         return self.sign(x)
@@ -188,18 +190,16 @@ class IRConv2d_bias_x2(BaseBinaryConv2d):
 
         
         if self.training is True:
+            output2 =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
             with torch.no_grad():
-                output2 =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
-                err = output1 - output2
-                #print(err.shape)
-                #mybias = err.mean(dim=0,keepdim=True).mean(dim=2,keepdim=True).mean(dim=3,keepdim=True)
-                mybias = err.mean(dim=0,keepdim=True)
-                self.bias_buffer = (self.bias_buffer + mybias)/2
-                ##bias = bias.repeat(size[0],1,size[2],size[3])
-            output = output1 + self.bias_buffer
+                err = output2 - output1
+                mybias = err.mean(dim=0,keepdim=True).mean(dim=2,keepdim=True).mean(dim=3,keepdim=True)
+                #mybias = err.mean(dim=0,keepdim=True)
+                self.bias_bi[:] = self.bias_bi[:]*self.aerfa +mybias*(1-self.aerfa)
+                output =output1 + mybias
             return(output)        
         else:
-            output = F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups) +2*self.bias_buffer
+            output = F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
             return(output)        
 
 class IRConv2d_bias_x2x(BaseBinaryConv2d):
@@ -211,7 +211,9 @@ class IRConv2d_bias_x2x(BaseBinaryConv2d):
         self.k = torch.tensor([10]).float().cuda()
         self.t = torch.tensor([0.1]).float().cuda()
         self.sign = RANetActSign()
-        self.bias_buffer=0
+        bias_bi = torch.zeros(1,out_channels,1,1)
+        self.aerfa = 0.999
+        self.register_buffer('bias_bi',bias_bi)
 
     def binary_input(self, x):
         return self.sign(x)
@@ -258,16 +260,15 @@ class IRConv2d_bias_x2x(BaseBinaryConv2d):
 
         
         if self.training is True:
+            output2 =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
             with torch.no_grad():
-                output2 =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
-                err = output1 - output2
+                err = output2 - output1
                 #print(err.shape)
                 mybias = err.mean(dim=0,keepdim=True).mean(dim=2,keepdim=True).mean(dim=3,keepdim=True)
                 #mybias = err.mean(dim=0,keepdim=True)
-                self.bias_buffer = (self.bias_buffer + mybias)/2
-                ##bias = bias.repeat(size[0],1,size[2],size[3])
-            output = output1 + self.bias_buffer
+                self.bias_bi[:] = self.bias_bi[:]*self.aerfa +mybias*(1-self.aerfa)
+                output =output1 + mybias
             return(output)        
         else:
-            output = output1 + self.bias_buffer
+            output = output1 + self.bias_bi[:]
             return(output)        
