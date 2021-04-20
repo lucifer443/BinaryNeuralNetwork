@@ -7,256 +7,7 @@ from mmcv.utils.parrots_wrapper import _BatchNorm
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 
-from .binary_utils.irnet_blocks import IRNetGBbBlock
-
-class BasicBlock(nn.Module):
-    """BasicBlock for ResNet.
-
-    Args:
-        in_channels (int): Input channels of this block.
-        out_channels (int): Output channels of this block.
-        expansion (int): The ratio of ``out_channels/mid_channels`` where
-            ``mid_channels`` is the output channels of conv1. This is a
-            reserved argument in BasicBlock and should always be 1. Default: 1.
-        stride (int): stride of the block. Default: 1
-        dilation (int): dilation of convolution. Default: 1
-        downsample (nn.Module): downsample operation on identity branch.
-            Default: None.
-        style (str): `pytorch` or `caffe`. It is unused and reserved for
-            unified API with Bottleneck.
-        with_cp (bool): Use checkpoint or not. Using checkpoint will save some
-            memory while slowing down the training speed.
-        conv_cfg (dict): dictionary to construct and config conv layer.
-            Default: None
-        norm_cfg (dict): dictionary to construct and config norm layer.
-            Default: dict(type='BN')
-    """
-
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 expansion=1,
-                 stride=1,
-                 dilation=1,
-                 downsample=None,
-                 style='pytorch',
-                 with_cp=False,
-                 conv_cfg=None,
-                 norm_cfg=dict(type='BN')):
-        super(BasicBlock, self).__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.expansion = expansion
-        assert self.expansion == 1
-        assert out_channels % expansion == 0
-        self.mid_channels = out_channels // expansion
-        self.stride = stride
-        self.dilation = dilation
-        self.style = style
-        self.with_cp = with_cp
-        self.conv_cfg = conv_cfg
-        self.norm_cfg = norm_cfg
-
-        self.norm1_name, norm1 = build_norm_layer(
-            norm_cfg, self.mid_channels, postfix=1)
-        self.norm2_name, norm2 = build_norm_layer(
-            norm_cfg, out_channels, postfix=2)
-
-        self.conv1 = build_conv_layer(
-            conv_cfg,
-            in_channels,
-            self.mid_channels,
-            3,
-            stride=stride,
-            padding=dilation,
-            dilation=dilation,
-            bias=False)
-        self.add_module(self.norm1_name, norm1)
-        self.conv2 = build_conv_layer(
-            conv_cfg,
-            self.mid_channels,
-            out_channels,
-            3,
-            padding=1,
-            bias=False)
-        self.add_module(self.norm2_name, norm2)
-
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-
-    @property
-    def norm1(self):
-        return getattr(self, self.norm1_name)
-
-    @property
-    def norm2(self):
-        return getattr(self, self.norm2_name)
-
-    def forward(self, x):
-
-        def _inner_forward(x):
-            identity = x
-
-            out = self.conv1(x)
-            out = self.norm1(out)
-            out = self.relu(out)
-
-            out = self.conv2(out)
-            out = self.norm2(out)
-
-            if self.downsample is not None:
-                identity = self.downsample(x)
-
-            out += identity
-
-            return out
-
-        if self.with_cp and x.requires_grad:
-            out = cp.checkpoint(_inner_forward, x)
-        else:
-            out = _inner_forward(x)
-
-        out = self.relu(out)
-
-        return out
-
-
-class Bottleneck(nn.Module):
-    """Bottleneck block for ResNet.
-
-    Args:
-        in_channels (int): Input channels of this block.
-        out_channels (int): Output channels of this block.
-        expansion (int): The ratio of ``out_channels/mid_channels`` where
-            ``mid_channels`` is the input/output channels of conv2. Default: 4.
-        stride (int): stride of the block. Default: 1
-        dilation (int): dilation of convolution. Default: 1
-        downsample (nn.Module): downsample operation on identity branch.
-            Default: None.
-        style (str): ``"pytorch"`` or ``"caffe"``. If set to "pytorch", the
-            stride-two layer is the 3x3 conv layer, otherwise the stride-two
-            layer is the first 1x1 conv layer. Default: "pytorch".
-        with_cp (bool): Use checkpoint or not. Using checkpoint will save some
-            memory while slowing down the training speed.
-        conv_cfg (dict): dictionary to construct and config conv layer.
-            Default: None
-        norm_cfg (dict): dictionary to construct and config norm layer.
-            Default: dict(type='BN')
-    """
-
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 expansion=4,
-                 stride=1,
-                 dilation=1,
-                 downsample=None,
-                 style='pytorch',
-                 with_cp=False,
-                 conv_cfg=None,
-                 norm_cfg=dict(type='BN')):
-        super(Bottleneck, self).__init__()
-        assert style in ['pytorch', 'caffe']
-
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.expansion = expansion
-        assert out_channels % expansion == 0
-        self.mid_channels = out_channels // expansion
-        self.stride = stride
-        self.dilation = dilation
-        self.style = style
-        self.with_cp = with_cp
-        self.conv_cfg = conv_cfg
-        self.norm_cfg = norm_cfg
-
-        if self.style == 'pytorch':
-            self.conv1_stride = 1
-            self.conv2_stride = stride
-        else:
-            self.conv1_stride = stride
-            self.conv2_stride = 1
-
-        self.norm1_name, norm1 = build_norm_layer(
-            norm_cfg, self.mid_channels, postfix=1)
-        self.norm2_name, norm2 = build_norm_layer(
-            norm_cfg, self.mid_channels, postfix=2)
-        self.norm3_name, norm3 = build_norm_layer(
-            norm_cfg, out_channels, postfix=3)
-
-        self.conv1 = build_conv_layer(
-            conv_cfg,
-            in_channels,
-            self.mid_channels,
-            kernel_size=1,
-            stride=self.conv1_stride,
-            bias=False)
-        self.add_module(self.norm1_name, norm1)
-        self.conv2 = build_conv_layer(
-            conv_cfg,
-            self.mid_channels,
-            self.mid_channels,
-            kernel_size=3,
-            stride=self.conv2_stride,
-            padding=dilation,
-            dilation=dilation,
-            bias=False)
-
-        self.add_module(self.norm2_name, norm2)
-        self.conv3 = build_conv_layer(
-            conv_cfg,
-            self.mid_channels,
-            out_channels,
-            kernel_size=1,
-            bias=False)
-        self.add_module(self.norm3_name, norm3)
-
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-
-    @property
-    def norm1(self):
-        return getattr(self, self.norm1_name)
-
-    @property
-    def norm2(self):
-        return getattr(self, self.norm2_name)
-
-    @property
-    def norm3(self):
-        return getattr(self, self.norm3_name)
-
-    def forward(self, x):
-
-        def _inner_forward(x):
-            identity = x
-
-            out = self.conv1(x)
-            out = self.norm1(out)
-            out = self.relu(out)
-
-            out = self.conv2(out)
-            out = self.norm2(out)
-            out = self.relu(out)
-
-            out = self.conv3(out)
-            out = self.norm3(out)
-
-            if self.downsample is not None:
-                identity = self.downsample(x)
-
-            out += identity
-
-            return out
-
-        if self.with_cp and x.requires_grad:
-            out = cp.checkpoint(_inner_forward, x)
-        else:
-            out = _inner_forward(x)
-
-        out = self.relu(out)
-
-        return out
+from .binary_utils.baseline_blocks import BaselineBlock
 
 
 def get_expansion(block, expansion=None):
@@ -382,7 +133,7 @@ class ResLayer(nn.Sequential):
 
 
 @BACKBONES.register_module()
-class ResNet(BaseBackbone):
+class Baseline(BaseBackbone):
     """ResNet backbone.
 
     Please refer to the `paper <https://arxiv.org/abs/1512.03385>`_ for
@@ -437,15 +188,12 @@ class ResNet(BaseBackbone):
     """
 
     arch_settings = {
-        18: (BasicBlock, (2, 2, 2, 2)),
-        34: (BasicBlock, (3, 4, 6, 3)),
-        50: (Bottleneck, (3, 4, 6, 3)),
-        101: (Bottleneck, (3, 4, 23, 3)),
-        152: (Bottleneck, (3, 8, 36, 3))
+        'baseline': (BaselineBlock, (2, 2, 2, 2)),
     }
 
     def __init__(self,
-                 depth,
+                 arch,
+                 stage_setting=None,
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -462,11 +210,12 @@ class ResNet(BaseBackbone):
                  norm_cfg=dict(type='BN', requires_grad=True),
                  norm_eval=False,
                  with_cp=False,
-                 zero_init_residual=True):
-        super(ResNet, self).__init__()
-        if depth not in self.arch_settings:
-            raise KeyError(f'invalid depth {depth} for resnet')
-        self.depth = depth
+                 zero_init_residual=False,
+                 binary_type=(True, True),):
+        super(Baseline, self).__init__()
+        if arch not in self.arch_settings:
+            raise KeyError(f'invalid arch type {arch} for baseline')
+        self.arch = arch
         self.stem_channels = stem_channels
         self.base_channels = base_channels
         self.num_stages = num_stages
@@ -485,9 +234,14 @@ class ResNet(BaseBackbone):
         self.with_cp = with_cp
         self.norm_eval = norm_eval
         self.zero_init_residual = zero_init_residual
-        self.block, stage_blocks = self.arch_settings[depth]
+        self.block, stage_blocks = self.arch_settings[arch]
         self.stage_blocks = stage_blocks[:num_stages]
-        self.expansion = get_expansion(self.block, expansion)
+        # self.expansion = get_expansion(self.block, expansion)
+        self.expansion = 1 if not expansion else expansion
+
+        # set stage_blocks from user config
+        if stage_setting:
+            self.stage_blocks = stage_setting
 
         self._make_stem_layer(in_channels, stem_channels)
 
@@ -509,10 +263,11 @@ class ResNet(BaseBackbone):
                 avg_down=self.avg_down,
                 with_cp=with_cp,
                 conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg)
+                norm_cfg=norm_cfg,
+                binary_type=binary_type,)
             _in_channels = _out_channels
             _out_channels *= 2
-            layer_name = f'layer{i + 1}'
+            layer_name = f'stage{i + 1}'
             self.add_module(layer_name, res_layer)
             self.res_layers.append(layer_name)
 
@@ -585,7 +340,7 @@ class ResNet(BaseBackbone):
                         param.requires_grad = False
 
         for i in range(1, self.frozen_stages + 1):
-            m = getattr(self, f'layer{i}')
+            m = getattr(self, f'stage{i}')
             m.eval()
             for param in m.parameters():
                 param.requires_grad = False
@@ -603,10 +358,7 @@ class ResNet(BaseBackbone):
 
             if self.zero_init_residual:
                 for m in self.modules():
-                    if isinstance(m, Bottleneck):
-                        constant_init(m.norm3, 0)
-                    elif isinstance(m, BasicBlock):
-                        constant_init(m.norm2, 0)
+                    constant_init(m.norm2, 0)
 
     def forward(self, x):
         if self.deep_stem:
@@ -628,26 +380,10 @@ class ResNet(BaseBackbone):
             return tuple(outs)
 
     def train(self, mode=True):
-        super(ResNet, self).train(mode)
+        super(Baseline, self).train(mode)
         self._freeze_stages()
         if mode and self.norm_eval:
             for m in self.modules():
                 # trick: eval have effect on BatchNorm only
                 if isinstance(m, _BatchNorm):
                     m.eval()
-
-
-@BACKBONES.register_module()
-class ResNetV1d(ResNet):
-    """ResNetV1d variant described in
-    `Bag of Tricks <https://arxiv.org/pdf/1812.01187.pdf>`_.
-
-    Compared with default ResNet(ResNetV1b), ResNetV1d replaces the 7x7 conv
-    in the input stem with three 3x3 convs. And in the downsampling block,
-    a 2x2 avg_pool with stride 2 is added before conv, whose stride is
-    changed to 1.
-    """
-
-    def __init__(self, **kwargs):
-        super(ResNetV1d, self).__init__(
-            deep_stem=True, avg_down=True, **kwargs)

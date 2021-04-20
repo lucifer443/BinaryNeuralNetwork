@@ -8,7 +8,6 @@ from mmcv.runner import load_checkpoint
 
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
-from .resnet import ResLayer
 from .binary_utils.irnet_blocks import (IRNetBlock, IRNetH1Block, IRNetH2Block, IRNetH1aBlock,
                                         IRNetG2Block, IRNetG3Block, IRNetG4Block, IRNetG5Block,
                                         IRNetG6Block, IRNetG7Block, IRNetG8Block,
@@ -24,6 +23,140 @@ def build_act(name):
     if name.lower() not in name_map:
         raise ValueError(f'Unknown activation function : {name}')
     return name_map[name]
+
+def get_expansion(block, expansion=None):
+    """Get the expansion of a residual block.
+
+    The block expansion will be obtained by the following order:
+
+    1. If ``expansion`` is given, just return it.
+    2. If ``block`` has the attribute ``expansion``, then return
+       ``block.expansion``.
+    3. Return the default value according the the block type:
+       1 for ``BasicBlock`` and 4 for ``Bottleneck``.
+
+    Args:
+        block (class): The block class.
+        expansion (int | None): The given expansion ratio.
+
+    Returns:
+        int: The expansion of the block.
+    """
+    if isinstance(expansion, int):
+        assert expansion > 0
+    elif expansion is None:
+        if hasattr(block, 'expansion'):
+            expansion = block.expansion
+        elif issubclass(block, BasicBlock):
+            expansion = 1
+        elif issubclass(block, Bottleneck):
+            expansion = 4
+        else:
+            raise TypeError(f'expansion is not specified for {block.__name__}')
+    else:
+        raise TypeError('expansion must be an integer or None')
+
+    return expansion
+
+class ResLayer(nn.Sequential):
+    """ResLayer to build ResNet style backbone.
+    该类已经为了irnet.py的需求进行了修改
+
+    Args:
+        block (nn.Module): Residual block used to build ResLayer.
+        num_blocks (int): Number of blocks.
+        in_channels (int): Input channels of this block.
+        out_channels (int): Output channels of this block.
+        expansion (int, optional): The expansion for BasicBlock/Bottleneck.
+            If not specified, it will firstly be obtained via
+            ``block.expansion``. If the block has no attribute "expansion",
+            the following default values will be used: 1 for BasicBlock and
+            4 for Bottleneck. Default: None.
+        stride (int): stride of the first block. Default: 1.
+        avg_down (bool): Use AvgPool instead of stride conv when
+            downsampling in the bottleneck. Default: False
+        conv_cfg (dict): dictionary to construct and config conv layer.
+            Default: None
+        norm_cfg (dict): dictionary to construct and config norm layer.
+            Default: dict(type='BN')
+    """
+
+    def __init__(self,
+                 block,
+                 num_blocks,
+                 in_channels,
+                 out_channels,
+                 expansion=None,
+                 stride=1,
+                 avg_down=False,
+                 conv_cfg=None,
+                 norm_cfg=dict(type='BN'),
+                 group_cfg=None,
+                 branch_cfg=None,
+                 **kwargs):
+        self.block = block
+        self.expansion = get_expansion(block, expansion)
+
+        # set group and branch configs for IRNetGBb4Block
+        if block == IRNetGBbBlock:
+            self.group_cfg = group_cfg
+            self.branch_cfg = branch_cfg
+        else:
+            self.group_cfg = (None,) * num_blocks
+            self.branch_cfg = (None,) * num_blocks
+
+        downsample = None
+        if stride != 1 or in_channels != out_channels:
+            downsample = []
+            conv_stride = stride
+            if avg_down and stride != 1:
+                conv_stride = 1
+                downsample.append(
+                    nn.AvgPool2d(
+                        kernel_size=stride,
+                        stride=stride,
+                        ceil_mode=True,
+                        count_include_pad=False))
+            downsample.extend([
+                build_conv_layer(
+                    conv_cfg,
+                    in_channels,
+                    out_channels,
+                    kernel_size=1,
+                    stride=conv_stride,
+                    bias=False),
+                build_norm_layer(norm_cfg, out_channels)[1]
+            ])
+            downsample = nn.Sequential(*downsample)
+
+        layers = []
+        # print(num_blocks)
+        layers.append(
+            block(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                expansion=self.expansion,
+                stride=stride,
+                downsample=downsample,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                g=self.group_cfg[0],
+                b=self.branch_cfg[0],
+                **kwargs))
+        in_channels = out_channels
+        for i in range(1, num_blocks):
+            layers.append(
+                block(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    expansion=self.expansion,
+                    stride=1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    g=self.group_cfg[i],
+                    b=self.group_cfg[i],
+                    **kwargs))
+        super(ResLayer, self).__init__(*layers)
 
 @BACKBONES.register_module()
 class IRNet(BaseBackbone):
