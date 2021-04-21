@@ -10,7 +10,6 @@ from mmcls.models.backbones.binary_utils.binary_functions import LearnableBias, 
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
-import math
 
 
 names = []
@@ -43,6 +42,9 @@ def get_irconv_inout(module, fea_in, fea_out):
 def get_raconv_inout(module, fea_in, fea_out):
     global raconv_fea_in
     global raconv_fea_out
+    # print(type(fea_in), type(fea_out))
+    # fea_in is a tuple, fea_out is a tensor
+    # print(module, fea_in[0].max())
     raconv_fea_in.append(fea_in[0].cpu())
     raconv_fea_out.append(fea_out.cpu())
 
@@ -87,7 +89,7 @@ def main():
     # test a single image
     result = inference_model(model, args.img)
 
-    # plot the results
+    # show the results
     if 'irnet' in arch_name :
         conv_num = 16
         fea_in = irconv_fea_in
@@ -101,20 +103,19 @@ def main():
         print('arch not support')
         exit()
     
-    ncols = 8
-    nrows = math.ceil(conv_num / ncols)
-    fig, axs = plt.subplots(nrows, ncols, figsize=(ncols * 4, nrows * 3))
+    fig, axs = plt.subplots(8, 8, figsize=(32, 24))
+    print(type(axs), axs[0])
+    print(axs.shape)
     index = 0
-    for ax, fea in zip(axs.flat, fea_in):
+    for ax, fea in zip(axs.flat, blconv_fea_in[1][0]):
         print(f'plotting img {index}...')
-        ratio_list = [compute_ratio(fea_c).item() for fea_c in fea[0]]
-        ax.hist(ratio_list, bins=20, range=(-1, 1))
-        ax.set_title(f'conv_{index} = {compute_ratio(fea):.3f}, total = {sum([abs(a) for a in ratio_list]):.3f}')
-        ax.grid()
+        ax.imshow(fea.sign().numpy(), vmin=-1, vmax=1)
+        ax.set_title(f'channel = {index}')
         index += 1
+    # breakpoint()
 
     print('saving...')
-    plt.savefig(f'./work_dir/plot/ratio_channel/{arch_name}_ratio_channel_{img_name}.jpg')
+    plt.savefig(f'./work_dir/plot/{arch_name}_feature_{img_name}.jpg')
 
                                                                                                                                                                                                                                                                                                                                                                       
 if __name__ == '__main__':
