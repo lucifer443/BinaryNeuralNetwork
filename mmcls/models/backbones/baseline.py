@@ -7,7 +7,9 @@ from mmcv.utils.parrots_wrapper import _BatchNorm
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 
-from .binary_utils.baseline_blocks import (Baseline11Block, Baseline12Block, Baseline13Block, Baseline14Block, Baseline15Block,)
+from .binary_utils.baseline_blocks import (Baseline11Block, Baseline12Block, Baseline13Block, Baseline14Block, Baseline15Block,
+                                           Baseline21Block, Baseline22Block, Baseline23Block, Baseline24Block,
+                                          )
 
 
 def get_expansion(block, expansion=None):
@@ -193,6 +195,10 @@ class Baseline(BaseBackbone):
         'baseline_13': (Baseline13Block, (2, 2, 2, 2)),
         'baseline_14': (Baseline14Block, (2, 2, 2, 2)),
         'baseline_15': (Baseline15Block, (2, 2, 2, 2)),
+        'baseline_21': (Baseline21Block, (2, 2, 2, 2)),
+        'baseline_22': (Baseline22Block, (2, 2, 2, 2)),
+        'baseline_23': (Baseline23Block, (2, 2, 2, 2)),
+        'baseline_24': (Baseline24Block, (2, 2, 2, 2)),
     }
 
     def __init__(self,
