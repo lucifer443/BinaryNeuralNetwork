@@ -6,13 +6,13 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='Baseline',
-        arch='baseline_11',
+        arch='baseline_14',
         stem_channels=64,
         base_channels=64,
         num_stages=4,
         out_indices=(3, ),
         style='pytorch',
-        binary_type=(True, True)),
+        binary_type=(True, False)),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -25,18 +25,20 @@ model = dict(
 # schedules for imagenet bs256
 optimizer = dict(
     type='Adam',
-    lr=2e-4,
-    weight_decay=0,
+    lr=1e-3,
+    weight_decay=1e-5,
     paramwise_cfg=dict(norm_decay_mult=0))
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='step',
+    warmup='linear',
+    warmup_iters=25025,
+    warmup_ratio=0.1,
     step=[40, 60, 70],
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-load_from = 'work_dir/baseline/baseline_11_b32x8/baseline_11_b32x8_step1/epoch_75.pth'
-work_dir = 'work_dir/baseline/baseline_11_b32x8/baseline_11_b32x8_step2'
+work_dir = 'work_dir/baseline/baseline_14_b32x8/baseline_14_b32x8_step1'
 find_unused_parameters=False
 seed = 166

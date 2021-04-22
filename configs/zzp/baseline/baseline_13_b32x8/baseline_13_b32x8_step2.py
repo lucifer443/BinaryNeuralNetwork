@@ -6,7 +6,7 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='Baseline',
-        arch='baseline_11',
+        arch='baseline_13',
         stem_channels=64,
         base_channels=64,
         num_stages=4,
@@ -36,7 +36,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-load_from = 'work_dir/baseline/baseline_11_b32x8/baseline_11_b32x8_step1/epoch_75.pth'
-work_dir = 'work_dir/baseline/baseline_11_b32x8/baseline_11_b32x8_step2'
+load_from = 'work_dir/baseline/baseline_13_b32x8/baseline_13_b32x8_step1/epoch_75.pth'
+work_dir = 'work_dir/baseline/baseline_13_b32x8/baseline_13_b32x8_step2'
 find_unused_parameters=False
 seed = 166
