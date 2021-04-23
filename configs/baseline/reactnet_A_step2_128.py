@@ -23,7 +23,7 @@ model = dict(
 optimizer = dict(
     type='Adam',
     lr=4*5e-4,
-    weight_decay=0.00001,
+    weight_decay=0,
     paramwise_cfg=dict(norm_decay_mult=0))
 optimizer_config = dict(grad_clip=None)
 # learning policy

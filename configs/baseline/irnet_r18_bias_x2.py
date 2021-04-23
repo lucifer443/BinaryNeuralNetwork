@@ -25,6 +25,7 @@ custom_hooks = [
     dict(type='EDEHook', total_epoch=100)
 ]
 #work_dir = 'work_dirs/tmp'
-work_dir = 'work_dirs/irnet_r18_bias_x2xinference_my'
+work_dir = 'work_dirs/irnet_r18_bias_x2xinference_allgrad'
+load_from = 'work_dirs/irnet18_x2x_float/epoch_100.pth'  #加入load_from试试
 find_unused_parameters=True
 seed = 166

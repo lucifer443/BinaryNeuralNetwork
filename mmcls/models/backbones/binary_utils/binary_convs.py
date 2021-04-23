@@ -190,14 +190,15 @@ class IRConv2d_bias_x2(BaseBinaryConv2d):
 
         
         if self.training is True:
-            with torch.no_grad():
+            #with torch.no_grad():
                 output2 =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
                 err = output2 - output1
                 mybias = err.mean(dim=0,keepdim=True).mean(dim=2,keepdim=True).mean(dim=3,keepdim=True)
                 #mybias = err.mean(dim=0,keepdim=True)
                 self.bias_bi[:] = self.bias_bi[:]*self.aerfa +mybias*(1-self.aerfa)
-            output =output1 + self.bias_bi[:]
-            return(output)        
+            #output =output1 + self.bias_bi[:]
+                output =output1 + mybias
+                return(output)        
         else:
             output = F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
             return(output)        
@@ -260,15 +261,16 @@ class IRConv2d_bias_x2x(BaseBinaryConv2d):
 
         
         if self.training is True:
-            with torch.no_grad():
+            #with torch.no_grad():
                 output2 =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
                 err = output2 - output1
                 #print(err.shape)
                 mybias = err.mean(dim=0,keepdim=True).mean(dim=2,keepdim=True).mean(dim=3,keepdim=True)
                 #mybias = err.mean(dim=0,keepdim=True)
                 self.bias_bi[:] = self.bias_bi[:]*self.aerfa +mybias*(1-self.aerfa)
-            output =output1 + self.bias_bi[:]
-            return(output)        
+            #output =output1 + self.bias_bi[:]
+                output =output1 + mybias
+                return(output)        
         else:
             output = output1 + self.bias_bi[:]
             return(output)        
