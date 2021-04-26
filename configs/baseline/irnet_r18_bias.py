@@ -25,7 +25,7 @@ custom_hooks = [
     dict(type='EDEHook', total_epoch=100)
 ]
 
-work_dir = 'work_dirs/irnet18_x2x_float'
+work_dir = 'work_dirs/irnet18_x2x_float_x=input'
 #work_dir = 'work_dirs/tmp'
 find_unused_parameters=True
 seed = 166

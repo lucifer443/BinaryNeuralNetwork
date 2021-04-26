@@ -126,7 +126,8 @@ class IRConv2d_bias(BaseBinaryConv2d):
 
     def forward(self, input):
 
-        floatx = self.float_x(input)
+        #floatx = self.float_x(input)
+        floatx = input
         float_w = self.float_weight(self.weight)
         output = F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
         return(output)        
