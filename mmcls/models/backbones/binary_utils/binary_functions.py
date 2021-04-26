@@ -50,22 +50,20 @@ class RANetWSign(nn.Module):
         return binary_weights
 
 
-class RANetWFATSign(nn.Module):
-    """ReActNet's weight sign function with FAT"""
-    def __init__(self, out_channels, clip=1):
-        super(RANetWFATSign, self).__init__()
+class BLActSign(nn.Module):
+    """Baseline's weight sign function"""
+    def __init__(self, clip=1):
+        super(BLActSign, self).__init__()
+        assert clip > 0
         self.clip = clip
 
-        self.transform = None
-        self.transform = nn.Linear(out_channels, out_channels, bias=False)
-        self.transform.weight.data.fill_(1 / out_channels)
-
     def forward(self, x):
+        out_no_grad = torch.sign(x)
         binary_weights_no_grad = torch.sign(x)
-        cliped_weights = torch.clamp(x, -self.clip, self.clip)
-        binary_weights = binary_weights_no_grad.detach() - cliped_weights.detach() + cliped_weights
+        cliped_out = torch.clamp(x, -self.clip, self.clip)
+        out = out_no_grad.detach() - cliped_out.detach() + cliped_out
 
-        return binary_weights
+        return out
 
 
 class RPRelu(nn.Module):

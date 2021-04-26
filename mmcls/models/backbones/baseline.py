@@ -9,9 +9,19 @@ from .base_backbone import BaseBackbone
 
 from .binary_utils.baseline_blocks import (Baseline11Block, Baseline12Block, Baseline13Block, Baseline14Block, Baseline15Block,
                                            Baseline21Block, Baseline22Block, Baseline23Block, Baseline24Block,
-                                           Baseline11sBlock,
+                                           Baseline11sBlock, Baseline11sSTEBlock,
                                           )
 
+
+def build_act(name):
+    name_map = {
+        'hardtanh': nn.Hardtanh,
+        'relu': nn.ReLU,
+        'prelu': nn.PReLU,
+    }
+    if name.lower() not in name_map:
+        raise ValueError(f'Unknown activation function : {name}')
+    return name_map[name]
 
 def get_expansion(block, expansion=None):
     """Get the expansion of a residual block.
@@ -201,11 +211,14 @@ class Baseline(BaseBackbone):
         'baseline_23': (Baseline23Block, (2, 2, 2, 2)),
         'baseline_24': (Baseline24Block, (2, 2, 2, 2)),
         'baseline_11s': (Baseline11sBlock, (2, 2, 2, 2)),
+        'baseline_strong': (Baseline11sSTEBlock, (2, 2, 2, 2)),
     }
 
     def __init__(self,
                  arch,
                  stage_setting=None,
+                 binary_type=(True, True),
+                 stem_act='relu',
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -222,8 +235,7 @@ class Baseline(BaseBackbone):
                  norm_cfg=dict(type='BN', requires_grad=True),
                  norm_eval=False,
                  with_cp=False,
-                 zero_init_residual=False,
-                 binary_type=(True, True),):
+                 zero_init_residual=False,):
         super(Baseline, self).__init__()
         if arch not in self.arch_settings:
             raise KeyError(f'invalid arch type {arch} for baseline')
@@ -254,6 +266,8 @@ class Baseline(BaseBackbone):
         # set stage_blocks from user config
         if stage_setting:
             self.stage_blocks = stage_setting
+        # set stem activation method
+        self.activation = build_act(stem_act) if stem_act else None
 
         self._make_stem_layer(in_channels, stem_channels)
 
@@ -336,7 +350,7 @@ class Baseline(BaseBackbone):
             self.norm1_name, norm1 = build_norm_layer(
                 self.norm_cfg, stem_channels, postfix=1)
             self.add_module(self.norm1_name, norm1)
-            self.relu = nn.ReLU(inplace=True)
+            self.stem_act = self.activation() if self.activation else None
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
     def _freeze_stages(self):
@@ -378,7 +392,8 @@ class Baseline(BaseBackbone):
         else:
             x = self.conv1(x)
             x = self.norm1(x)
-            x = self.relu(x)
+            if self.stem_act:
+                x = self.stem_act(x)
         x = self.maxpool(x)
         outs = []
         for i, layer_name in enumerate(self.res_layers):
