@@ -8,10 +8,10 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
-from .binary_utils.binary_blocks import IRNetBlock, RANetBlockA, CM1Block, CM2Block, CM3Block
+from .binary_utils.binary_blocks import IRNetBlock, RANetBlockA, StrongBaselineBlock
 
 def build_act(name):
-    name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU}
+    name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU, 'prelu': nn.PReLU}
     if name.lower() not in name_map:
         raise ValueError(f'Unknown activation function : {name}')
     return name_map[name]
@@ -24,10 +24,7 @@ class ResArch(BaseBackbone):
         "IRNet-34": (IRNetBlock, (3, 4, 6, 3)),
         "ReActNet-18": (RANetBlockA, (2, 2, 2, 2)),
         "ReActNet-34": (RANetBlockA, (3, 4, 6, 3)),
-        "CM1-18": (CM1Block, (2, 2, 2, 2)),
-        "CM1-34": (CM1Block, (3, 4, 6, 3)),
-        "CM2-18": (CM2Block, (2, 2, 2, 2)),
-        "CM3-18": (CM3Block, (2, 2, 2, 2)),
+        "StrongBaseline": (StrongBaselineBlock, (2, 2, 2, 2))
     }
 
     def __init__(self,
@@ -163,7 +160,13 @@ class ResArch(BaseBackbone):
             self.norm1_name, norm1 = build_norm_layer(
                 self.norm_cfg, stem_channels, postfix=1)
             self.add_module(self.norm1_name, norm1)
-            self.stem_act = activation(inplace=True) if activation else None
+            if activation:
+                if isinstance(activation, nn.PReLU):
+                    self.stem_act = activation(stem_channels)
+                else:
+                    self.stem_act = activation(inplace=True)
+            else:
+                self.stem_act = None
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
     def _freeze_stages(self):

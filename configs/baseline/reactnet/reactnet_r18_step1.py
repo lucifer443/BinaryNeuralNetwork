@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/imagenet_bs64.py', '../_base_/default_runtime.py'
+    '../../_base_/datasets/imagenet_bs64.py', '../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -9,7 +9,7 @@ model = dict(
         arch='ReActNet-18',
         num_stages=4,
         out_indices=(3, ),
-        binary_type=(True, True),
+        binary_type=(True, False),
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
@@ -27,7 +27,7 @@ model = dict(
 optimizer = dict(
     type='Adam',
     lr=1e-3,
-    weight_decay=0.,
+    weight_decay=0.00001,
     paramwise_cfg=dict(norm_decay_mult=0))
 optimizer_config = dict(grad_clip=None)
 # learning policy
@@ -38,6 +38,5 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-load_from = 'work_dirs/reactnet_r18_step1/epoch_256.pth'
 find_unused_parameters=True
 seed = 166

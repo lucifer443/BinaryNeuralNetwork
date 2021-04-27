@@ -70,6 +70,22 @@ class RAConv2d(BaseBinaryConv2d):
         return bw * sw
 
 
+class STEConv2d(BaseBinaryConv2d):
+
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(STEConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        self.sign_a = RANetWSign(clip=1.25)
+        self.sign_w = RANetWSign(clip=1.25)
+
+    def binary_input(self, x):
+        return self.sign_a(x)
+
+    def binary_weight(self, w):
+        return self.sign_w(w)
+
+
 class ANDConv2d(nn.Conv2d):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
