@@ -3,30 +3,68 @@ import torch
 import torch.nn as nn
 
 
-def accuracy_numpy(pred, target, topk):
+def accuracy_numpy(pred, target, topk=1, thrs=None):
+    if thrs is None:
+        thrs = 0.0
+    if isinstance(thrs, float):
+        thrs = (thrs, )
+        res_single = True
+    elif isinstance(thrs, tuple):
+        res_single = False
+    else:
+        raise TypeError(
+            f'thrs should be float or tuple, but got {type(thrs)}.')
+
     res = []
     maxk = max(topk)
     num = pred.shape[0]
     pred_label = pred.argsort(axis=1)[:, -maxk:][:, ::-1]
+    pred_score = np.sort(pred, axis=1)[:, -maxk:][:, ::-1]
 
     for k in topk:
-        correct_k = np.logical_or.reduce(
-            pred_label[:, :k] == target.reshape(-1, 1), axis=1)
-        res.append(correct_k.sum() * 100. / num)
+        correct_k = pred_label[:, :k] == target.reshape(-1, 1)
+        res_thr = []
+        for thr in thrs:
+            # Only prediction values larger than thr are counted as correct
+            _correct_k = correct_k & (pred_score[:, :k] > thr)
+            _correct_k = np.logical_or.reduce(_correct_k, axis=1)
+            res_thr.append(_correct_k.sum() * 100. / num)
+        if res_single:
+            res.append(res_thr[0])
+        else:
+            res.append(res_thr)
     return res
 
 
-def accuracy_torch(pred, target, topk=1):
+def accuracy_torch(pred, target, topk=1, thrs=None):
+    if thrs is None:
+        thrs = 0.0
+    if isinstance(thrs, float):
+        thrs = (thrs, )
+        res_single = True
+    elif isinstance(thrs, tuple):
+        res_single = False
+    else:
+        raise TypeError(
+            f'thrs should be float or tuple, but got {type(thrs)}.')
+
     res = []
     maxk = max(topk)
     num = pred.size(0)
-    _, pred_label = pred.topk(maxk, dim=1)
+    pred_score, pred_label = pred.topk(maxk, dim=1)
     pred_label = pred_label.t()
     correct = pred_label.eq(target.view(1, -1).expand_as(pred_label))
-
     for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
-        res.append(correct_k.mul_(100. / num))
+        res_thr = []
+        for thr in thrs:
+            # Only prediction values larger than thr are counted as correct
+            _correct = correct & (pred_score.t() > thr)
+            correct_k = _correct[:k].reshape(-1).float().sum(0, keepdim=True)
+            res_thr.append(correct_k.mul_(100. / num))
+        if res_single:
+            res.append(res_thr[0])
+        else:
+            res.append(res_thr)
     return res
 
 
