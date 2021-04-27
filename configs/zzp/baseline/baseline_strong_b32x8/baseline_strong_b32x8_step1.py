@@ -40,10 +40,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-custom_hooks = [
-    dict(type='WeightClipHook', clip=1.5)
-]
-
 work_dir = 'work_dir/baseline/baseline_strong_b32x8/baseline_strong_b32x8_step1'
 find_unused_parameters=True
 seed = 166
