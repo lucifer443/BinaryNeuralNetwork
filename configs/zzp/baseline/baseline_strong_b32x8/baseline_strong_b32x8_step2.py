@@ -43,5 +43,5 @@ custom_hooks = [
 
 load_from = 'work_dir/baseline/baseline_11s_b32x8/baseline_11s_b32x8_step1/epoch_75.pth'
 work_dir = 'work_dir/baseline/baseline_11s_b32x8/baseline_11s_b32x8_step2'
-find_unused_parameters=False
+find_unused_parameters=True
 seed = 166

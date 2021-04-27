@@ -1,12 +1,12 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
+    '../../../../_base_/datasets/imagenet_bs32.py', '../../../../_base_/default_runtime.py'
 ]
 
 model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='Baseline',
-        arch='baseline_strong',
+        arch='baseline_13',
         binary_type=(True, False),
         stem_act='prelu',
         stem_channels=64,
@@ -40,10 +40,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-custom_hooks = [
-    dict(type='WeightClipHook', clip=1.5)
-]
-
-work_dir = 'work_dir/baseline/baseline_strong_b32x8/baseline_strong_b32x8_step1'
-find_unused_parameters=True
+work_dir = 'work_dir/baseline/baseline_prelu/baseline_prelu_13_b32x8/baseline_prelu_13_b32x8_step1'
+find_unused_parameters=False
 seed = 166
