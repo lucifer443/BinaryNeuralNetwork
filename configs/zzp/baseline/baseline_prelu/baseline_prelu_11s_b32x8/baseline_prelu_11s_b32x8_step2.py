@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
+    '../../../../_base_/datasets/imagenet_bs32.py', '../../../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -7,12 +7,13 @@ model = dict(
     backbone=dict(
         type='Baseline',
         arch='baseline_11s',
+        binary_type=(True, True),
+        stem_act='prelu',
         stem_channels=64,
         base_channels=64,
         num_stages=4,
         out_indices=(3, ),
-        style='pytorch',
-        binary_type=(True, True)),
+        style='pytorch',),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -36,7 +37,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-load_from = 'work_dir/baseline/baseline_11s_b32x8/baseline_11s_b32x8_step1/epoch_75.pth'
-work_dir = 'work_dir/baseline/baseline_11s_b32x8/baseline_11s_b32x8_step2'
+load_from = 'work_dir/baseline/baseline_prelu/baseline_prelu_11s_b32x8/baseline_prelu_11s_b32x8_step1/epoch_75.pth'
+work_dir = 'work_dir/baseline/baseline_prelu/baseline_prelu_11s_b32x8/baseline_prelu_11s_b32x8_step2'
 find_unused_parameters=False
 seed = 166
