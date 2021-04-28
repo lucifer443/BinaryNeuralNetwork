@@ -50,16 +50,15 @@ class RANetWSign(nn.Module):
         return binary_weights
 
 
-class BLActSign(nn.Module):
-    """Baseline's weight sign function"""
+class STESign(nn.Module):
+    """a sign function using STE"""
     def __init__(self, clip=1):
-        super(BLActSign, self).__init__()
+        super(STESign, self).__init__()
         assert clip > 0
         self.clip = clip
 
     def forward(self, x):
         out_no_grad = torch.sign(x)
-        binary_weights_no_grad = torch.sign(x)
         cliped_out = torch.clamp(x, -self.clip, self.clip)
         out = out_no_grad.detach() - cliped_out.detach() + cliped_out
 

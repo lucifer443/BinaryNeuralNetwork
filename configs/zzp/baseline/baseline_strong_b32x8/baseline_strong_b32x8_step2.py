@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
+    '../../../_base_/datasets/imagenet_bs32_color_jitter.py', '../../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -38,10 +38,10 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 custom_hooks = [
-    dict(type='WeightClipHook', clip=1.5)
+    dict(type='WeightClipHook', clip=1.25)
 ]
 
-load_from = 'work_dir/baseline/baseline_11s_b32x8/baseline_11s_b32x8_step1/epoch_75.pth'
-work_dir = 'work_dir/baseline/baseline_11s_b32x8/baseline_11s_b32x8_step2'
+load_from = 'work_dir/baseline/baseline_strong_b32x8/baseline_strong_b32x8_step1/epoch_75.pth'
+work_dir = 'work_dir/baseline/baseline_strong_b32x8/baseline_strong_b32x8_step2'
 find_unused_parameters=True
 seed = 166

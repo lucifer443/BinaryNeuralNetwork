@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
+    '../../../_base_/datasets/imagenet_bs32_color_jitter.py', '../../../_base_/default_runtime.py'
 ]
 
 model = dict(

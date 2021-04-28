@@ -9,7 +9,7 @@ from .base_backbone import BaseBackbone
 
 from .binary_utils.baseline_blocks import (Baseline11Block, Baseline12Block, Baseline13Block, Baseline14Block, Baseline15Block,
                                            Baseline21Block, Baseline22Block, Baseline23Block, Baseline24Block,
-                                           Baseline11sBlock, Baseline11sSTEBlock,
+                                           Baseline11sBlock, BaselineStrongBlock,
                                           )
 
 
@@ -211,7 +211,7 @@ class Baseline(BaseBackbone):
         'baseline_23': (Baseline23Block, (2, 2, 2, 2)),
         'baseline_24': (Baseline24Block, (2, 2, 2, 2)),
         'baseline_11s': (Baseline11sBlock, (2, 2, 2, 2)),
-        'baseline_strong': (Baseline11sSTEBlock, (2, 2, 2, 2)),
+        'baseline_strong': (BaselineStrongBlock, (2, 2, 2, 2)),
     }
 
     def __init__(self,

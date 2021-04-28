@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from .binary_functions import IRNetSign, RANetActSign, RANetWSign, BLActSign
+from .binary_functions import (IRNetSign, RANetActSign, RANetWSign, STESign,)
 import torch
 import math
 
@@ -153,20 +153,18 @@ class BLConv2d(BaseBinaryConv2d):
         return bw * sw
 
 
-class BLSTEConv2d(BaseBinaryConv2d):
+class STEConv2d(BaseBinaryConv2d):
 
     def __init__(self, in_channels, out_channels, kernel_size,
                  stride=1, padding=0, dilation=1, groups=1, bias=True,
-                 binary_type=(True, True), **kwargs):
-        super(BLSTEConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+                 binary_type=(True, True), clip=1, **kwargs):
+        super(STEConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
         
-        self.sign_a = BLActSign()
-        self.sign_w = RANetWSign()
+        self.sign_a = STESign(clip=clip)
+        self.sign_w = STESign(clip=clip)
 
     def binary_input(self, x):
         return self.sign_a(x)
 
     def binary_weight(self, w):
-        bw = self.sign_w(w)
-        sw = torch.mean(torch.mean(torch.mean(abs(w),dim=3,keepdim=True),dim=2,keepdim=True),dim=1,keepdim=True).detach()
-        return bw * sw
+        return self.sign_w(w)

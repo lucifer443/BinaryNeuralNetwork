@@ -40,6 +40,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-work_dir = 'work_dir/baseline/baseline_prelu/baseline_prelu_22_b32x8/baseline_22_b32x8_step1'
+work_dir = 'work_dir/baseline/baseline_prelu/baseline_prelu_22_b32x8/baseline_prelu_22_b32x8_step1'
 find_unused_parameters=False
 seed = 166

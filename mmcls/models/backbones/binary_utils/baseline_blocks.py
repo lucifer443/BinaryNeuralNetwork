@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .binary_convs import BLConv2d, BLSTEConv2d
+from .binary_convs import BLConv2d, STEConv2d
 from .binary_functions import LearnableScale
 
 
@@ -76,17 +76,17 @@ class Baseline11sBlock(nn.Module):
         return out
 
 
-class Baseline11sSTEBlock(nn.Module):
+class BaselineStrongBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline11sSTEBlock, self).__init__()
+        super(BaselineStrongBlock, self).__init__()
         self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.conv1 = STEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, clip=1.25, **kwargs)
         self.scale1 = LearnableScale(out_channels)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
-        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = STEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, clip=1.25, **kwargs)
         self.scale2 = LearnableScale(out_channels)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.downsample = downsample
