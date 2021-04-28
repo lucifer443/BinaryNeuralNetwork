@@ -3,15 +3,15 @@ from mmcls.apis import inference_model, init_model, show_result_pyplot
 
 import torch
 import torch.nn as nn
-from mmcls.models.backbones.binary_utils.binary_convs import RAConv2d, IRConv2d
-from mmcls.models.backbones.binary_utils.baseline_blocks import BLConv2d
-from mmcls.models.backbones.binary_utils.binary_functions import LearnableBias, RANetActSign, RANetWSign
+from mmcls.models.backbones.binary_utils.binary_convs import *
+from mmcls.models.backbones.binary_utils.binary_blocks import *
+from mmcls.models.backbones.binary_utils.binary_functions import *
 
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 import math
-
+import os
 
 names = []
 features = []
@@ -62,6 +62,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('img', help='Image file')
     parser.add_argument('config', help='Config file')
+    parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument(
         '--device', default='cuda:0', help='Device used for inference')
     args = parser.parse_args()
@@ -72,17 +73,15 @@ def main():
     img_name = args.img.split('/')[-1].rstrip('.JPEG')
 
     # build the model from a config file and a checkpoint file
-    model = init_model(args.config, f'checkpoints/{arch_name}.pth', device=args.device)
+    model = init_model(args.config, args.checkpoint, device=args.device)
 
     # add my own hooks
     for m in model.modules():
         # print(type(m))
-        if isinstance(m, IRConv2d):
+        if isinstance(m, IRConv2d_bias_x2x):
             m.register_forward_hook(hook=get_irconv_inout)
         if isinstance(m, RAConv2d):
             m.register_forward_hook(hook=get_raconv_inout)
-        if isinstance(m, BLConv2d):
-            m.register_forward_hook(hook=get_blconv_inout)
 
     # test a single image
     result = inference_model(model, args.img)
@@ -114,7 +113,11 @@ def main():
         index += 1
 
     print('saving...')
-    plt.savefig(f'./work_dir/plot/ratio_channel/{arch_name}_ratio_channel_{img_name}.jpg')
+    path = f'./work_dirs/plot/ratio_channel/'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    plt.savefig(f'./work_dirs/plot/ratio_channel/{arch_name}_ratio_channel_{img_name}.jpg')
 
                                                                                                                                                                                                                                                                                                                                                                       
 if __name__ == '__main__':
