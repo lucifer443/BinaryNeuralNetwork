@@ -17,4 +17,4 @@ class WeightClipHook(Hook):
                 for name, param in m.named_parameters():
                     if 'weight' in name:
                         with torch.no_grad():
-                            param.set_(param.clamp(-1.5, 1.5))
+                            param.set_(param.clamp(-self.clip, self.clip))

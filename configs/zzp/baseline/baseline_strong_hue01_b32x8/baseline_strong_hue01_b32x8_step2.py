@@ -41,7 +41,7 @@ custom_hooks = [
     dict(type='WeightClipHook', clip=1.25)
 ]
 
-load_from = 'work_dir/baseline/baseline_strong_b32x8/baseline_strong_b32x8_step1/epoch_75.pth'
-work_dir = 'work_dir/baseline/baseline_strong_b32x8/baseline_strong_b32x8_step2'
+load_from = 'work_dir/baseline/baseline_strong_hue01_b32x8/baseline_strong_hue01_b32x8_step1/epoch_75.pth'
+work_dir = 'work_dir/baseline/baseline_strong_hue01_b32x8/baseline_strong_hue01_b32x8_step2'
 find_unused_parameters=True
 seed = 166

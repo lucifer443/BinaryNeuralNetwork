@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
+    '../../../_base_/datasets/imagenet_bs32_cj_hue01.py', '../../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -7,7 +7,7 @@ model = dict(
     backbone=dict(
         type='Baseline',
         arch='baseline_strong',
-        binary_type=(True, True),
+        binary_type=(True, False),
         stem_act='prelu',
         stem_channels=64,
         base_channels=64,
@@ -26,22 +26,20 @@ model = dict(
 # schedules for imagenet bs256
 optimizer = dict(
     type='Adam',
-    lr=2e-4,
-    weight_decay=0,
+    lr=1e-3,
+    weight_decay=1e-5,
     paramwise_cfg=dict(norm_decay_mult=0))
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='step',
+    warmup='linear',
+    warmup_iters=25025,
+    warmup_ratio=0.1,
     step=[40, 60, 70],
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-custom_hooks = [
-    dict(type='WeightClipHook', clip=1.25)
-]
-
-load_from = 'work_dir/baseline/baseline_strong_b32x8/baseline_strong_b32x8_step1/epoch_75.pth'
-work_dir = 'work_dir/baseline/baseline_strong_b32x8/baseline_strong_b32x8_step2'
+work_dir = 'work_dir/baseline/baseline_strong_hue01_b32x8/baseline_strong_hue01_b32x8_step1'
 find_unused_parameters=True
 seed = 166
