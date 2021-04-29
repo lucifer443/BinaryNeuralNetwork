@@ -8,7 +8,7 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
-from .binary_utils.binary_blocks import IRNetBlock, RANetBlockA, StrongBaselineBlock
+from .binary_utils.binary_blocks import IRNetBlock, RANetBlockA, StrongBaselineBlock, RealToBinaryBlock, RealToBinaryFPBlock
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU, 'prelu': nn.PReLU}
@@ -24,7 +24,9 @@ class ResArch(BaseBackbone):
         "IRNet-34": (IRNetBlock, (3, 4, 6, 3)),
         "ReActNet-18": (RANetBlockA, (2, 2, 2, 2)),
         "ReActNet-34": (RANetBlockA, (3, 4, 6, 3)),
-        "StrongBaseline": (StrongBaselineBlock, (2, 2, 2, 2))
+        "StrongBaseline": (StrongBaselineBlock, (2, 2, 2, 2)),
+        "Real2Bi": (RealToBinaryBlock, (2, 2, 2, 2)),
+        "Real2BiFP": (RealToBinaryFPBlock, (2, 2, 2, 2))
     }
 
     def __init__(self,

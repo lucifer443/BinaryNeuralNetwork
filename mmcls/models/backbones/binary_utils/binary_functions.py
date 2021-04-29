@@ -101,3 +101,20 @@ class LearnableScale(nn.Module):
         out = out * self.gamma.expand_as(x)
 
         return out
+
+
+class AttentionScale(nn.Module):
+    """attention scale from Real-To-Binary Net"""
+    scale_factor = 8
+    def __init__(self, channels):
+        super(AttentionScale, self).__init__()
+        self.fc1 = nn.Linear(channels, channels // self.scale_factor)
+        self.fc2 = nn.Linear(channels // self.scale_factor, channels)
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+
+    def forward(self, inputs):
+        x = self.pool(inputs)
+        x = x.view(x.size(0), -1)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        return inputs * x[:, :, None, None]
