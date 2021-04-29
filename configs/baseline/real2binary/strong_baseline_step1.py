@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/datasets/imagenet_bs64.py', '../../_base_/default_runtime.py'
+    '../../_base_/datasets/imagenet_bs32.py', '../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -37,5 +37,5 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-find_unused_parameters=True
+find_unused_parameters=False
 seed = 166

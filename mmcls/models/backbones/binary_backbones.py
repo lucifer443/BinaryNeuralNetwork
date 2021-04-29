@@ -161,7 +161,7 @@ class ResArch(BaseBackbone):
                 self.norm_cfg, stem_channels, postfix=1)
             self.add_module(self.norm1_name, norm1)
             if activation:
-                if isinstance(activation, nn.PReLU):
+                if activation == nn.PReLU:
                     self.stem_act = activation(stem_channels)
                 else:
                     self.stem_act = activation(inplace=True)

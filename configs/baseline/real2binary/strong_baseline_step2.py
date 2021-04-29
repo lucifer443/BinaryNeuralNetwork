@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/datasets/imagenet_bs64.py', '../../_base_/default_runtime.py'
+    '../../_base_/datasets/imagenet_bs32.py', '../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -21,22 +21,20 @@ model = dict(
         topk=(1, 5),
     ))
 
+# schedules for imagenet bs256
 optimizer = dict(
     type='Adam',
-    lr=1e-3,
-    weight_decay=1e-5,
+    lr=2e-4,
+    weight_decay=0,
     paramwise_cfg=dict(norm_decay_mult=0))
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='step',
-    warmup='linear',
-    warmup_iters=25025,
-    warmup_ratio=0.1,
     step=[40, 60, 70],
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 load_from = 'work_dirs/strong_baseline_step1/epoch_75.pth'
-find_unused_parameters=True
+find_unused_parameters=False
 seed = 166

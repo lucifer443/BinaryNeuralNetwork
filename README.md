@@ -70,7 +70,7 @@ model = dict(
         num_stages=4,
         out_indices=(3, ),
         binary_type=(True, True), # 二值化类型，分别代表神经元(a)和权值(x)，默认全为True
-        stem_act='hardtanh', # stem部分激活函数，支持“hardtanh”、“relu”和None
+        stem_act='hardtanh', # stem部分激活函数，支持“hardtanh”、“relu”、“prelu”和None
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
@@ -95,18 +95,16 @@ seed = 166  # 训练seed，建议设置
 
 **baseline模型**
 
-| 模型名称     | 复现精度 | 训练时间 | 官方精度 | 官方代码                              |
-| ------------ | -------- | -------- | -------- | ------------------------------------- |
-| irnet_r18    | 58.58%   | 17h      | 58.1%    | https://github.com/htqin/IR-Net       |
-| reactnet_r18 |          | 4d20h    | 65.9%    | https://github.com/liuzechun/ReActNet |
-
-baseline模型复现日志存于baseline文件夹下
+- [x] [IR-Net](https://arxiv.org/abs/1909.10788)
+- [ ] [ReActNet](https://arxiv.org/abs/2003.03488)
+- [ ] [Real-To-Binary Net](https://arxiv.org/abs/2003.11535)
+- [ ] [High-Capcity Expert Binary Net](https://arxiv.org/abs/2010.03558)
 
 ### 5、功能列表
 
 - [x] Error Decay Estimator  （EDE）
 - [x] KD distilling
-- [ ] 信息熵 tensorboard支持
+- [x] BOPs计算工具
 
 ### 6、使用建议和注意事项
 
