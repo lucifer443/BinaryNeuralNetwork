@@ -350,7 +350,10 @@ class Baseline(BaseBackbone):
             self.norm1_name, norm1 = build_norm_layer(
                 self.norm_cfg, stem_channels, postfix=1)
             self.add_module(self.norm1_name, norm1)
-            self.stem_act = self.activation() if self.activation else None
+            if self.activation == nn.PReLU:
+                self.stem_act = self.activation(self.stem_channels)
+            else:
+                self.stem_act = self.activation() if self.activation else None
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
     def _freeze_stages(self):
