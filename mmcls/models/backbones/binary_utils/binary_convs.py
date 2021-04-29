@@ -255,7 +255,7 @@ class IRConv2d_bias_x2x(BaseBinaryConv2d):
 
     def forward(self, input):
         x = self.binary_input(input) if self.mode[0] else input
-        w = self.binary_weight(self.weight) if self.mode[1] else self.weight
+        w = self.binary_weight(self.weight) if self.mode[1] else self.float_weight(self.weight)
         floatx = self.float_x(input)
         float_w = self.float_weight(self.weight)
         output1 =  F.conv2d(x, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
