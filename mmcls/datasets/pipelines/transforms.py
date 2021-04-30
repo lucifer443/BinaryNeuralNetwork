@@ -6,10 +6,11 @@ import mmcv
 import numpy as np
 
 from ..builder import PIPELINES
+from .compose import Compose
 
 try:
     import albumentations
-    from albumentations import Compose
+    # from albumentations import Compose
 except ImportError:
     albumentations = None
     Compose = None

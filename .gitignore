@@ -1,6 +1,7 @@
 *pyc
 *pth
 __pycache__
+pretrained
 work_dirs/*
 tmp/*
 *.ipython_checkpoints/

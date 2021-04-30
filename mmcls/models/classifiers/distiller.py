@@ -7,7 +7,7 @@ from mmcv import Config
 
 from ..builder import CLASSIFIERS, build_backbone, build_head, build_neck, build_classifier
 from .image import ImageClassifier
-from ..backbones.binary_utils.binary_blocks import RealToBinaryBlock
+from ..backbones.binary_utils.binary_blocks import RealToBinaryBlock, RealToBinaryFPBlock
 from ..backbones.resnet import BasicBlock, Bottleneck
 
 
@@ -123,7 +123,7 @@ class ATKDImageClassifier(ImageClassifier):
 
         losses = dict()
         if self.ce_weight:
-            loss = self.head.forward_train(x, gt_label)
+            loss = self.head.loss(model_output, gt_label)
             losses.update(loss)
         losses['KD_loss'] = self.kd_loss(model_output, real_output) * self.kd_weight
 
@@ -132,23 +132,23 @@ class ATKDImageClassifier(ImageClassifier):
             at_loss = []
             for sd, tc in zip(self.student_feats, self.teacher_feats):
                 at_loss.append(torch.mean(torch.pow(self._normalized_attention_vector(sd) - self._normalized_attention_vector(tc), 2), dim=-1))
-            losses['AT_loss'] = torch.mean(at_loss) * self.at_weight
+            losses['AT_loss'] = torch.mean(torch.stack(at_loss)) * self.at_weight
             self.student_feats.clear()
-            self.teacher.feats.clear()
+            self.teacher_feats.clear()
         return losses
 
     @staticmethod
     def _normalized_attention_vector(feat):
         attention_area = torch.pow(feat, 2).mean(dim=1)
         attention_vector = attention_area.reshape(feat.size(0), -1)
-        return attention_vector / attention_vector.max(dim=-1)[1]
+        return attention_vector / attention_vector.max(dim=-1)[0][:, None]
 
     def register_attention_hook(self):
-        for module in self.backbone.children():
-            if isinstance(module, RealToBinaryBlock):
+        for module in self.backbone.modules():
+            if isinstance(module, (RealToBinaryBlock, RealToBinaryFPBlock)):
                 module.register_forward_hook(self.attention_student_hook)
-        for module in self.teacher_model.backbone.children():
-            if isinstance(module, (RealToBinaryBlock, BasicBlock, Bottleneck)):
+        for module in self.teacher_model.backbone.modules():
+            if isinstance(module, (RealToBinaryBlock, RealToBinaryFPBlock, BasicBlock, Bottleneck)):
                 module.register_forward_hook(self.attention_teacher_hook)
 
     def attention_student_hook(self, module, fea_in, fea_out):
