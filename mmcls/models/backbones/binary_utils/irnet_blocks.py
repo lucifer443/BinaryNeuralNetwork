@@ -652,3 +652,69 @@ class IRNetShiftHalfBlock(nn.Module):
         out = self.nonlinear2(out)
 
         return out
+
+
+class IRNetGSHBlock(nn.Module):
+    expansion = 1
+
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, n=0, shift=0.0, **kwargs):
+        super(IRNetGSHBlock, self).__init__()
+
+        self.groups = n
+        self.shift = shift
+        self.conv1 = nn.ModuleList()
+        self.bn1 = nn.ModuleList()
+        self.conv2 = nn.ModuleList()
+        self.bn2 = nn.ModuleList()
+
+        self.nonlinear = nn.Hardtanh(inplace=True)
+        self.downsample = downsample
+        self.stride = stride
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+
+        for i in range(self.groups):
+            self.conv1.append(IRConv2d(self.in_channels, self.out_channels, kernel_size=3, stride=self.stride, padding=1, bias=False, **kwargs))
+            self.bn1.append(nn.BatchNorm2d(self.out_channels))
+            self.conv2.append(IRConv2d(self.out_channels, self.out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs))
+            self.bn2.append(nn.BatchNorm2d(self.out_channels))
+
+    def forward(self, x):
+        if self.downsample is not None:
+            identity = self.downsample(x)
+        else:
+            identity = x
+
+        x_list = []
+        for i in range(self.groups):
+            x_list.append(x + self.shift)
+
+        out = 0
+        for i in range(self.groups):
+            x_list[i] = self.conv1[i](x_list[i])
+            x_list[i] = self.bn1[i](x_list[i])
+            out += x_list[i]
+
+        out += identity
+        out = self.nonlinear(out)
+
+        identity = out
+        x_list = []
+        for i in range(self.groups):
+            x_list.append(out)
+
+        out = 0
+        for i in range(self.groups):
+            x_list[i] = self.conv2[i](x_list[i])
+            x_list[i] = self.bn2[i](x_list[i])
+            out += x_list[i]
+
+        out += identity
+        out = self.nonlinear(out)
+
+        return out
+
+
+class IRNetG3SHBlock(IRNetGSHBlock):
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, shift=0.0, **kwargs):
+        super(IRNetG3SHBlock, self).__init__(in_channels, out_channels, stride, downsample, n=3, shift=shift, **kwargs)
