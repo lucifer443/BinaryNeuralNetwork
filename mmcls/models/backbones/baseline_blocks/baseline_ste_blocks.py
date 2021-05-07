@@ -1,19 +1,19 @@
 import torch
 import torch.nn as nn
-from .binary_convs import BLConv2d, STEConv2d
-from .binary_functions import LearnableScale
+from ..binary_utils.binary_convs import BLSTEConv2d, STEConv2d
+from ..binary_utils.binary_functions import LearnableScale
 
 
-class Baseline11Block(nn.Module):
+class Baseline11STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline11Block, self).__init__()
+        super(Baseline11STEBlock, self).__init__()
         self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.downsample = downsample
         self.stride = stride
@@ -38,17 +38,17 @@ class Baseline11Block(nn.Module):
         return out
 
 
-class Baseline11sBlock(nn.Module):
+class Baseline11sSTEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline11sBlock, self).__init__()
+        super(Baseline11sSTEBlock, self).__init__()
         self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.scale1 = LearnableScale(out_channels)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.scale2 = LearnableScale(out_channels)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.downsample = downsample
@@ -76,53 +76,15 @@ class Baseline11sBlock(nn.Module):
         return out
 
 
-class BaselineStrongBlock(nn.Module):
+class Baseline12STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(BaselineStrongBlock, self).__init__()
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv1 = STEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, clip=1.25, **kwargs)
-        self.scale1 = LearnableScale(out_channels)
-        self.nonlinear1 = nn.PReLU(out_channels)
-        self.bn2 = nn.BatchNorm2d(out_channels)
-        self.conv2 = STEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, clip=1.25, **kwargs)
-        self.scale2 = LearnableScale(out_channels)
-        self.nonlinear2 = nn.PReLU(out_channels)
-        self.downsample = downsample
-        self.stride = stride
-        self.out_channels = out_channels
-
-    def forward(self, x):
-        identity = x
-
-        out = self.bn1(x)
-        out = self.conv1(out)
-        out = self.scale1(out)
-        out = self.nonlinear1(out)
-        if self.downsample is not None:
-            identity = self.downsample(x)
-        out += identity
-
-        identity = out
-        out = self.bn2(out)
-        out = self.conv2(out)
-        out = self.scale2(out)
-        out = self.nonlinear2(out)
-        out += identity
-
-        return out
-
-
-class Baseline12Block(nn.Module):
-    expansion = 1
-
-    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline12Block, self).__init__()
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        super(Baseline12STEBlock, self).__init__()
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.nonlinear1 = nn.PReLU(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.downsample = downsample
@@ -148,15 +110,15 @@ class Baseline12Block(nn.Module):
         return out
 
 
-class Baseline13Block(nn.Module):
+class Baseline13STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline13Block, self).__init__()
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        super(Baseline13STEBlock, self).__init__()
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.downsample = downsample
@@ -182,15 +144,15 @@ class Baseline13Block(nn.Module):
         return out
 
 
-class Baseline14Block(nn.Module):
+class Baseline14STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline14Block, self).__init__()
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        super(Baseline14STEBlock, self).__init__()
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.downsample = downsample
@@ -216,16 +178,16 @@ class Baseline14Block(nn.Module):
         return out
 
 
-class Baseline15Block(nn.Module):
+class Baseline15STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline15Block, self).__init__()
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        super(Baseline15STEBlock, self).__init__()
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn11 = nn.BatchNorm2d(out_channels)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn12 = nn.BatchNorm2d(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn21 = nn.BatchNorm2d(out_channels)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.bn22 = nn.BatchNorm2d(out_channels)
@@ -254,16 +216,16 @@ class Baseline15Block(nn.Module):
         return out
 
 
-class Baseline21Block(nn.Module):
+class Baseline21STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline21Block, self).__init__()
+        super(Baseline21STEBlock, self).__init__()
         self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.downsample = downsample
         self.stride = stride
@@ -288,15 +250,15 @@ class Baseline21Block(nn.Module):
         return out
 
 
-class Baseline22Block(nn.Module):
+class Baseline22STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline22Block, self).__init__()
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        super(Baseline22STEBlock, self).__init__()
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.nonlinear1 = nn.PReLU(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.downsample = downsample
@@ -322,15 +284,15 @@ class Baseline22Block(nn.Module):
         return out
 
 
-class Baseline23Block(nn.Module):
+class Baseline23STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline23Block, self).__init__()
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        super(Baseline23STEBlock, self).__init__()
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.nonlinear1 = nn.PReLU(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.downsample = downsample
@@ -356,15 +318,15 @@ class Baseline23Block(nn.Module):
         return out
 
 
-class Baseline24Block(nn.Module):
+class Baseline24STEBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
-        super(Baseline24Block, self).__init__()
-        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        super(Baseline24STEBlock, self).__init__()
+        self.conv1 = BLSTEConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = BLSTEConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.downsample = downsample

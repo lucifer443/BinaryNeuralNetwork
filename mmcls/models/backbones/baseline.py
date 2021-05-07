@@ -7,10 +7,13 @@ from mmcv.utils.parrots_wrapper import _BatchNorm
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 
-from .binary_utils.baseline_blocks import (Baseline11Block, Baseline12Block, Baseline13Block, Baseline14Block, Baseline15Block,
-                                           Baseline21Block, Baseline22Block, Baseline23Block, Baseline24Block,
-                                           Baseline11sBlock, BaselineStrongBlock,
-                                          )
+from .baseline_blocks.baseline_blocks import (
+    Baseline11Block, Baseline12Block, Baseline13Block, Baseline14Block, Baseline15Block,
+    Baseline21Block, Baseline22Block, Baseline23Block, Baseline24Block,
+    Baseline11sBlock, BaselineStrongBlock,)
+from .baseline_blocks.baseline_ste_blocks import (
+    Baseline11STEBlock, Baseline12STEBlock, Baseline13STEBlock, Baseline14STEBlock, Baseline15STEBlock,
+    Baseline21STEBlock, Baseline22STEBlock,)
 
 
 def build_act(name):
@@ -206,6 +209,13 @@ class Baseline(BaseBackbone):
         'baseline_13': (Baseline13Block, (2, 2, 2, 2)),
         'baseline_14': (Baseline14Block, (2, 2, 2, 2)),
         'baseline_15': (Baseline15Block, (2, 2, 2, 2)),
+        'baseline_11_ste': (Baseline11STEBlock, (2, 2, 2, 2)),
+        'baseline_12_ste': (Baseline12STEBlock, (2, 2, 2, 2)),
+        'baseline_13_ste': (Baseline13STEBlock, (2, 2, 2, 2)),
+        'baseline_14_ste': (Baseline14STEBlock, (2, 2, 2, 2)),
+        'baseline_15_ste': (Baseline15STEBlock, (2, 2, 2, 2)),
+        'baseline_21_ste': (Baseline21STEBlock, (2, 2, 2, 2)),
+        'baseline_22_ste': (Baseline22STEBlock, (2, 2, 2, 2)),
         'baseline_21': (Baseline21Block, (2, 2, 2, 2)),
         'baseline_22': (Baseline22Block, (2, 2, 2, 2)),
         'baseline_23': (Baseline23Block, (2, 2, 2, 2)),
