@@ -112,3 +112,35 @@ class LearnableScale(nn.Module):
         out = out * self.gamma.expand_as(x)
 
         return out
+
+
+class FeaExpand(nn.Module):
+    """expand feature map
+
+    mode:
+        1:
+        1c: 分通道
+    """
+    def __init__(self, expansion=3, mode='1'):
+        super(FeaExpand, self).__init__()
+        self.mode = mode
+        if '1' in self.mode:
+            self.alpha = []
+            for i in range(expansion):
+                self.alpha.append(-1 + (i + 1) * 2 / (expansion + 1))
+
+    def forward(self, x):
+        out = []
+        if self.mode == '1':
+            x_max = x.abs().max()
+            for bias in self.alpha:
+                out.append(x + bias * x_max)
+        elif self.mode == '1c':
+            x_max = x.max(dim=3, keepdim=True)[0].max(dim=2, keepdim=True)[0]
+            for bias in self.alpha:
+                out.append(x + bias * x_max)
+        elif self.mode == '2':
+            bias = x.abs().max() / 2
+            out.append(x)
+            out.append(-x.abs() + bias)
+        return torch.cat(out, dim=1)

@@ -4,7 +4,7 @@ from mmcls.apis import inference_model, init_model, show_result_pyplot
 import torch
 import torch.nn as nn
 from mmcls.models.backbones.binary_utils.binary_convs import RAConv2d, IRConv2d
-from mmcls.models.backbones.binary_utils.baseline_blocks import BLConv2d
+from mmcls.models.backbones.baseline_blocks.baseline_blocks import BLConv2d
 from mmcls.models.backbones.binary_utils.binary_functions import LearnableBias, RANetActSign, RANetWSign
 
 import matplotlib.pyplot as plt
