@@ -7,14 +7,14 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='Baseline',
-        arch='mf_3_1',
-        binary_type=(True, True),
+        arch='mf_5_1',
+        binary_type=(True, False),
         stem_act='hardtanh',
         stem_channels=64,
         base_channels=64,
         num_stages=4,
         out_indices=(3, ),
-        style='pytorch'),
+        style='pytorch',),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='IRClsHead',
@@ -25,6 +25,6 @@ model = dict(
     ))
 
 
-work_dir = 'work_dir/multifea/multifea_3_1/multifea_3_1_b128x8'
-find_unused_parameters=True
+work_dir = 'work_dir/multifea/multifea_5_1/multifea_5_1_b128x8_two/multifea_5_1_b128x8_step1'
+find_unused_parameters=False
 seed = 166

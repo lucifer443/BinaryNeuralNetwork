@@ -19,6 +19,8 @@ data/imagenet/
 # vscode settings
 .vscode/
 
+# plot scripts
+tools/plot/
+
 # others
 *.jpg
-plot/*

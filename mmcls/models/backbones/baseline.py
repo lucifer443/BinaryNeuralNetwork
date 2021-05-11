@@ -14,7 +14,9 @@ from .baseline_blocks.baseline_blocks import (
 from .baseline_blocks.baseline_ste_blocks import (
     Baseline11STEBlock, Baseline12STEBlock, Baseline13STEBlock, Baseline14STEBlock, Baseline15STEBlock,
     Baseline21STEBlock, Baseline22STEBlock,)
-from .binary_utils.multifea_blocks import MultiFea_3_1_Block, MultiFea_2_2_Block, MultiFea_3_1c_Block
+from .binary_utils.multifea_blocks import (
+    MultiFea_2_1_Block, MultiFea_3_1_Block, MultiFea_4_1_Block, MultiFea_5_1_Block, MultiFea_6_1_Block, MultiFea_7_1_Block,
+    MultiFea_2_2_Block, MultiFea_3_1c_Block,)
 
 
 def build_act(name):
@@ -223,7 +225,12 @@ class Baseline(BaseBackbone):
         'baseline_24': (Baseline24Block, (2, 2, 2, 2)),
         'baseline_11s': (Baseline11sBlock, (2, 2, 2, 2)),
         'baseline_strong': (BaselineStrongBlock, (2, 2, 2, 2)),
+        'mf_2_1': (MultiFea_2_1_Block, (2, 2, 2, 2)),
         'mf_3_1': (MultiFea_3_1_Block, (2, 2, 2, 2)),
+        'mf_4_1': (MultiFea_4_1_Block, (2, 2, 2, 2)),
+        'mf_5_1': (MultiFea_5_1_Block, (2, 2, 2, 2)),
+        'mf_6_1': (MultiFea_6_1_Block, (2, 2, 2, 2)),
+        'mf_7_1': (MultiFea_7_1_Block, (2, 2, 2, 2)),
         'mf_3_1c': (MultiFea_3_1c_Block, (2, 2, 2, 2)),
         'mf_2_2': (MultiFea_2_2_Block, (2, 2, 2, 2)),
     }
