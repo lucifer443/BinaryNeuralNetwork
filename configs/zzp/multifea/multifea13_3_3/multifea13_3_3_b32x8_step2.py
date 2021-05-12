@@ -6,8 +6,8 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='Baseline',
-        arch='mf13_3_1',
-        binary_type=(True, False),
+        arch='mf13_3_3',
+        binary_type=(True, True),
         stem_act='prelu',
         stem_channels=64,
         base_channels=64,
@@ -26,20 +26,18 @@ model = dict(
 # schedules for imagenet bs256
 optimizer = dict(
     type='Adam',
-    lr=1e-3,
-    weight_decay=1e-5,
+    lr=2e-4,
+    weight_decay=0,
     paramwise_cfg=dict(norm_decay_mult=0))
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='step',
-    warmup='linear',
-    warmup_iters=25025,
-    warmup_ratio=0.1,
     step=[40, 60, 70],
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-work_dir = 'work_dir/multifea/multifea13_3_1/multifea13_3_1_b32x8/multifea13_3_1_b32x8_step1'
+load_from = 'work_dir/multifea/multifea13_3_3/multifea13_3_3_b32x8/multifea13_3_3_b32x8_step1/epoch_75.pth'
+work_dir = 'work_dir/multifea/multifea13_3_3/multifea13_3_3_b32x8/multifea13_3_3_b32x8_step2'
 find_unused_parameters=False
 seed = 166

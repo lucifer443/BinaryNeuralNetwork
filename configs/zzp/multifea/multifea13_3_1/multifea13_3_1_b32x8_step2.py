@@ -6,9 +6,9 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='Baseline',
-        arch='mf_3_1',
+        arch='mf13_3_1',
         binary_type=(True, True),
-        stem_act='hardtanh',
+        stem_act='prelu',
         stem_channels=64,
         base_channels=64,
         num_stages=4,
@@ -16,7 +16,7 @@ model = dict(
         style='pytorch',),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
-        type='IRClsHead',
+        type='LinearClsHead',
         num_classes=1000,
         in_channels=512,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),

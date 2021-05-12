@@ -2,6 +2,7 @@ from torch.autograd import Function
 import torch
 import torch.nn as nn
 
+from scipy.stats import norm
 
 class IRNetSign(Function):
     """Sign function from IR-Net, which can add EDE progress"""
@@ -118,8 +119,10 @@ class FeaExpand(nn.Module):
     """expand feature map
 
     mode:
-        1:
-        1c: 分通道
+        1: 根据特征图绝对值最大值均匀选择阈值
+        1c: 1的基础上分通道
+        2: 仅限于2张特征图，第1张不变，第2张绝对值小的映射为+1，绝对值大的映射为-1
+        3: 根据均值方差选择阈值
     """
     def __init__(self, expansion=3, mode='1'):
         super(FeaExpand, self).__init__()
@@ -128,19 +131,29 @@ class FeaExpand(nn.Module):
             self.alpha = []
             for i in range(expansion):
                 self.alpha.append(-1 + (i + 1) * 2 / (expansion + 1))
+        elif '3' in self.mode:
+            self.alpha = []
+            for i in range(expansion):
+                self.alpha.append((i + 1) / (expansion + 1))
 
     def forward(self, x):
         out = []
         if self.mode == '1':
             x_max = x.abs().max()
-            for bias in self.alpha:
-                out.append(x + bias * x_max)
+            for alpha in self.alpha:
+                out.append(x + alpha * x_max)
         elif self.mode == '1c':
             x_max = x.max(dim=3, keepdim=True)[0].max(dim=2, keepdim=True)[0]
-            for bias in self.alpha:
-                out.append(x + bias * x_max)
+            for alpha in self.alpha:
+                out.append(x + alpha * x_max)
         elif self.mode == '2':
             bias = x.abs().max() / 2
             out.append(x)
             out.append(-x.abs() + bias)
+        elif self.mode == '3':
+            mean = x.mean().item()
+            std = x.std().item()
+            for alpha in self.alpha:
+                out.append(x + norm.ppf(alpha, loc=mean, scale=std))
+
         return torch.cat(out, dim=1)

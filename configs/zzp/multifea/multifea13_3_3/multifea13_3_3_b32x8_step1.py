@@ -6,7 +6,7 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='Baseline',
-        arch='mf13_3_1',
+        arch='mf13_3_3',
         binary_type=(True, False),
         stem_act='prelu',
         stem_channels=64,
@@ -40,6 +40,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-work_dir = 'work_dir/multifea/multifea13_3_1/multifea13_3_1_b32x8/multifea13_3_1_b32x8_step1'
+work_dir = 'work_dir/multifea/multifea13_3_3/multifea13_3_3_b32x8/multifea13_3_3_b32x8_step1'
 find_unused_parameters=False
 seed = 166
