@@ -388,3 +388,41 @@ class Baseline24Block(nn.Module):
         out = self.bn2(out)
 
         return out
+
+
+class Baseline13clipBlock(nn.Module):
+    expansion = 1
+
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
+        super(Baseline13clipBlock, self).__init__()
+        self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.nonlinear1 = nn.PReLU(out_channels)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.clip1 = nn.Hardtanh(inplace=True)
+        self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.nonlinear2 = nn.PReLU(out_channels)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.clip2 = nn.Hardtanh(inplace=True)
+        self.downsample = downsample
+        self.stride = stride
+        self.out_channels = out_channels
+
+    def forward(self, x):
+        identity = x
+
+        out = self.conv1(x)
+        out = self.nonlinear1(out)
+        out = self.bn1(out)
+        if self.downsample is not None:
+            identity = self.downsample(x)
+        out += identity
+        out = self.clip1(out)
+
+        identity = out
+        out = self.conv2(out)
+        out = self.nonlinear2(out)
+        out = self.bn2(out)
+        out += identity
+        out = self.clip2(out)
+
+        return out
