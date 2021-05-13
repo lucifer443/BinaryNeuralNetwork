@@ -111,10 +111,14 @@ class AttentionScale(nn.Module):
         self.fc1 = nn.Linear(channels, channels // self.scale_factor)
         self.fc2 = nn.Linear(channels // self.scale_factor, channels)
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.act1 = nn.ReLU(inplace=True)
+        self.act2 = nn.Sigmoid()
 
     def forward(self, inputs):
         x = self.pool(inputs)
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
+        x = self.act1(x)
         x = self.fc2(x)
+        x = self.act2(x)
         return inputs * x[:, :, None, None]
