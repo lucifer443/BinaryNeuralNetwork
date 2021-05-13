@@ -82,9 +82,9 @@ class RPRelu(nn.Module):
 
 
 class LearnableBias(nn.Module):
-    def __init__(self, out_chn):
+    def __init__(self, channels, init=0):
         super(LearnableBias, self).__init__()
-        self.bias = nn.Parameter(torch.zeros(1,out_chn,1,1), requires_grad=True)
+        self.bias = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
 
     def forward(self, x):
         out = x + self.bias.expand_as(x)
@@ -123,9 +123,11 @@ class FeaExpand(nn.Module):
         1c: 1的基础上分通道
         2: 仅限于2张特征图，第1张不变，第2张绝对值小的映射为+1，绝对值大的映射为-1
         3: 根据均值方差选择阈值
+        4: 分通道可学习的阈值
     """
-    def __init__(self, expansion=3, mode='1'):
+    def __init__(self, expansion=3, mode='1', in_channels=None):
         super(FeaExpand, self).__init__()
+        self.expansion = expansion
         self.mode = mode
         if '1' in self.mode:
             self.alpha = []
@@ -135,6 +137,11 @@ class FeaExpand(nn.Module):
             self.alpha = []
             for i in range(expansion):
                 self.alpha.append((i + 1) / (expansion + 1))
+        elif '4' in self.mode:
+            self.move = nn.ModuleList()
+            for i in range(expansion):
+                alpha = -1 + (i + 1) * 2 / (expansion + 1)
+                self.move.append(LearnableBias(in_channels, init=alpha))
 
     def forward(self, x):
         out = []
@@ -155,5 +162,8 @@ class FeaExpand(nn.Module):
             std = x.std().item()
             for alpha in self.alpha:
                 out.append(x + norm.ppf(alpha, loc=mean, scale=std))
+        elif self.mode =='4':
+            for i in range(self.expansion):
+                out.append(self.move[i](x))
 
         return torch.cat(out, dim=1)

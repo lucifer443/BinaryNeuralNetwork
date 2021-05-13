@@ -19,7 +19,8 @@ from .binary_utils.multifea_blocks import (
     MultiFea_2_1_Block, MultiFea_3_1_Block, MultiFea_4_1_Block, MultiFea_5_1_Block, MultiFea_6_1_Block, MultiFea_7_1_Block,
     MultiFea_2_2_Block, MultiFea_3_1c_Block,
     MultiFea13_3_1_Block,
-    MultiFea13_3_3_Block,)
+    MultiFea13_3_3_Block,
+    MultiFea_3_4_Block,)
 
 
 def build_act(name):
@@ -239,6 +240,7 @@ class Baseline(BaseBackbone):
         'mf_2_2': (MultiFea_2_2_Block, (2, 2, 2, 2)),
         'mf13_3_1': (MultiFea13_3_1_Block, (2, 2, 2, 2)),
         'mf13_3_3': (MultiFea13_3_3_Block, (2, 2, 2, 2)),
+        'mf_3_4': (MultiFea_3_4_Block, (2, 2, 2, 2)),
     }
 
     def __init__(self,

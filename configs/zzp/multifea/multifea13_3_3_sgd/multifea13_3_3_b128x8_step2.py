@@ -1,5 +1,6 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
+    '../../../_base_/datasets/imagenet_bs128.py',
+    '../../../_base_/schedules/imagenet_bs1024.py' '../../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -23,21 +24,8 @@ model = dict(
         topk=(1, 5),
     ))
 
-# schedules for imagenet bs256
-optimizer = dict(
-    type='Adam',
-    lr=2e-4,
-    weight_decay=0,
-    paramwise_cfg=dict(norm_decay_mult=0))
-optimizer_config = dict(grad_clip=None)
-# learning policy
-lr_config = dict(
-    policy='step',
-    step=[40, 60, 70],
-)
-runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-load_from = 'work_dir/multifea/multifea13_3_3/multifea13_3_3_b32x8/multifea13_3_3_b32x8_step1/epoch_75.pth'
-work_dir = 'work_dir/multifea/multifea13_3_3/multifea13_3_3_b32x8/multifea13_3_3_b32x8_step2'
+load_from = 'work_dir/multifea/multifea13_3_3_sgd/multifea13_3_3_b128x8/multifea13_3_3_b128x8_step1/epoch_75.pth'
+work_dir = 'work_dir/multifea/multifea13_3_3_sgd/multifea13_3_3_b128x8/multifea13_3_3_b128x8_step2'
 find_unused_parameters=False
 seed = 166
