@@ -106,3 +106,39 @@ class ANDConv2d(nn.Conv2d):
                           self.stride, self.padding,
                           self.dilation, self.groups)
         return output
+
+
+class CorrBiasConv2d(RAConv2d):
+    hw_settings = {
+        64: 56,
+        128: 28,
+        256: 14,
+        512: 7,
+    }
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(CorrBiasConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias,
+                                       binary_type, **kwargs)
+        self.register_buffer('bias_w', torch.zeros(1, 1, self.hw_settings[out_channels], 1))
+        self.register_buffer('bias_h', torch.zeros(1, 1, 1, self.hw_settings[out_channels]))
+        self.register_buffer('bias_c', torch.zeros(1, self.hw_settings[out_channels], 1, 1))
+        self.alpha = 0.99
+
+    def forward(self, input):
+        x = self.binary_input(input) if self.mode[0] else input
+        w = self.binary_weight(self.weight) if self.mode[1] else self.weight
+        boutput =  F.conv2d(x, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
+        if self.training:
+            foutput =  F.conv2d(input, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
+            err = foutput - boutput
+            bias_w = torch.mean(err, dim=[0, 1, 2], keepdim=True)
+            bias_h = torch.mean(err, dim=[0, 1, 3], keepdim=True)
+            bias_c = torch.mean(err, dim=[0, 2, 3], keepdim=True)
+            self.bias_w[:] = self.bias_w[:] * self.alpha + bias_w * (1-self.alpha)
+            self.bias_h[:] = self.bias_h[:] * self.alpha + bias_h * (1-self.alpha)
+            self.bias_c[:] = self.bias_c[:] * self.alpha + bias_c * (1-self.alpha)
+            output = boutput + bias_w + bias_h + bias_c
+        else:
+            output = boutput + self.bias_w + self.bias_h + self.bias_c
+        return output
