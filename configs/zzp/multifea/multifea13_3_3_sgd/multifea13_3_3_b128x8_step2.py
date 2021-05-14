@@ -24,6 +24,10 @@ model = dict(
         topk=(1, 5),
     ))
 
+# set weight_decay to 0
+optimizer = dict(
+    weight_decay=0
+)
 
 load_from = 'work_dir/multifea/multifea13_3_3_sgd/multifea13_3_3_b128x8/multifea13_3_3_b128x8_step1/epoch_75.pth'
 work_dir = 'work_dir/multifea/multifea13_3_3_sgd/multifea13_3_3_b128x8/multifea13_3_3_b128x8_step2'

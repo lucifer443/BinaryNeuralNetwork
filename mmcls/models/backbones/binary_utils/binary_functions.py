@@ -122,8 +122,10 @@ class FeaExpand(nn.Module):
         1: 根据特征图绝对值最大值均匀选择阈值
         1c: 1的基础上分通道
         2: 仅限于2张特征图，第1张不变，第2张绝对值小的映射为+1，绝对值大的映射为-1
-        3: 根据均值方差选择阈值
-        4: 分通道可学习的阈值
+        3: 根据均值方差选择阈值（一个batch中的所有图片计算一个均值和方差）
+        3n: 3的基础上分输入，每个输入图片计算自己的均值方差
+        4: 使用1的值初始化的可学习的阈值
+        4c: 4的基础上分通道
     """
     def __init__(self, expansion=3, mode='1', in_channels=None):
         super(FeaExpand, self).__init__()
@@ -133,11 +135,19 @@ class FeaExpand(nn.Module):
             self.alpha = []
             for i in range(expansion):
                 self.alpha.append(-1 + (i + 1) * 2 / (expansion + 1))
+
         elif '3' in self.mode:
             self.alpha = []
             for i in range(expansion):
                 self.alpha.append((i + 1) / (expansion + 1))
-        elif '4' in self.mode:
+
+        elif '4' == self.mode:
+            self.move = nn.ModuleList()
+            for i in range(expansion):
+                alpha = -1 + (i + 1) * 2 / (expansion + 1)
+                self.move.append(LearnableBias(channels=1, init=alpha))
+
+        elif '4c' == self.mode:
             self.move = nn.ModuleList()
             for i in range(expansion):
                 alpha = -1 + (i + 1) * 2 / (expansion + 1)
@@ -149,20 +159,33 @@ class FeaExpand(nn.Module):
             x_max = x.abs().max()
             for alpha in self.alpha:
                 out.append(x + alpha * x_max)
+
         elif self.mode == '1c':
             x_max = x.max(dim=3, keepdim=True)[0].max(dim=2, keepdim=True)[0]
             for alpha in self.alpha:
                 out.append(x + alpha * x_max)
+
         elif self.mode == '2':
             bias = x.abs().max() / 2
             out.append(x)
             out.append(-x.abs() + bias)
+
         elif self.mode == '3':
             mean = x.mean().item()
             std = x.std().item()
             for alpha in self.alpha:
                 out.append(x + norm.ppf(alpha, loc=mean, scale=std))
-        elif self.mode =='4':
+
+        elif self.mode == '3n':
+            ppf_alpha = []
+            for alpha in self.alpha:
+                ppf_alpha.append(norm.ppf(alpha))
+            mean = x.mean(dim=(1, 2, 3), keepdim=True)
+            std = x.std(dim=(1, 2, 3), keepdim=True)
+            for a in ppf_alpha:
+                out.append(x + (mean * a + std))
+
+        elif self.mode == '4' or self.mode == '4c':
             for i in range(self.expansion):
                 out.append(self.move[i](x))
 
