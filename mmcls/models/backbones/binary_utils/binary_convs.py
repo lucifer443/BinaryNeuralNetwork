@@ -120,9 +120,9 @@ class CorrBiasConv2d(RAConv2d):
                  binary_type=(True, True), **kwargs):
         super(CorrBiasConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias,
                                        binary_type, **kwargs)
-        self.register_buffer('bias_w', torch.zeros(1, 1, self.hw_settings[out_channels], 1))
-        self.register_buffer('bias_h', torch.zeros(1, 1, 1, self.hw_settings[out_channels]))
-        self.register_buffer('bias_c', torch.zeros(1, self.hw_settings[out_channels], 1, 1))
+        self.register_buffer('bias_h', torch.zeros(1, 1, self.hw_settings[out_channels], 1))
+        self.register_buffer('bias_w', torch.zeros(1, 1, 1, self.hw_settings[out_channels]))
+        self.register_buffer('bias_c', torch.zeros(1, out_channels, 1, 1))
         self.alpha = 0.99
 
     def forward(self, input):
