@@ -29,7 +29,7 @@ optimizer = dict(
     weight_decay=0
 )
 
-load_from = 'work_dir/multifea/multifea13_3_3n/multifea13_3_3n_b128x8/multifea13_3_3n_b128x8_step1/epoch_75.pth'
+load_from = 'work_dir/multifea/multifea13_3_3n/multifea13_3_3n_b128x8/multifea13_3_3n_b128x8_step1/epoch_100.pth'
 work_dir = 'work_dir/multifea/multifea13_3_3n/multifea13_3_3n_b128x8/multifea13_3_3n_b128x8_step2'
 find_unused_parameters=False
 seed = 166

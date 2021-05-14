@@ -37,7 +37,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-load_from = 'work_dir/multifea/multifea_3_1c/multifea_3_1c_b32x8/multifea_3_1c_b32x8_step1/epoch_75.pth'
+load_from = 'work_dir/multifea/multifea_3_1c/multifea_3_1c_b32x8/multifea_3_1c_b32x8_step1/epoch_100.pth'
 work_dir = 'work_dir/multifea/multifea_3_1c/multifea_3_1c_b32x8/multifea_3_1c_b32x8_step2'
 find_unused_parameters=False
 seed = 166
