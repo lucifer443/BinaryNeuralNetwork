@@ -114,7 +114,7 @@ def main():
         index += 1
 
     print('saving...')
-    plt.savefig(f'./work_dir/plot/ratio_channel/{arch_name}_ratio_channel_{img_name}.jpg')
+    plt.savefig(f'./work_dir/plot/ratio_channel/{arch_name}_ratio_channel.jpg')
 
                                                                                                                                                                                                                                                                                                                                                                       
 if __name__ == '__main__':
