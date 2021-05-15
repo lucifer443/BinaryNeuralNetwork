@@ -7,7 +7,7 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='Baseline',
-        arch='mf13_3_3',
+        arch='mf13_3_3nc',
         binary_type=(True, False),
         stem_act='prelu',
         stem_channels=64,
@@ -25,6 +25,6 @@ model = dict(
     ))
 
 
-work_dir = 'work_dir/multifea/multifea13_3_3_sgd/multifea13_3_3_b128x8/multifea13_3_3_b128x8_step1'
+work_dir = 'work_dir/multifea/multifea13_3_3nc/multifea13_3_3nc_b128x8/multifea13_3_3nc_b128x8_step1'
 find_unused_parameters=False
 seed = 166

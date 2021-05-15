@@ -124,6 +124,8 @@ class FeaExpand(nn.Module):
         2: 仅限于2张特征图，第1张不变，第2张绝对值小的映射为+1，绝对值大的映射为-1
         3: 根据均值方差选择阈值（一个batch中的所有图片计算一个均值和方差）
         3n: 3的基础上分输入，每个输入图片计算自己的均值方差
+        3c: 3的基础上分通道计算均值方差（类似bn）
+        3nc: 3的基础上既分输入也分通道计算均值方差
         4: 使用1的值初始化的可学习的阈值
         4c: 4的基础上分通道
     """
@@ -183,7 +185,25 @@ class FeaExpand(nn.Module):
             mean = x.mean(dim=(1, 2, 3), keepdim=True)
             std = x.std(dim=(1, 2, 3), keepdim=True)
             for a in ppf_alpha:
-                out.append(x + (mean * a + std))
+                out.append(x + (a * std + mean))
+
+        elif self.mode == '3c':
+            ppf_alpha = []
+            for alpha in self.alpha:
+                ppf_alpha.append(norm.ppf(alpha))
+            mean = x.mean(dim=(0, 2, 3), keepdim=True)
+            std = x.std(dim=(0, 2, 3), keepdim=True)
+            for a in ppf_alpha:
+                out.append(x + (a * std + mean))
+
+        elif self.mode == '3nc':
+            ppf_alpha = []
+            for alpha in self.alpha:
+                ppf_alpha.append(norm.ppf(alpha))
+            mean = x.mean(dim=(2, 3), keepdim=True)
+            std = x.std(dim=(2, 3), keepdim=True)
+            for a in ppf_alpha:
+                out.append(x + (a * std + mean))
 
         elif self.mode == '4' or self.mode == '4c':
             for i in range(self.expansion):
