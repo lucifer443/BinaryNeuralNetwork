@@ -106,3 +106,17 @@ class ANDConv2d(nn.Conv2d):
                           self.stride, self.padding,
                           self.dilation, self.groups)
         return output
+    
+class MultiBiasConv2d(RAConv2d):
+    ratio = 2
+
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(MultiBiasConv2d, self).__init__(in_channels, out_channels // self.ratio, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+
+    def binary_weight(self, w):
+        bw1 = self.sign_w(w)
+        bw2 = self.sign_w(w-0.3)
+        sw = torch.mean(torch.mean(torch.mean(abs(w),dim=3,keepdim=True),dim=2,keepdim=True),dim=1,keepdim=True).detach()
+        return torch.cat([bw1 * sw, bw2 * sw], dim=0)

@@ -1,8 +1,12 @@
+work_dirs
+data
+
 *pyc
 *pth
 __pycache__
 pretrained
 work_dirs/*
+data/*
 tmp/*
 *.ipython_checkpoints/
 .ipython_checkpoints/*

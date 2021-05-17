@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .binary_convs import IRConv2d, RAConv2d, STEConv2d
+from .binary_convs import IRConv2d, RAConv2d, STEConv2d, MultiBiasConv2d
 from .binary_functions import RPRelu, LearnableBias, LearnableScale, AttentionScale, BiasExpand
 
 
@@ -206,10 +206,10 @@ class MultiBiasBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
         super(MultiBiasBlock, self).__init__()
-        self.conv1 = RAConv2d(in_channels*self.ratio, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.conv1 = MultiBiasConv2d(in_channels*self.ratio, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.nonlinear = nn.Hardtanh(inplace=True)
-        self.conv2 = RAConv2d(out_channels*self.ratio, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = MultiBiasConv2d(out_channels*self.ratio, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.multi_bias = BiasExpand(ratio=self.ratio)
         self.downsample = downsample
