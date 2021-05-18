@@ -109,6 +109,11 @@ class MultiFea_7_1_Block(MultiFea_n_1_Block):
         super(MultiFea_7_1_Block, self).__init__(in_channels, out_channels, stride, downsample, n=7, **kwargs)
 
 
+class MultiFea_10_1_Block(MultiFea_n_1_Block):
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
+        super(MultiFea_10_1_Block, self).__init__(in_channels, out_channels, stride, downsample, n=10, **kwargs)
+
+
 class MultiFea_3_1c_Block(nn.Module):
     expansion = 1
 
