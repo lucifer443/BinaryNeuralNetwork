@@ -7,10 +7,9 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='MultiFea',
-        arch='mf13_3_3c',
-        binary_type=(True, True),
-        stem_act='prelu',
-        block_act='prelu',
+        arch='mf13c_1_3',
+        binary_type=(True, False),
+        stem_act='hardtanh',
         stem_channels=64,
         base_channels=64,
         num_stages=4,
@@ -18,19 +17,14 @@ model = dict(
         style='pytorch',),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
-        type='LinearClsHead',
+        type='IRClsHead',
         num_classes=1000,
         in_channels=512,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
         topk=(1, 5),
     ))
 
-# set weight_decay to 0
-optimizer = dict(
-    weight_decay=0
-)
 
-load_from = 'work_dir/multifea/multifea13_3_3c/multifea13_3_3c_b128x8/multifea13_3_3c_b128x8_step1/epoch_100.pth'
-work_dir = 'work_dir/multifea/multifea13_3_3c/multifea13_3_3c_b128x8/multifea13_3_3c_b128x8_step2'
+work_dir = 'work_dir/multifea/multifea13clip_1/multifea13clip_1_b128x8/multifea13clip_1_b128x8_step1'
 find_unused_parameters=False
 seed = 166

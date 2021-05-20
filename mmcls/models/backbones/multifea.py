@@ -7,35 +7,9 @@ from mmcv.utils.parrots_wrapper import _BatchNorm
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 
-from .baseline_blocks.baseline_blocks import (
-    Baseline11Block, Baseline12Block, Baseline13Block, Baseline14Block, Baseline15Block,
-    Baseline21Block, Baseline22Block, Baseline23Block, Baseline24Block,
-    Baseline11sBlock, BaselineStrongBlock,
-    Baseline13clipBlock,
-    )
-from .baseline_blocks.baseline_ste_blocks import (
-    Baseline11STEBlock, Baseline12STEBlock, Baseline13STEBlock, Baseline14STEBlock, Baseline15STEBlock,
-    Baseline21STEBlock, Baseline22STEBlock,
-    )
-from .binary_utils.multifea_blocks import (
-    MultiFea_1_Block,
-    MultiFea_2_1_Block, MultiFea_3_1_Block, MultiFea_4_1_Block, MultiFea_5_1_Block,
-    MultiFea_6_1_Block, MultiFea_7_1_Block, MultiFea_10_1_Block,
-    MultiFea_2_2_Block, MultiFea_3_1c_Block,
-    MultiFea_3_4_Block, MultiFea_3_4c_Block,
-    MultiFea_3_6_Block, MultiFea_3_6n_Block, MultiFea_3_6c_Block, MultiFea_3_6nc_Block,
-    )
+from .binary_utils.binary_functions import act_name_map
+from .binary_utils.multifea13_blocks import MultiFea_Block, MultiFea13_Block, MultiFea13clip_Block
 
-
-def build_act(name):
-    name_map = {
-        'hardtanh': nn.Hardtanh,
-        'relu': nn.ReLU,
-        'prelu': nn.PReLU,
-    }
-    if name.lower() not in name_map:
-        raise ValueError(f'Unknown activation function : {name}')
-    return name_map[name]
 
 def get_expansion(block, expansion=None):
     """Get the expansion of a residual block.
@@ -160,7 +134,7 @@ class ResLayer(nn.Sequential):
 
 
 @BACKBONES.register_module()
-class Baseline(BaseBackbone):
+class MultiFea(BaseBackbone):
     """ResNet backbone.
 
     Please refer to the `paper <https://arxiv.org/abs/1512.03385>`_ for
@@ -214,49 +188,18 @@ class Baseline(BaseBackbone):
         (1, 512, 1, 1)
     """
 
-    arch_settings = {
-        'baseline_11': (Baseline11Block, (2, 2, 2, 2)),
-        'baseline_12': (Baseline12Block, (2, 2, 2, 2)),
-        'baseline_13': (Baseline13Block, (2, 2, 2, 2)),
-        'baseline_13clip': (Baseline13clipBlock, (2, 2, 2, 2)),
-        'baseline_14': (Baseline14Block, (2, 2, 2, 2)),
-        'baseline_15': (Baseline15Block, (2, 2, 2, 2)),
-        'baseline_11_ste': (Baseline11STEBlock, (2, 2, 2, 2)),
-        'baseline_12_ste': (Baseline12STEBlock, (2, 2, 2, 2)),
-        'baseline_13_ste': (Baseline13STEBlock, (2, 2, 2, 2)),
-        'baseline_14_ste': (Baseline14STEBlock, (2, 2, 2, 2)),
-        'baseline_15_ste': (Baseline15STEBlock, (2, 2, 2, 2)),
-        'baseline_21_ste': (Baseline21STEBlock, (2, 2, 2, 2)),
-        'baseline_22_ste': (Baseline22STEBlock, (2, 2, 2, 2)),
-        'baseline_21': (Baseline21Block, (2, 2, 2, 2)),
-        'baseline_22': (Baseline22Block, (2, 2, 2, 2)),
-        'baseline_23': (Baseline23Block, (2, 2, 2, 2)),
-        'baseline_24': (Baseline24Block, (2, 2, 2, 2)),
-        'baseline_11s': (Baseline11sBlock, (2, 2, 2, 2)),
-        'baseline_strong': (BaselineStrongBlock, (2, 2, 2, 2)),
-        'mf_1': (MultiFea_1_Block, (2, 2, 2, 2)),
-        'mf_2_1': (MultiFea_2_1_Block, (2, 2, 2, 2)),
-        'mf_3_1': (MultiFea_3_1_Block, (2, 2, 2, 2)),
-        'mf_4_1': (MultiFea_4_1_Block, (2, 2, 2, 2)),
-        'mf_5_1': (MultiFea_5_1_Block, (2, 2, 2, 2)),
-        'mf_6_1': (MultiFea_6_1_Block, (2, 2, 2, 2)),
-        'mf_7_1': (MultiFea_7_1_Block, (2, 2, 2, 2)),
-        'mf_10_1': (MultiFea_10_1_Block, (2, 2, 2, 2)),
-        'mf_3_1c': (MultiFea_3_1c_Block, (2, 2, 2, 2)),
-        'mf_2_2': (MultiFea_2_2_Block, (2, 2, 2, 2)),
-        'mf_3_4': (MultiFea_3_4_Block, (2, 2, 2, 2)),
-        'mf_3_4c': (MultiFea_3_4c_Block, (2, 2, 2, 2)),
-        'mf_3_6': (MultiFea_3_6_Block, (2, 2, 2, 2)),
-        'mf_3_6n': (MultiFea_3_6n_Block, (2, 2, 2, 2)),
-        'mf_3_6c': (MultiFea_3_6c_Block, (2, 2, 2, 2)),
-        'mf_3_6nc': (MultiFea_3_6nc_Block, (2, 2, 2, 2)),
+    block_settings = {
+        'mf': MultiFea_Block,
+        'mf13': MultiFea13_Block,
+        'mf13c': MultiFea13clip_Block,
     }
 
     def __init__(self,
                  arch,
-                 stage_setting=None,
+                 stage_setting=(2, 2, 2, 2),
                  binary_type=(True, True),
-                 stem_act='relu',
+                 stem_act='prelu',
+                 block_act='prelu',
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -274,9 +217,7 @@ class Baseline(BaseBackbone):
                  norm_eval=False,
                  with_cp=False,
                  zero_init_residual=False,):
-        super(Baseline, self).__init__()
-        if arch not in self.arch_settings:
-            raise KeyError(f'invalid arch type {arch} for baseline')
+        super(MultiFea, self).__init__()
         self.arch = arch
         self.stem_channels = stem_channels
         self.base_channels = base_channels
@@ -296,16 +237,15 @@ class Baseline(BaseBackbone):
         self.with_cp = with_cp
         self.norm_eval = norm_eval
         self.zero_init_residual = zero_init_residual
-        self.block, stage_blocks = self.arch_settings[arch]
-        self.stage_blocks = stage_blocks[:num_stages]
-        # self.expansion = get_expansion(self.block, expansion)
         self.expansion = 1 if not expansion else expansion
 
-        # set stage_blocks from user config
-        if stage_setting:
-            self.stage_blocks = stage_setting
+        arch_split = arch.split('_')
+        self.block = self.block_settings[arch_split[0]]
+        self.fea_num = int(arch_split[1])
+        self.mode = arch_split[2]
+        self.stage_blocks = stage_setting[:num_stages]
         # set stem activation method
-        self.activation = build_act(stem_act) if stem_act else None
+        self.activation = act_name_map[stem_act]
 
         self._make_stem_layer(in_channels, stem_channels)
 
@@ -328,6 +268,9 @@ class Baseline(BaseBackbone):
                 with_cp=with_cp,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
+                nonlinear=block_act,
+                fea_num=self.fea_num,
+                mode=self.mode,
                 binary_type=binary_type,)
             _in_channels = _out_channels
             _out_channels *= 2
@@ -391,7 +334,7 @@ class Baseline(BaseBackbone):
             if self.activation == nn.PReLU:
                 self.stem_act = self.activation(self.stem_channels)
             else:
-                self.stem_act = self.activation() if self.activation else None
+                self.stem_act = self.activation(inplace=True) if self.activation else None
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
     def _freeze_stages(self):
@@ -448,7 +391,7 @@ class Baseline(BaseBackbone):
             return tuple(outs)
 
     def train(self, mode=True):
-        super(Baseline, self).train(mode)
+        super(MultiFea, self).train(mode)
         self._freeze_stages()
         if mode and self.norm_eval:
             for m in self.modules():

@@ -4,6 +4,15 @@ import torch.nn as nn
 
 from scipy.stats import norm
 
+
+act_name_map = {
+        'hardtanh': nn.Hardtanh,
+        'relu': nn.ReLU,
+        'prelu': nn.PReLU,
+        None: None,
+    }
+
+
 class IRNetSign(Function):
     """Sign function from IR-Net, which can add EDE progress"""
     @staticmethod
@@ -128,20 +137,19 @@ class FeaExpand(nn.Module):
         3nc: 3的基础上既分输入也分通道计算均值方差
         4: 使用1的值初始化的可学习的阈值
         4c: 4的基础上分通道
+        5:
+        6: 按照数值的个数均匀选择阈值，由直方图计算得到
     """
     def __init__(self, expansion=3, mode='1', in_channels=None):
         super(FeaExpand, self).__init__()
         self.expansion = expansion
         self.mode = mode
         if '1' in self.mode:
-            self.alpha = []
-            for i in range(expansion):
-                self.alpha.append(-1 + (i + 1) * 2 / (expansion + 1))
+            self.alpha = [-1 + (i + 1) * 2 / (expansion + 1) for i in range(expansion)]
 
-        elif '3' in self.mode:
-            self.alpha = []
-            for i in range(expansion):
-                self.alpha.append((i + 1) / (expansion + 1))
+        elif '3' in self.mode or '6' in self.mode:
+            self.alpha = [(i + 1) / (expansion + 1) for i in range(expansion)]
+            self.ppf_alpha = [norm.ppf(alpha) for alpha in self.alpha]
 
         elif '4' == self.mode:
             self.move = nn.ModuleList()
@@ -155,17 +163,47 @@ class FeaExpand(nn.Module):
                 alpha = -1 + (i + 1) * 2 / (expansion + 1)
                 self.move.append(LearnableBias(in_channels, init=alpha))
 
+    def bin_id_to_thres(self, bins, bin_id, low, high):
+        interval = (high - low) / bins
+        thres_low = interval / 2 + low
+        thres_high = high - interval / 2
+        thres = [thres_low + id * interval for id in bin_id]
+        while 1:
+            if len(thres) < 3:
+                thres.append(thres_high)
+            else:
+                break
+        # breakpoint()
+        return torch.tensor(thres).cuda()
+
+    def compute_thres(self, fea, bins=20):
+        hist = fea.histc(bins=bins)
+        fea_num = fea.numel()
+        alpha_index = 0
+        sum = 0
+        bin_id = []
+        for i in range(bins):
+            if alpha_index >= self.expansion:
+                break
+            sum = sum + hist[i]
+            if sum >= fea_num * self.alpha[alpha_index]:
+                bin_id.append(i)
+                alpha_index += 1
+        thres = self.bin_id_to_thres(bins, bin_id, fea.min(), fea.max())
+        return thres
+
     def forward(self, x):
+        if self.expansion == 1:
+            return x
+
         out = []
         if self.mode == '1':
             x_max = x.abs().max()
-            for alpha in self.alpha:
-                out.append(x + alpha * x_max)
+            out = [x + alpha * x_max for alpha in self.alpha]
 
         elif self.mode == '1c':
             x_max = x.max(dim=3, keepdim=True)[0].max(dim=2, keepdim=True)[0]
-            for alpha in self.alpha:
-                out.append(x + alpha * x_max)
+            out = [x + alpha * x_max for alpha in self.alpha]
 
         elif self.mode == '2':
             bias = x.abs().max() / 2
@@ -175,38 +213,49 @@ class FeaExpand(nn.Module):
         elif self.mode == '3':
             mean = x.mean().item()
             std = x.std().item()
-            for alpha in self.alpha:
-                out.append(x + norm.ppf(alpha, loc=mean, scale=std))
+            out = [x + (a * std + mean) for a in self.ppf_alpha]
 
         elif self.mode == '3n':
-            ppf_alpha = []
-            for alpha in self.alpha:
-                ppf_alpha.append(norm.ppf(alpha))
             mean = x.mean(dim=(1, 2, 3), keepdim=True)
             std = x.std(dim=(1, 2, 3), keepdim=True)
-            for a in ppf_alpha:
-                out.append(x + (a * std + mean))
+            out = [x + (a * std + mean) for a in self.ppf_alpha]
 
         elif self.mode == '3c':
-            ppf_alpha = []
-            for alpha in self.alpha:
-                ppf_alpha.append(norm.ppf(alpha))
             mean = x.mean(dim=(0, 2, 3), keepdim=True)
             std = x.std(dim=(0, 2, 3), keepdim=True)
-            for a in ppf_alpha:
-                out.append(x + (a * std + mean))
+            out = [x + (a * std + mean) for a in self.ppf_alpha]
 
         elif self.mode == '3nc':
-            ppf_alpha = []
-            for alpha in self.alpha:
-                ppf_alpha.append(norm.ppf(alpha))
             mean = x.mean(dim=(2, 3), keepdim=True)
             std = x.std(dim=(2, 3), keepdim=True)
-            for a in ppf_alpha:
-                out.append(x + (a * std + mean))
+            out = [x + (a * std + mean) for a in self.ppf_alpha]
 
         elif self.mode == '4' or self.mode == '4c':
-            for i in range(self.expansion):
-                out.append(self.move[i](x))
+            out = [self.move[i](x) for i in range(self.expansion)]
+
+        elif self.mode == '6':
+            thres = self.compute_thres(x)
+            out = [x + t for t in thres]
+
+        elif self.mode == '6n':
+            n = x.size(0)
+            thres_n = [self.compute_thres(x_n) for x_n in x]
+            thres_n_tensor = torch.stack(thres_n)
+            thres_n_tensor = thres_n_tensor.T.reshape((self.expansion, n, 1, 1, 1))
+            out = [x + t for t in thres_n_tensor]
+        
+        elif self.mode == '6c':
+            c = x.size(1)
+            thres_c = [self.compute_thres(x_c) for x_c in x.transpose(0, 1)]
+            thres_c_tensor = torch.stack(thres_c)
+            thres_c_tensor = thres_c_tensor.T.reshape((self.expansion, 1, c, 1, 1))
+            out = [x + t for t in thres_c_tensor]
+        
+        elif self.mode == '6nc':
+            n, c, h, w = x.shape
+            thres_nc = [self.compute_thres(x_nc) for x_nc in x.reshape(n * c , h, w)]
+            thres_nc_tensor = torch.stack(thres_nc)
+            thres_nc_tensor = thres_nc_tensor.T.reshape((self.expansion, n, c, 1, 1))
+            out = [x + t for t in thres_nc_tensor]
 
         return torch.cat(out, dim=1)

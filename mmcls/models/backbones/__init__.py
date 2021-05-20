@@ -17,10 +17,11 @@ from .binary_backbones import ResArch
 from .reactnet import ReActNet
 from .irnet import IRNet
 from .baseline import Baseline
+from .multifea import MultiFea
 
 __all__ = [
     'LeNet5', 'AlexNet', 'VGG', 'RegNet', 'ResNet', 'ResNeXt', 'ResNetV1d',
     'ResNeSt', 'ResNet_CIFAR', 'SEResNet', 'SEResNeXt', 'ShuffleNetV1',
     'ShuffleNetV2', 'MobileNetV2', 'MobileNetv3', 'ResArch',
-    'ReActNet', 'IRNet', 'Baseline',
+    'ReActNet', 'IRNet', 'Baseline', 'MultiFea',
 ]

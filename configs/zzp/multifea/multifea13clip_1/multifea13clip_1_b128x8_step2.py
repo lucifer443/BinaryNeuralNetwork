@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs128.py',
+    '../../../_base_/datasets/imagenet_bs32.py',
     '../../../_base_/schedules/imagenet_bs1024.py', '../../../_base_/default_runtime.py'
 ]
 
@@ -7,10 +7,9 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='MultiFea',
-        arch='mf13_3_3c',
+        arch='mf13c_1_3',
         binary_type=(True, True),
-        stem_act='prelu',
-        block_act='prelu',
+        stem_act='hardtanh',
         stem_channels=64,
         base_channels=64,
         num_stages=4,
@@ -18,7 +17,7 @@ model = dict(
         style='pytorch',),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
-        type='LinearClsHead',
+        type='IRClsHead',
         num_classes=1000,
         in_channels=512,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
@@ -30,7 +29,7 @@ optimizer = dict(
     weight_decay=0
 )
 
-load_from = 'work_dir/multifea/multifea13_3_3c/multifea13_3_3c_b128x8/multifea13_3_3c_b128x8_step1/epoch_100.pth'
-work_dir = 'work_dir/multifea/multifea13_3_3c/multifea13_3_3c_b128x8/multifea13_3_3c_b128x8_step2'
+load_from = 'work_dir/multifea/multifea13clip_1/multifea13clip_1_b128x8/multifea13clip_1_b128x8_step1/epoch_100.pth'
+work_dir = 'work_dir/multifea/multifea13clip_1/multifea13clip_1_b128x8/multifea13clip_1_b128x8_step2'
 find_unused_parameters=False
 seed = 166
