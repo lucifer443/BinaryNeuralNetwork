@@ -10,6 +10,7 @@ model = dict(
         arch='mf13c_1_3',
         binary_type=(True, True),
         stem_act='hardtanh',
+        block_act=('prelu', 'hardtanh'),
         stem_channels=64,
         base_channels=64,
         num_stages=4,

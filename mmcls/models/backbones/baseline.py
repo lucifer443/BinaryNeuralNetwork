@@ -12,6 +12,7 @@ from .baseline_blocks.baseline_blocks import (
     Baseline21Block, Baseline22Block, Baseline23Block, Baseline24Block,
     Baseline11sBlock, BaselineStrongBlock,
     Baseline13clipBlock,
+    Baseline13wsBlock, Baseline14wsBlock,
     )
 from .baseline_blocks.baseline_ste_blocks import (
     Baseline11STEBlock, Baseline12STEBlock, Baseline13STEBlock, Baseline14STEBlock, Baseline15STEBlock,
@@ -234,6 +235,8 @@ class Baseline(BaseBackbone):
         'baseline_24': (Baseline24Block, (2, 2, 2, 2)),
         'baseline_11s': (Baseline11sBlock, (2, 2, 2, 2)),
         'baseline_strong': (BaselineStrongBlock, (2, 2, 2, 2)),
+        'baseline_13ws': (Baseline13wsBlock, (2, 2, 2, 2)),
+        'baseline_14ws': (Baseline14wsBlock, (2, 2, 2, 2)),
         'mf_1': (MultiFea_1_Block, (2, 2, 2, 2)),
         'mf_2_1': (MultiFea_2_1_Block, (2, 2, 2, 2)),
         'mf_3_1': (MultiFea_3_1_Block, (2, 2, 2, 2)),

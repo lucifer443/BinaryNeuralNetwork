@@ -1,15 +1,24 @@
 from torch.autograd import Function
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from scipy.stats import norm
 
 
+class Mish(nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        x = x * (torch.tanh(F.softplus(x)))
+        return x
+
 act_name_map = {
         'hardtanh': nn.Hardtanh,
         'relu': nn.ReLU,
-        'prelu': nn.PReLU,
-        None: None,
+        'prelu_one': nn.PReLU,
+        'mish': Mish,
     }
 
 

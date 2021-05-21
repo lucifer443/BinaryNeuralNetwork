@@ -39,6 +39,7 @@ class IRConv2d(BaseBinaryConv2d):
         return IRNetSign().apply(x, self.k, self.t)
 
     def binary_weight(self, w):
+        breakpoint()
         bw = w - w.view(w.size(0), -1).mean(-1).view(w.size(0), 1, 1, 1)
         bw = bw / bw.view(bw.size(0), -1).std(-1).view(bw.size(0), 1, 1, 1)
         sw = torch.pow(torch.tensor([2] * bw.size(0)).cuda().float(),
@@ -149,7 +150,8 @@ class BLConv2d(BaseBinaryConv2d):
 
     def binary_weight(self, w):
         bw = self.sign_w(w)
-        sw = torch.mean(torch.mean(torch.mean(abs(w),dim=3,keepdim=True),dim=2,keepdim=True),dim=1,keepdim=True).detach()
+        sw = w.abs().mean(dim=(1, 2, 3), keepdim=True).detach()
+        # sw = torch.mean(torch.mean(torch.mean(abs(w),dim=3,keepdim=True),dim=2,keepdim=True),dim=1,keepdim=True).detach()
         return bw * sw
 
 
@@ -187,3 +189,29 @@ class STEConv2d(BaseBinaryConv2d):
 
     def binary_weight(self, w):
         return self.sign_w(w)
+
+
+class BConvWS2d(BaseBinaryConv2d):
+
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(BConvWS2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        
+        self.sign_a = RANetActSign()
+        self.sign_w = RANetWSign()
+
+    def binary_input(self, x):
+        return self.sign_a(x)
+
+    def binary_weight(self, w):
+        mean=  w.mean(dim=(1, 2, 3), keepdim=True)
+        std = w.std(dim=(1, 2, 3), keepdim=True)
+        w = (w - mean) / (std + 1e-5)
+        bw = self.sign_w(w)
+        sw = w.abs().mean(dim=(1, 2, 3), keepdim=True).detach()
+        # sw = torch.pow(torch.tensor([2] * w.size(0)).cuda().float(),
+        #                (torch.log(w.abs().view(w.size(0), -1).mean(-1)) / math.log(2)).round().float()).view(
+        #     w.size(0), 1, 1, 1).detach()
+
+        return bw * sw

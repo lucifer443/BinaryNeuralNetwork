@@ -8,7 +8,7 @@ from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 
 from .binary_utils.binary_functions import act_name_map
-from .binary_utils.multifea13_blocks import MultiFea_Block, MultiFea13_Block, MultiFea13clip_Block
+from .binary_utils.multifea13_blocks import MultiFea_Block
 
 
 def get_expansion(block, expansion=None):
@@ -188,18 +188,13 @@ class MultiFea(BaseBackbone):
         (1, 512, 1, 1)
     """
 
-    block_settings = {
-        'mf': MultiFea_Block,
-        'mf13': MultiFea13_Block,
-        'mf13c': MultiFea13clip_Block,
-    }
-
     def __init__(self,
                  arch,
                  stage_setting=(2, 2, 2, 2),
                  binary_type=(True, True),
+                 stem_order='cbam',
                  stem_act='prelu',
-                 block_act='prelu',
+                 block_act=('prelu', 'identity'),
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -218,7 +213,17 @@ class MultiFea(BaseBackbone):
                  with_cp=False,
                  zero_init_residual=False,):
         super(MultiFea, self).__init__()
+
         self.arch = arch
+        arch_split = arch.split('_')
+        self.block = MultiFea_Block
+        self.fea_num = int(arch_split[1])
+        self.mode = arch_split[2]
+        self.stage_blocks = stage_setting[:num_stages]
+        self.stem_order = stem_order
+        # set stem activation method
+        self.stem_act_name = stem_act
+
         self.stem_channels = stem_channels
         self.base_channels = base_channels
         self.num_stages = num_stages
@@ -238,14 +243,6 @@ class MultiFea(BaseBackbone):
         self.norm_eval = norm_eval
         self.zero_init_residual = zero_init_residual
         self.expansion = 1 if not expansion else expansion
-
-        arch_split = arch.split('_')
-        self.block = self.block_settings[arch_split[0]]
-        self.fea_num = int(arch_split[1])
-        self.mode = arch_split[2]
-        self.stage_blocks = stage_setting[:num_stages]
-        # set stem activation method
-        self.activation = act_name_map[stem_act]
 
         self._make_stem_layer(in_channels, stem_channels)
 
@@ -290,8 +287,26 @@ class MultiFea(BaseBackbone):
         return getattr(self, self.norm1_name)
 
     def _make_stem_layer(self, in_channels, stem_channels):
+        stem_act = self._build_stem_act()
+        stem_conv = build_conv_layer(
+            self.conv_cfg,
+            in_channels,
+            stem_channels,
+            kernel_size=7,
+            stride=2,
+            padding=3,
+            bias=False)
+        stem_bn1 = nn.BatchNorm2d(self.stem_channels)
+        stem_bn2 = nn.BatchNorm2d(self.stem_channels)
+        stem_maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        stem_dict = dict(
+            c=[stem_conv],
+            b=[stem_bn1, stem_bn2],
+            a=[stem_act],
+            m=[stem_maxpool],
+        )
         if self.deep_stem:
-            self.stem = nn.Sequential(
+            stem = [
                 ConvModule(
                     in_channels,
                     stem_channels // 2,
@@ -318,24 +333,21 @@ class MultiFea(BaseBackbone):
                     padding=1,
                     conv_cfg=self.conv_cfg,
                     norm_cfg=self.norm_cfg,
-                    inplace=True))
+                    inplace=True),
+                nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            ]
         else:
-            self.conv1 = build_conv_layer(
-                self.conv_cfg,
-                in_channels,
-                stem_channels,
-                kernel_size=7,
-                stride=2,
-                padding=3,
-                bias=False)
-            self.norm1_name, norm1 = build_norm_layer(
-                self.norm_cfg, stem_channels, postfix=1)
-            self.add_module(self.norm1_name, norm1)
-            if self.activation == nn.PReLU:
-                self.stem_act = self.activation(self.stem_channels)
-            else:
-                self.stem_act = self.activation(inplace=True) if self.activation else None
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            stem = [stem_dict[ch].pop(0) for ch in self.stem_order]
+
+        self.stem = nn.Sequential(*stem)
+
+    def _build_stem_act(self):
+        if self.stem_act_name == 'identity':
+            return nn.Sequential()
+        if self.stem_act_name == 'prelu':
+            return nn.PReLU(self.stem_channels)
+        else:
+            return act_name_map[self.stem_act_name](inplace=True)
 
     def _freeze_stages(self):
         if self.frozen_stages >= 0:
@@ -371,14 +383,7 @@ class MultiFea(BaseBackbone):
                     constant_init(m.norm2, 0)
 
     def forward(self, x):
-        if self.deep_stem:
-            x = self.stem(x)
-        else:
-            x = self.conv1(x)
-            x = self.norm1(x)
-            if self.stem_act:
-                x = self.stem_act(x)
-        x = self.maxpool(x)
+        x = self.stem(x)
         outs = []
         for i, layer_name in enumerate(self.res_layers):
             res_layer = getattr(self, layer_name)
