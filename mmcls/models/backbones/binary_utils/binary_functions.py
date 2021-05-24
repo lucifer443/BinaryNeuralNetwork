@@ -146,10 +146,10 @@ class FeaExpand(nn.Module):
         3nc: 3的基础上既分输入也分通道计算均值方差
         4: 使用1的值初始化的可学习的阈值
         4c: 4的基础上分通道
-        5:
+        5: 手动设置阈值
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
     """
-    def __init__(self, expansion=3, mode='1', in_channels=None):
+    def __init__(self, expansion=3, mode='1', in_channels=None, thres=None):
         super(FeaExpand, self).__init__()
         self.expansion = expansion
         self.mode = mode
@@ -171,6 +171,10 @@ class FeaExpand(nn.Module):
             for i in range(expansion):
                 alpha = -1 + (i + 1) * 2 / (expansion + 1)
                 self.move.append(LearnableBias(in_channels, init=alpha))
+        
+        elif '5' == self.mode:
+            assert len(thres) == expansion
+            self.thres = thres
 
     def bin_id_to_thres(self, bins, bin_id, low, high):
         interval = (high - low) / bins
@@ -206,61 +210,64 @@ class FeaExpand(nn.Module):
             return x
 
         out = []
-        if self.mode == '1':
+        if '1' == self.mode:
             x_max = x.abs().max()
             out = [x + alpha * x_max for alpha in self.alpha]
 
-        elif self.mode == '1c':
+        elif '1c' == self.mode:
             x_max = x.max(dim=3, keepdim=True)[0].max(dim=2, keepdim=True)[0]
             out = [x + alpha * x_max for alpha in self.alpha]
 
-        elif self.mode == '2':
+        elif '2' == self.mode:
             bias = x.abs().max() / 2
             out.append(x)
             out.append(-x.abs() + bias)
 
-        elif self.mode == '3':
+        elif '3' == self.mode:
             mean = x.mean().item()
             std = x.std().item()
             out = [x + (a * std + mean) for a in self.ppf_alpha]
 
-        elif self.mode == '3n':
+        elif '3n' == self.mode:
             mean = x.mean(dim=(1, 2, 3), keepdim=True)
             std = x.std(dim=(1, 2, 3), keepdim=True)
             out = [x + (a * std + mean) for a in self.ppf_alpha]
 
-        elif self.mode == '3c':
+        elif '3c' == self.mode:
             mean = x.mean(dim=(0, 2, 3), keepdim=True)
             std = x.std(dim=(0, 2, 3), keepdim=True)
             out = [x + (a * std + mean) for a in self.ppf_alpha]
 
-        elif self.mode == '3nc':
+        elif '3nc' == self.mode:
             mean = x.mean(dim=(2, 3), keepdim=True)
             std = x.std(dim=(2, 3), keepdim=True)
             out = [x + (a * std + mean) for a in self.ppf_alpha]
 
-        elif self.mode == '4' or self.mode == '4c':
+        elif '4' == self.mode or '4c' == self.mode:
             out = [self.move[i](x) for i in range(self.expansion)]
+        
+        elif '5' == self.mode:
+            out = [x + t for t in self.thres]
 
-        elif self.mode == '6':
+        elif '6' == self.mode:
             thres = self.compute_thres(x)
             out = [x + t for t in thres]
 
-        elif self.mode == '6n':
+        elif '6n' == self.mode:
             n = x.size(0)
             thres_n = [self.compute_thres(x_n) for x_n in x]
             thres_n_tensor = torch.stack(thres_n)
             thres_n_tensor = thres_n_tensor.T.reshape((self.expansion, n, 1, 1, 1))
             out = [x + t for t in thres_n_tensor]
         
-        elif self.mode == '6c':
+        elif '6c' == self.mode:
             c = x.size(1)
             thres_c = [self.compute_thres(x_c) for x_c in x.transpose(0, 1)]
             thres_c_tensor = torch.stack(thres_c)
             thres_c_tensor = thres_c_tensor.T.reshape((self.expansion, 1, c, 1, 1))
             out = [x + t for t in thres_c_tensor]
         
-        elif self.mode == '6nc':
+        elif '6nc' == self.mode:
             n, c, h, w = x.shape
             thres_nc = [self.compute_thres(x_nc) for x_nc in x.reshape(n * c , h, w)]
             thres_nc_tensor = torch.stack(thres_nc)

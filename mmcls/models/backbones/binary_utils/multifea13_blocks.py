@@ -8,24 +8,24 @@ class MultiFea_Block(nn.Module):
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None,
-                 nonlinear=('identity', 'hardtanh'), fea_num=1, mode='1', **kwargs):
+                 nonlinear=('identity', 'hardtanh'), fea_num=1, mode='1', thres=None, **kwargs):
         super(MultiFea_Block, self).__init__()
         self.out_channels = out_channels
         self.stride = stride
         self.downsample = downsample
         self.fea_num = fea_num
 
-        self.fexpand1 = FeaExpand(expansion=fea_num, mode=mode)
+        self.fexpand1 = FeaExpand(expansion=fea_num, mode=mode, in_channels=in_channels, thres=thres)
         self.conv1 = BLConv2d(in_channels * fea_num, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear11 = self._build_act(nonlinear[0])
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.nonlinear12 = self._build_act(nonlinear[1])
-        self.fexpand2 = FeaExpand(expansion=fea_num, mode=mode)
+        self.fexpand2 = FeaExpand(expansion=fea_num, mode=mode, in_channels=out_channels, thres=thres)
         self.conv2 = BLConv2d(out_channels * fea_num, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.nonlinear21 = self._build_act(nonlinear[0])
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.nonlinear22 = self._build_act(nonlinear[1])
-        
+
 
     def _build_act(self, act_name):
         if act_name == 'identity':

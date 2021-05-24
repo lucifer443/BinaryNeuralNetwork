@@ -7,10 +7,11 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='MultiFea',
-        arch='mf_3_4c',
+        arch='mf_2_5',
         binary_type=(True, True),
         stem_act='hardtanh',
         block_act=('identity', 'hardtanh'),
+        thres=(-0.40, 0.40),
         stem_channels=64,
         base_channels=64,
         num_stages=4,
@@ -30,7 +31,7 @@ optimizer = dict(
     weight_decay=0
 )
 
-load_from = 'work_dir/multifea/multifea_3_4c/multifea_3_4c_b128x8_two/multifea_3_4c_b128x8_step1/epoch_100.pth'
-work_dir = 'work_dir/multifea/multifea_3_4c/multifea_3_4c_b128x8_two/multifea_3_4c_b128x8_step2'
+load_from = 'work_dir/multifea/multifea_2_5/multifea_2_5_40/multifea_2_5_40_b128x8_step1/epoch_100.pth'
+work_dir = 'work_dir/multifea/multifea_2_5/multifea_2_5_40/multifea_2_5_40_b128x8_step2'
 find_unused_parameters=False
 seed = 166

@@ -195,6 +195,7 @@ class MultiFea(BaseBackbone):
                  stem_order='cbam',
                  stem_act='prelu',
                  block_act=('prelu', 'identity'),
+                 thres=None,
                  in_channels=3,
                  stem_channels=64,
                  base_channels=64,
@@ -223,6 +224,7 @@ class MultiFea(BaseBackbone):
         self.stem_order = stem_order
         # set stem activation method
         self.stem_act_name = stem_act
+        self.thres = thres
 
         self.stem_channels = stem_channels
         self.base_channels = base_channels
@@ -268,6 +270,7 @@ class MultiFea(BaseBackbone):
                 nonlinear=block_act,
                 fea_num=self.fea_num,
                 mode=self.mode,
+                thres=self.thres,
                 binary_type=binary_type,)
             _in_channels = _out_channels
             _out_channels *= 2
