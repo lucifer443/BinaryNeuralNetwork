@@ -8,7 +8,7 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
-from .binary_utils.binary_blocks import IRNetBlock, RANetBlockA, StrongBaselineBlock, RealToBinaryBlock, RealToBinaryFPBlock
+from .binary_utils.binary_blocks import IRNetBlock, RANetBlockA, RANetBlockB, StrongBaselineBlock, RealToBinaryBlock, RealToBinaryFPBlock
 from .binary_utils.expand_block import *
 
 def build_act(name):
