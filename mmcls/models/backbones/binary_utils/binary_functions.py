@@ -76,3 +76,45 @@ class LearnableBias(nn.Module):
     def forward(self, x):
         out = x + self.bias.expand_as(x)
         return out
+
+class LearnableScale(nn.Module):
+    """scale from XNOR Net++"""
+    hw_settings = {
+        64: 56,
+        128: 28,
+        256: 14,
+        512: 7,
+    }
+    def __init__(self, channels):
+        super(LearnableScale, self).__init__()
+        self.channels = channels
+        self.height = self.hw_settings[channels]
+        self.width = self.hw_settings[channels]
+        self.alpha = nn.Parameter(torch.ones(1, self.channels, 1, 1), requires_grad=True)
+        self.beta = nn.Parameter(torch.ones(1, 1, self.height, 1), requires_grad=True)
+        self.gamma = nn.Parameter(torch.ones(1, 1, 1, self.width), requires_grad=True)
+
+    def forward(self, x):
+        out = x * self.alpha.expand_as(x)
+        out = out * self.beta.expand_as(x)
+        out = out * self.gamma.expand_as(x)
+
+        return out
+
+
+class AttentionScale(nn.Module):
+    """attention scale from Real-To-Binary Net"""
+    ##缺少relu和sigmod
+    scale_factor = 8
+    def __init__(self, channels):
+        super(AttentionScale, self).__init__()
+        self.fc1 = nn.Linear(channels, channels // self.scale_factor)
+        self.fc2 = nn.Linear(channels // self.scale_factor, channels)
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+
+    def forward(self, inputs):
+        x = self.pool(inputs)
+        x = x.view(x.size(0), -1)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        return inputs * x[:, :, None, None]

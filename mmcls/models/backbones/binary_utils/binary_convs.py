@@ -256,6 +256,7 @@ class IRConv2d_bias_x2x(BaseBinaryConv2d):
     def forward(self, input):
         x = self.binary_input(input) if self.mode[0] else input
         w = self.binary_weight(self.weight) if self.mode[1] else self.float_weight(self.weight)
+        #w = self.binary_weight(self.weight) if self.mode[1] else self.weight
         floatx = self.float_x(input)
         float_w = self.float_weight(self.weight)
         output1 =  F.conv2d(x, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
@@ -268,10 +269,86 @@ class IRConv2d_bias_x2x(BaseBinaryConv2d):
                 #print(err.shape)
                 mybias = err.mean(dim=0,keepdim=True).mean(dim=2,keepdim=True).mean(dim=3,keepdim=True)
                 #mybias = err.mean(dim=0,keepdim=True)
-                self.bias_bi[:] = self.bias_bi[:]*self.aerfa +mybias*(1-self.aerfa)
+                with torch.no_grad():
+                    self.bias_bi[:] = self.bias_bi[:]*self.aerfa +mybias*(1-self.aerfa)
             #output =output1 + self.bias_bi[:]
-                output =output1 + mybias
+                output = output1 + mybias
                 return(output)        
         else:
             output = output1 + self.bias_bi[:]
-            return(output)        
+            return(output)
+
+class STEConv2d(BaseBinaryConv2d):
+
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(STEConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        self.sign_a = RANetWSign(clip=1.25)
+        self.sign_w = RANetWSign(clip=1.25)
+
+    def binary_input(self, x):
+        return self.sign_a(x)
+
+    def binary_weight(self, w):
+        return self.sign_w(w)
+
+class StrongBaselineConv2d(BaseBinaryConv2d):
+
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(StrongBaselineConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        self.sign = RANetActSign()
+        self.sign_w = RANetWSign(clip=1.25)
+        self.bias_bi = torch.zeros(1,out_channels,1,1).cuda()
+        self.aerfa = 0.999
+        #self.register_buffer('bias_bi',bias_bi)
+
+    def binary_input(self, x):
+        return self.sign(x)
+
+    def binary_weight(self, w):
+        return self.sign_w(w)
+    
+    def step_weight(self,w):
+        cliped_weights = torch.clamp(w, -1.25, 1.25)
+        return cliped_weights      
+    
+    def float_weight(self,w):
+        cliped_weights = torch.clamp(w, -1.25, 1.25)
+        return cliped_weights
+
+    def float_x(self,x):
+        mask1 = x < -1
+        mask2 = x < 0
+        mask3 = x < 1
+        out1 = (-1) * mask1.type(torch.float32) + (x*x + 2*x) * (1-mask1.type(torch.float32))
+        out2 = out1 * mask2.type(torch.float32) + (-x*x + 2*x) * (1-mask2.type(torch.float32))
+        out3 = out2 * mask3.type(torch.float32) + 1 * (1- mask3.type(torch.float32))
+        return out3
+
+    def forward(self, input):
+        if self.mode[0]:
+            x = self.binary_input(input)
+        else:
+            x = input
+        if self.mode[1]:
+            w = self.binary_weight(self.weight)
+        else:
+            w = self.step_weight(self.weight)
+        floatx = self.float_x(input)
+        float_w = self.float_weight(self.weight)
+        boutput =  F.conv2d(x, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
+        
+        if self.training:
+            foutput =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
+            bias = torch.mean(foutput-boutput, dim=[0, 2, 3])
+            bias = bias.reshape(1, bias.size(0), 1, 1)
+            with torch.no_grad():
+                self.bias_bi = self.bias_bi*self.aerfa +bias*(1-self.aerfa)
+            output =boutput + bias   
+        else:
+            bias = self.bias_bi
+            output = boutput + bias
+        return output

@@ -10,7 +10,7 @@ model = dict(
         arch='IRNet-18-bias-x2x',
         num_stages=4,
         out_indices=(3, ),
-        binary_type=(True, False),
+        #binary_type=(True, True),
         stem_act='hardtanh',
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
@@ -26,7 +26,8 @@ custom_hooks = [
     dict(type='EDEHook', total_epoch=100)
 ]
 #work_dir = 'work_dirs/tmp'
-work_dir = 'work_dirs/33testirnet_r18_bias_x2x_c_allgradreload'
-load_from = 'work_dirs/irnet18_x2x_float/epoch_100.pth'
+work_dir = 'work_dirs/irnet_r18_bias_x2x_bnall11'
+load_from = 'work_dirs/irnet_r18_bias_x2x_bnact_floatw/epoch_100.pth'
+#resume_from = 'work_dirs/irnet_r18_bias_x2x_bnall/epoch_56.pth'
 find_unused_parameters=True
 seed = 166
