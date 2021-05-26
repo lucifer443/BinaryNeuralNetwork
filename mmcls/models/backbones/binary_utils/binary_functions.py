@@ -102,10 +102,10 @@ class RPRelu(nn.Module):
 class LearnableBias(nn.Module):
     def __init__(self, channels, init=0):
         super(LearnableBias, self).__init__()
-        self.bias = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
+        self.learnable_bias = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
 
     def forward(self, x):
-        out = x + self.bias.expand_as(x)
+        out = x + self.learnable_bias.expand_as(x)
         return out
 
 
