@@ -122,3 +122,19 @@ class AttentionScale(nn.Module):
         x = self.fc2(x)
         x = self.act2(x)
         return inputs * x[:, :, None, None]
+
+
+class BiasExpand(nn.Module):
+    """expand feat use multi bias"""
+    def __init__(self, ratio=3):
+        super(BiasExpand, self).__init__()
+        self.alpha = []
+        for i in range(ratio):
+            self.alpha.append(-1 + (i + 1) * 2 / (ratio + 1))
+
+    def forward(self, inputs):
+        absmax = torch.abs(inputs).max()
+        out = []
+        for bias in self.alpha:
+            out.append(inputs + bias*absmax)
+        return torch.cat(out, dim=1)
