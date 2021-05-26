@@ -39,7 +39,6 @@ class IRConv2d(BaseBinaryConv2d):
         return IRNetSign().apply(x, self.k, self.t)
 
     def binary_weight(self, w):
-        breakpoint()
         bw = w - w.view(w.size(0), -1).mean(-1).view(w.size(0), 1, 1, 1)
         bw = bw / bw.view(bw.size(0), -1).std(-1).view(bw.size(0), 1, 1, 1)
         sw = torch.pow(torch.tensor([2] * bw.size(0)).cuda().float(),

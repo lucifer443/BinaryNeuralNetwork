@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from sys import base_prefix
 from mmcls.apis import inference_model, init_model, show_result_pyplot
 
 import torch
@@ -100,7 +101,7 @@ def main():
     else:
         print('arch not support')
         exit()
-    
+    breakpoint()
     ncols = 8
     nrows = math.ceil(conv_num / ncols)
     fig, axs = plt.subplots(nrows, ncols, figsize=(ncols * 4, nrows * 3))
@@ -114,7 +115,7 @@ def main():
         index += 1
 
     print('saving...')
-    plt.savefig(f'./work_dir/plot/ratio_channel/{arch_name}_ratio_channel.jpg')
+    fig.savefig(f'./work_dir/plot/ratio_channel/{arch_name}_ratio_channel.jpg')
 
                                                                                                                                                                                                                                                                                                                                                                       
 if __name__ == '__main__':

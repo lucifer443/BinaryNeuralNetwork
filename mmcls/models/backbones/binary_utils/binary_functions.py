@@ -139,6 +139,8 @@ class FeaExpand(nn.Module):
     mode:
         1: 根据特征图绝对值最大值均匀选择阈值
         1c: 1的基础上分通道
+        1c-m: 根据特征图的最大值和最小值,分通道计算阈值
+        1nc-m: 根据特征图的最大值和最小值，分输入分通道计算阈值
         2: 仅限于2张特征图，第1张不变，第2张绝对值小的映射为+1，绝对值大的映射为-1
         3: 根据均值方差选择阈值（一个batch中的所有图片计算一个均值和方差）
         3n: 3的基础上分输入，每个输入图片计算自己的均值方差
@@ -175,6 +177,12 @@ class FeaExpand(nn.Module):
         elif '5' == self.mode:
             assert len(thres) == expansion
             self.thres = thres
+        
+        elif '7' == self.mode:
+            self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+            self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
+            self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
+            self.tanh = nn.Tanh()
 
     def bin_id_to_thres(self, bins, bin_id, low, high):
         interval = (high - low) / bins
@@ -215,8 +223,21 @@ class FeaExpand(nn.Module):
             out = [x + alpha * x_max for alpha in self.alpha]
 
         elif '1c' == self.mode:
-            x_max = x.max(dim=3, keepdim=True)[0].max(dim=2, keepdim=True)[0]
+            # amin is supported by pytorch 1.8.1
+            x_max = x.abs().amax(dim=(0, 2, 3), keepdim=True)
             out = [x + alpha * x_max for alpha in self.alpha]
+
+        elif '1c-m' == self.mode:
+            # amin and amax are supported by pytorch 1.8.1
+            x_min = x.amin(dim=(0, 2, 3), keepdim=True)
+            x_max = x.amax(dim=(0, 2, 3), keepdim=True)
+            out = [x + ((alpha + 1) / 2 * (x_max - x_min) + x_min) for alpha in self.alpha]
+
+        elif '1nc-m' == self.mode:
+            # amin and amax are supported by pytorch 1.8.1
+            x_min = x.amin(dim=(2, 3), keepdim=True)
+            x_max = x.amax(dim=(2, 3), keepdim=True)
+            out = [x + ((alpha + 1) / 2 * (x_max - x_min) + x_min) for alpha in self.alpha]
 
         elif '2' == self.mode:
             bias = x.abs().max() / 2
@@ -273,5 +294,10 @@ class FeaExpand(nn.Module):
             thres_nc_tensor = torch.stack(thres_nc)
             thres_nc_tensor = thres_nc_tensor.T.reshape((self.expansion, n, c, 1, 1))
             out = [x + t for t in thres_nc_tensor]
+        
+        elif '72' == self.mode:
+            bias = self.avgpool(x)
+            bias = self.linear1(bias)
+            bias = self.tanh(bias)
 
         return torch.cat(out, dim=1)
