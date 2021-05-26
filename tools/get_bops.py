@@ -51,7 +51,7 @@ def main():
             m.register_forward_hook(hook=count_bops)
 
     if hasattr(model, 'extract_feat'):
-        model.forward = model.simple_test
+        model.forward = model.extract_feat
     else:
         raise NotImplementedError(
             'FLOPs counter is currently not currently supported with {}'.

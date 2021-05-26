@@ -12,9 +12,9 @@ model = dict(
         out_indices=(3, ),
         stem_act='hardtanh',
         style='pytorch'),
-    neck=dict(type='GlobalAveragePooling'),
+    neck=dict(type='GlobalAveragePoolingBN', in_channels=512),
     head=dict(
-        type='IRClsHead',
+        type='LinearClsHead',
         num_classes=1000,
         in_channels=512,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
