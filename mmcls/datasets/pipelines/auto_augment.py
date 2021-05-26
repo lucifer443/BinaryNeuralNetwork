@@ -1,5 +1,6 @@
 import copy
 import random
+from numbers import Number
 
 import mmcv
 import numpy as np
@@ -17,7 +18,9 @@ def random_negative(value, random_negative_prob):
 class AutoAugment(object):
     """Auto augmentation. This data augmentation is proposed in `AutoAugment:
     Learning Augmentation Policies from Data.
+
     <https://arxiv.org/abs/1805.09501>`_.
+
     Args:
         policies (list[list[dict]]): The policies of auto augmentation. Each
             policy in ``policies`` is a specific augmentation policy, and is
@@ -54,7 +57,9 @@ class AutoAugment(object):
 class RandAugment(object):
     """Random augmentation. This data augmentation is proposed in `RandAugment:
     Practical automated data augmentation with a reduced search space.
+
     <https://arxiv.org/abs/1909.13719>`_.
+
     Args:
         policies (list[dict]): The policies of random augmentation. Each
             policy in ``policies`` is one specific augmentation policy (dict).
@@ -62,20 +67,36 @@ class RandAugment(object):
             augmentation. For those which have magnitude, (given to the fact
             they are named differently in different augmentation, )
             `magnitude_key` and `magnitude_range` shall be the magnitude
-            argument (str) and the range of magnitude (tuple in the format or
-            (minval, maxval)), respectively.
+            argument (str) and the range of magnitude (tuple in the format of
+            (val1, val2)), respectively. Note that val1 is not necessarily
+            less than val2.
         num_policies (int): Number of policies to select from policies each
             time.
         magnitude_level (int | float): Magnitude level for all the augmentation
             selected.
         total_level (int | float): Total level for the magnitude. Defaults to
             30.
+        magnitude_std (Number | str): Deviation of magnitude noise applied.
+            If positive number, magnitude is sampled from normal distribution
+                (mean=magnitude, std=magnitude_std).
+            If 0 or negative number, magnitude remains unchanged.
+            If str "inf", magnitude is sampled from uniform distribution
+                (range=[min, magnitude]).
+
+    Note:
+        `magnitude_std` will introduce some randomness to policy, modified by
+        https://github.com/rwightman/pytorch-image-models
+        When magnitude_std=0, we calculate the magnitude as follows:
+
+        .. math::
+            magnitude = magnitude_level / total_level * (val2 - val1) + val1
     """
 
     def __init__(self,
                  policies,
                  num_policies,
                  magnitude_level,
+                 magnitude_std=0.,
                  total_level=30):
         assert isinstance(num_policies, int), 'Number of policies must be ' \
             f'of int type, got {type(num_policies)} instead.'
@@ -90,12 +111,21 @@ class RandAugment(object):
             assert isinstance(policy, dict) and 'type' in policy, \
                 'Each policy must be a dict with key "type".'
 
+        assert isinstance(magnitude_std, (Number, str)), \
+            'Magnitude std must be of number or str type, ' \
+            f'got {type(magnitude_std)} instead.'
+        if isinstance(magnitude_std, str):
+            assert magnitude_std == 'inf', \
+                'Magnitude std must be of number or "inf", ' \
+                f'got "{magnitude_std}" instead.'
+
         assert num_policies > 0, 'num_policies must be greater than 0.'
         assert magnitude_level >= 0, 'magnitude_level must be no less than 0.'
         assert total_level > 0, 'total_level must be greater than 0.'
 
         self.num_policies = num_policies
         self.magnitude_level = magnitude_level
+        self.magnitude_std = magnitude_std
         self.total_level = total_level
         self.policies = self._process_policies(policies)
 
@@ -105,10 +135,20 @@ class RandAugment(object):
             processed_policy = copy.deepcopy(policy)
             magnitude_key = processed_policy.pop('magnitude_key', None)
             if magnitude_key is not None:
-                minval, maxval = processed_policy.pop('magnitude_range')
-                magnitude_value = (float(self.magnitude_level) /
-                                   self.total_level) * float(maxval -
-                                                             minval) + minval
+                val1, val2 = processed_policy.pop('magnitude_range')
+                magnitude_value = (self.magnitude_level / self.total_level
+                                   ) * float(val2 - val1) + val1
+
+                # if magnitude_std is positive number or 'inf', move
+                # magnitude_value randomly.
+                maxval = max(val1, val2)
+                minval = min(val1, val2)
+                if self.magnitude_std == 'inf':
+                    magnitude_value = random.uniform(minval, magnitude_value)
+                elif self.magnitude_std > 0:
+                    magnitude_value = random.gauss(magnitude_value,
+                                                   self.magnitude_std)
+                    magnitude_value = min(maxval, max(minval, magnitude_value))
                 processed_policy.update({magnitude_key: magnitude_value})
             processed_policies.append(processed_policy)
         return processed_policies
@@ -132,6 +172,7 @@ class RandAugment(object):
 @PIPELINES.register_module()
 class Shear(object):
     """Shear images.
+
     Args:
         magnitude (int | float): The magnitude used for shear.
         pad_val (int, tuple[int]): Pixel pad_val value for constant fill. If a
@@ -208,6 +249,7 @@ class Shear(object):
 @PIPELINES.register_module()
 class Translate(object):
     """Translate images.
+
     Args:
         magnitude (int | float): The magnitude used for translate. Note that
             the offset is calculated by magnitude * size in the corresponding
@@ -292,6 +334,7 @@ class Translate(object):
 @PIPELINES.register_module()
 class Rotate(object):
     """Rotate images.
+
     Args:
         angle (float): The angle used for rotate. Positive values stand for
             clockwise rotation.
@@ -381,6 +424,7 @@ class Rotate(object):
 @PIPELINES.register_module()
 class AutoContrast(object):
     """Auto adjust image contrast.
+
     Args:
         prob (float): The probability for performing invert therefore should
              be in range [0, 1]. Defaults to 0.5.
@@ -410,6 +454,7 @@ class AutoContrast(object):
 @PIPELINES.register_module()
 class Invert(object):
     """Invert images.
+
     Args:
         prob (float): The probability for performing invert therefore should
              be in range [0, 1]. Defaults to 0.5.
@@ -439,6 +484,7 @@ class Invert(object):
 @PIPELINES.register_module()
 class Equalize(object):
     """Equalize the image histogram.
+
     Args:
         prob (float): The probability for performing invert therefore should
              be in range [0, 1]. Defaults to 0.5.
@@ -468,6 +514,7 @@ class Equalize(object):
 @PIPELINES.register_module()
 class Solarize(object):
     """Solarize images (invert all pixel values above a threshold).
+
     Args:
         thr (int | float): The threshold above which the pixels value will be
             inverted.
@@ -503,6 +550,7 @@ class Solarize(object):
 @PIPELINES.register_module()
 class SolarizeAdd(object):
     """SolarizeAdd images (add a certain value to pixels below a threshold).
+
     Args:
         magnitude (int | float): The value to be added to pixels below the thr.
         thr (int | float): The threshold below which the pixels value will be
@@ -545,6 +593,7 @@ class SolarizeAdd(object):
 @PIPELINES.register_module()
 class Posterize(object):
     """Posterize images (reduce the number of bits for each color channel).
+
     Args:
         bits (int | float): Number of bits for each pixel in the output img,
             which should be less or equal to 8.
@@ -579,6 +628,7 @@ class Posterize(object):
 @PIPELINES.register_module()
 class Contrast(object):
     """Adjust images contrast.
+
     Args:
         magnitude (int | float): The magnitude used for adjusting contrast. A
             positive magnitude would enhance the contrast and a negative
@@ -623,6 +673,7 @@ class Contrast(object):
 @PIPELINES.register_module()
 class ColorTransform(object):
     """Adjust images color balance.
+
     Args:
         magnitude (int | float): The magnitude used for color transform. A
             positive magnitude would enhance the color and a negative magnitude
@@ -666,6 +717,7 @@ class ColorTransform(object):
 @PIPELINES.register_module()
 class Brightness(object):
     """Adjust images brightness.
+
     Args:
         magnitude (int | float): The magnitude used for adjusting brightness. A
             positive magnitude would enhance the brightness and a negative
@@ -710,6 +762,7 @@ class Brightness(object):
 @PIPELINES.register_module()
 class Sharpness(object):
     """Adjust images sharpness.
+
     Args:
         magnitude (int | float): The magnitude used for adjusting sharpness. A
             positive magnitude would enhance the sharpness and a negative
@@ -754,6 +807,7 @@ class Sharpness(object):
 @PIPELINES.register_module()
 class Cutout(object):
     """Cutout images.
+
     Args:
         shape (int | float | tuple(int | float)): Expected cutout shape (h, w).
             If given as a single value, the value will be used for

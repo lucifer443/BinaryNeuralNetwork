@@ -1,4 +1,4 @@
-from .gap import GlobalAveragePooling
-from .mlf import MultiLevelFuse
+from .gap import GlobalAveragePooling, GlobalAveragePoolingBN
 
-__all__ = ['GlobalAveragePooling', 'MultiLevelFuse']
+__all__ = ['GlobalAveragePooling', 'GlobalAveragePoolingBN']
+

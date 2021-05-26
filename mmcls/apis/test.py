@@ -5,12 +5,18 @@ import tempfile
 import time
 
 import mmcv
+import numpy as np
 import torch
 import torch.distributed as dist
+from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
 
 
-def single_gpu_test(model, data_loader, show=False, out_dir=None):
+def single_gpu_test(model,
+                    data_loader,
+                    show=False,
+                    out_dir=None,
+                    **show_kwargs):
     model.eval()
     results = []
     dataset = data_loader.dataset
@@ -18,10 +24,43 @@ def single_gpu_test(model, data_loader, show=False, out_dir=None):
     for i, data in enumerate(data_loader):
         with torch.no_grad():
             result = model(return_loss=False, **data)
-        results.append(result)
+
+        batch_size = len(result)
+        results.extend(result)
 
         if show or out_dir:
-            pass  # TODO
+            scores = np.vstack(result)
+            pred_score = np.max(scores, axis=1)
+            pred_label = np.argmax(scores, axis=1)
+            pred_class = [model.CLASSES[lb] for lb in pred_label]
+
+            img_metas = data['img_metas'].data[0]
+            imgs = tensor2imgs(data['img'], **img_metas[0]['img_norm_cfg'])
+            assert len(imgs) == len(img_metas)
+
+            for i, (img, img_meta) in enumerate(zip(imgs, img_metas)):
+                h, w, _ = img_meta['img_shape']
+                img_show = img[:h, :w, :]
+
+                ori_h, ori_w = img_meta['ori_shape'][:-1]
+                img_show = mmcv.imresize(img_show, (ori_w, ori_h))
+
+                if out_dir:
+                    out_file = osp.join(out_dir, img_meta['ori_filename'])
+                else:
+                    out_file = None
+
+                result_show = {
+                    'pred_score': pred_score[i],
+                    'pred_label': pred_label[i],
+                    'pred_class': pred_class[i]
+                }
+                model.module.show_result(
+                    img_show,
+                    result_show,
+                    show=show,
+                    out_file=out_file,
+                    **show_kwargs)
 
         batch_size = data['img'].size(0)
         for _ in range(batch_size):
@@ -53,6 +92,11 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
     dataset = data_loader.dataset
     rank, world_size = get_dist_info()
     if rank == 0:
+        # Check if tmpdir is valid for cpu_collect
+        if (not gpu_collect) and (tmpdir is not None and osp.exists(tmpdir)):
+            raise OSError((f'The tmpdir {tmpdir} already exists.',
+                           ' Since tmpdir will be deleted after testing,',
+                           ' please make sure you specify an empty one.'))
         prog_bar = mmcv.ProgressBar(len(dataset))
     time.sleep(2)  # This line can prevent deadlock problem in some cases.
     for i, data in enumerate(data_loader):
@@ -87,7 +131,8 @@ def collect_results_cpu(result_part, size, tmpdir=None):
                                 dtype=torch.uint8,
                                 device='cuda')
         if rank == 0:
-            tmpdir = tempfile.mkdtemp()
+            mmcv.mkdir_or_exist('.dist_test')
+            tmpdir = tempfile.mkdtemp(dir='.dist_test')
             tmpdir = torch.tensor(
                 bytearray(tmpdir.encode()), dtype=torch.uint8, device='cuda')
             dir_tensor[:len(tmpdir)] = tmpdir
@@ -106,7 +151,11 @@ def collect_results_cpu(result_part, size, tmpdir=None):
         part_list = []
         for i in range(world_size):
             part_file = osp.join(tmpdir, f'part_{i}.pkl')
-            part_list.append(mmcv.load(part_file))
+            part_result = mmcv.load(part_file)
+            # When data is severely insufficient, an empty part_result
+            # on a certain gpu could makes the overall outputs empty.
+            if part_result:
+                part_list.append(part_result)
         # sort the results
         ordered_results = []
         for res in zip(*part_list):
@@ -140,8 +189,11 @@ def collect_results_gpu(result_part, size):
     if rank == 0:
         part_list = []
         for recv, shape in zip(part_recv_list, shape_list):
-            part_list.append(
-                pickle.loads(recv[:shape[0]].cpu().numpy().tobytes()))
+            part_result = pickle.loads(recv[:shape[0]].cpu().numpy().tobytes())
+            # When data is severely insufficient, an empty part_result
+            # on a certain gpu could makes the overall outputs empty.
+            if part_result:
+                part_list.append(part_result)
         # sort the results
         ordered_results = []
         for res in zip(*part_list):

@@ -20,7 +20,7 @@ class InvertedResidual(nn.Module):
         stride (int): Stride of the middle (first) 3x3 convolution.
         expand_ratio (int): adjusts number of channels of the hidden layer
             in InvertedResidual by this amount.
-        conv_cfg (dict): Config dict for convolution layer.
+        conv_cfg (dict, optional): Config dict for convolution layer.
             Default: None, which means using conv2d.
         norm_cfg (dict): Config dict for normalization layer.
             Default: dict(type='BN').
@@ -108,7 +108,7 @@ class MobileNetV2(BaseBackbone):
             Default: (7, ).
         frozen_stages (int): Stages to be frozen (all param fixed).
             Default: -1, which means not freezing any parameters.
-        conv_cfg (dict): Config dict for convolution layer.
+        conv_cfg (dict, optional): Config dict for convolution layer.
             Default: None, which means using conv2d.
         norm_cfg (dict): Config dict for normalization layer.
             Default: dict(type='BN').
@@ -199,7 +199,7 @@ class MobileNetV2(BaseBackbone):
         self.layers.append('conv2')
 
     def make_layer(self, out_channels, num_blocks, stride, expand_ratio):
-        """ Stack InvertedResidual blocks to build a layer for MobileNetV2.
+        """Stack InvertedResidual blocks to build a layer for MobileNetV2.
 
         Args:
             out_channels (int): out_channels of block.

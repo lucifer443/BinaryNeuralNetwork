@@ -19,14 +19,14 @@ class BasicBlock(nn.Module):
             reserved argument in BasicBlock and should always be 1. Default: 1.
         stride (int): stride of the block. Default: 1
         dilation (int): dilation of convolution. Default: 1
-        downsample (nn.Module): downsample operation on identity branch.
-            Default: None.
+        downsample (nn.Module, optional): downsample operation on identity
+            branch. Default: None.
         style (str): `pytorch` or `caffe`. It is unused and reserved for
             unified API with Bottleneck.
         with_cp (bool): Use checkpoint or not. Using checkpoint will save some
             memory while slowing down the training speed.
-        conv_cfg (dict): dictionary to construct and config conv layer.
-            Default: None
+        conv_cfg (dict, optional): dictionary to construct and config conv
+            layer. Default: None
         norm_cfg (dict): dictionary to construct and config norm layer.
             Default: dict(type='BN')
     """
@@ -130,15 +130,15 @@ class Bottleneck(nn.Module):
             ``mid_channels`` is the input/output channels of conv2. Default: 4.
         stride (int): stride of the block. Default: 1
         dilation (int): dilation of convolution. Default: 1
-        downsample (nn.Module): downsample operation on identity branch.
-            Default: None.
+        downsample (nn.Module, optional): downsample operation on identity
+            branch. Default: None.
         style (str): ``"pytorch"`` or ``"caffe"``. If set to "pytorch", the
             stride-two layer is the 3x3 conv layer, otherwise the stride-two
             layer is the first 1x1 conv layer. Default: "pytorch".
         with_cp (bool): Use checkpoint or not. Using checkpoint will save some
             memory while slowing down the training speed.
-        conv_cfg (dict): dictionary to construct and config conv layer.
-            Default: None
+        conv_cfg (dict, optional): dictionary to construct and config conv
+            layer. Default: None
         norm_cfg (dict): dictionary to construct and config norm layer.
             Default: dict(type='BN')
     """
@@ -309,8 +309,8 @@ class ResLayer(nn.Sequential):
         stride (int): stride of the first block. Default: 1.
         avg_down (bool): Use AvgPool instead of stride conv when
             downsampling in the bottleneck. Default: False
-        conv_cfg (dict): dictionary to construct and config conv layer.
-            Default: None
+        conv_cfg (dict, optional): dictionary to construct and config conv
+            layer. Default: None
         norm_cfg (dict): dictionary to construct and config norm layer.
             Default: dict(type='BN')
     """
@@ -588,9 +588,7 @@ class ResNet(BaseBackbone):
                 param.requires_grad = False
 
     def init_weights(self, pretrained=None):
-        if isinstance(pretrained, str):
-            logger = logging.getLogger()
-            load_checkpoint(self, pretrained, strict=False, logger=logger)
+        super(ResNet, self).init_weights(pretrained)
         if pretrained is None:
             for m in self.modules():
                 if isinstance(m, nn.Conv2d):
@@ -636,13 +634,13 @@ class ResNet(BaseBackbone):
 
 @BACKBONES.register_module()
 class ResNetV1d(ResNet):
-    """ResNetV1d variant described in
-    `Bag of Tricks <https://arxiv.org/pdf/1812.01187.pdf>`_.
+    """ResNetV1d variant described in `Bag of Tricks.
 
-    Compared with default ResNet(ResNetV1b), ResNetV1d replaces the 7x7 conv
-    in the input stem with three 3x3 convs. And in the downsampling block,
-    a 2x2 avg_pool with stride 2 is added before conv, whose stride is
-    changed to 1.
+    <https://arxiv.org/pdf/1812.01187.pdf>`_.
+
+    Compared with default ResNet(ResNetV1b), ResNetV1d replaces the 7x7 conv in
+    the input stem with three 3x3 convs. And in the downsampling block, a 2x2
+    avg_pool with stride 2 is added before conv, whose stride is changed to 1.
     """
 
     def __init__(self, **kwargs):

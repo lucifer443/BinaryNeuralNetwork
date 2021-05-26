@@ -19,7 +19,6 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['img']),
     dict(type='Collect', keys=['img'])
 ]
-imagenet_path = "data/imagenet/"
 data = dict(
     samples_per_gpu=64,
     workers_per_gpu=2,

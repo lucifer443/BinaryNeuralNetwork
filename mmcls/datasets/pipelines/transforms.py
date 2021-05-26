@@ -1,6 +1,8 @@
 import inspect
 import math
 import random
+from numbers import Number
+from typing import Sequence
 
 import mmcv
 import numpy as np
@@ -10,10 +12,8 @@ from .compose import Compose
 
 try:
     import albumentations
-    # from albumentations import Compose
 except ImportError:
     albumentations = None
-    Compose = None
 
 
 @PIPELINES.register_module()
@@ -86,8 +86,8 @@ class RandomCrop(object):
         if width == target_width and height == target_height:
             return 0, 0, height, width
 
-        xmin = random.randint(0, height - target_height)
-        ymin = random.randint(0, width - target_width)
+        ymin = random.randint(0, height - target_height)
+        xmin = random.randint(0, width - target_width)
         return xmin, ymin, target_height, target_width
 
     def __call__(self, results):
@@ -122,7 +122,12 @@ class RandomCrop(object):
             xmin, ymin, height, width = self.get_params(img, self.size)
             results[key] = mmcv.imcrop(
                 img,
-                np.array([ymin, xmin, ymin + width - 1, xmin + height - 1]))
+                np.array([
+                    xmin,
+                    ymin,
+                    xmin + width - 1,
+                    ymin + height - 1,
+                ]))
         return results
 
     def __repr__(self):
@@ -203,8 +208,8 @@ class RandomResizedCrop(object):
             target_height = int(round(math.sqrt(target_area / aspect_ratio)))
 
             if 0 < target_width <= width and 0 < target_height <= height:
-                xmin = random.randint(0, height - target_height)
-                ymin = random.randint(0, width - target_width)
+                ymin = random.randint(0, height - target_height)
+                xmin = random.randint(0, width - target_width)
                 return xmin, ymin, target_height, target_width
 
         # Fallback to central crop
@@ -218,8 +223,8 @@ class RandomResizedCrop(object):
         else:  # whole image
             target_width = width
             target_height = height
-        xmin = (height - target_height) // 2
-        ymin = (width - target_width) // 2
+        ymin = (height - target_height) // 2
+        xmin = (width - target_width) // 2
         return xmin, ymin, target_height, target_width
 
     def __call__(self, results):
@@ -237,8 +242,8 @@ class RandomResizedCrop(object):
             img = mmcv.imcrop(
                 img,
                 np.array([
-                    ymin, xmin, ymin + target_width - 1,
-                    xmin + target_height - 1
+                    xmin, ymin, xmin + target_width - 1,
+                    ymin + target_height - 1
                 ]))
             results[key] = mmcv.imresize(
                 img,
@@ -269,7 +274,6 @@ class RandomGrayscale(object):
             - If input image is 1 channel: grayscale version is 1 channel.
             - If input image is 3 channel: grayscale version is 3 channel
                 with r == g == b.
-
     """
 
     def __init__(self, gray_prob=0.1):
@@ -307,7 +311,7 @@ class RandomFlip(object):
 
     Args:
         flip_prob (float): probability of the image being flipped. Default: 0.5
-        direction (str, optional): The flipping direction. Options are
+        direction (str): The flipping direction. Options are
             'horizontal' and 'vertical'. Default: 'horizontal'.
     """
 
@@ -339,6 +343,142 @@ class RandomFlip(object):
 
     def __repr__(self):
         return self.__class__.__name__ + f'(flip_prob={self.flip_prob})'
+
+
+@PIPELINES.register_module()
+class RandomErasing(object):
+    """Randomly selects a rectangle region in an image and erase pixels.
+
+    Args:
+        erase_prob (float): Probability that image will be randomly erased.
+            Default: 0.5
+        min_area_ratio (float): Minimum erased area / input image area
+            Default: 0.02
+        max_area_ratio (float): Maximum erased area / input image area
+            Default: 0.4
+        aspect_range (sequence | float): Aspect ratio range of erased area.
+            if float, it will be converted to (aspect_ratio, 1/aspect_ratio)
+            Default: (3/10, 10/3)
+        mode (str): Fill method in erased area, can be:
+            - 'const' (default): All pixels are assign with the same value.
+            - 'rand': each pixel is assigned with a random value in [0, 255]
+        fill_color (sequence | Number): Base color filled in erased area.
+            Default: (128, 128, 128)
+        fill_std (sequence | Number, optional): If set and mode='rand', fill
+            erased area with random color from normal distribution
+            (mean=fill_color, std=fill_std); If not set, fill erased area with
+            random color from uniform distribution (0~255)
+            Default: None
+
+    Note:
+        See https://arxiv.org/pdf/1708.04896.pdf
+        This paper provided 4 modes: RE-R, RE-M, RE-0, RE-255, and use RE-M as
+        default.
+        - RE-R: RandomErasing(mode='rand')
+        - RE-M: RandomErasing(mode='const', fill_color=(123.67, 116.3, 103.5))
+        - RE-0: RandomErasing(mode='const', fill_color=0)
+        - RE-255: RandomErasing(mode='const', fill_color=255)
+    """
+
+    def __init__(self,
+                 erase_prob=0.5,
+                 min_area_ratio=0.02,
+                 max_area_ratio=0.4,
+                 aspect_range=(3 / 10, 10 / 3),
+                 mode='const',
+                 fill_color=(128, 128, 128),
+                 fill_std=None):
+        assert isinstance(erase_prob, float) and 0. <= erase_prob <= 1.
+        assert isinstance(min_area_ratio, float) and 0. <= min_area_ratio <= 1.
+        assert isinstance(max_area_ratio, float) and 0. <= max_area_ratio <= 1.
+        assert min_area_ratio <= max_area_ratio, \
+            'min_area_ratio should be smaller than max_area_ratio'
+        if isinstance(aspect_range, float):
+            aspect_range = min(aspect_range, 1 / aspect_range)
+            aspect_range = (aspect_range, 1 / aspect_range)
+        assert isinstance(aspect_range, Sequence) and len(aspect_range) == 2 \
+            and all(isinstance(x, float) for x in aspect_range), \
+            'aspect_range should be a float or Sequence with two float.'
+        assert all(x > 0 for x in aspect_range), \
+            'aspect_range should be positive.'
+        assert aspect_range[0] <= aspect_range[1], \
+            'In aspect_range (min, max), min should be smaller than max.'
+        assert mode in ['const', 'rand']
+        if isinstance(fill_color, Number):
+            fill_color = [fill_color] * 3
+        assert isinstance(fill_color, Sequence) and len(fill_color) == 3 \
+            and all(isinstance(x, Number) for x in fill_color), \
+            'fill_color should be a float or Sequence with three int.'
+        if fill_std is not None:
+            if isinstance(fill_std, Number):
+                fill_std = [fill_std] * 3
+            assert isinstance(fill_std, Sequence) and len(fill_std) == 3 \
+                and all(isinstance(x, Number) for x in fill_std), \
+                'fill_std should be a float or Sequence with three int.'
+
+        self.erase_prob = erase_prob
+        self.min_area_ratio = min_area_ratio
+        self.max_area_ratio = max_area_ratio
+        self.aspect_range = aspect_range
+        self.mode = mode
+        self.fill_color = fill_color
+        self.fill_std = fill_std
+
+    def _fill_pixels(self, img, top, left, h, w):
+        if self.mode == 'const':
+            patch = np.empty((h, w, 3), dtype=np.uint8)
+            patch[:, :] = np.array(self.fill_color, dtype=np.uint8)
+        elif self.fill_std is None:
+            # Uniform distribution
+            patch = np.random.uniform(0, 256, (h, w, 3)).astype(np.uint8)
+        else:
+            # Normal distribution
+            patch = np.random.normal(self.fill_color, self.fill_std, (h, w, 3))
+            patch = np.clip(patch.astype(np.int32), 0, 255).astype(np.uint8)
+
+        img[top:top + h, left:left + w] = patch
+        return img
+
+    def __call__(self, results):
+        """
+        Args:
+            results (dict): Results dict from pipeline
+
+        Returns:
+            dict: Results after the transformation.
+        """
+        for key in results.get('img_fields', ['img']):
+            if np.random.rand() > self.erase_prob:
+                continue
+            img = results[key]
+            img_h, img_w = img.shape[:2]
+
+            # convert to log aspect to ensure equal probability of aspect ratio
+            log_aspect_range = np.log(
+                np.array(self.aspect_range, dtype=np.float32))
+            aspect_ratio = np.exp(np.random.uniform(*log_aspect_range))
+            area = img_h * img_w
+            area *= np.random.uniform(self.min_area_ratio, self.max_area_ratio)
+
+            h = min(int(round(np.sqrt(area * aspect_ratio))), img_h)
+            w = min(int(round(np.sqrt(area / aspect_ratio))), img_w)
+            top = np.random.randint(0, img_h - h) if img_h > h else 0
+            left = np.random.randint(0, img_w - w) if img_w > w else 0
+            img = self._fill_pixels(img, top, left, h, w)
+
+            results[key] = img
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'(erase_prob={self.erase_prob}, '
+        repr_str += f'min_area_ratio={self.min_area_ratio}, '
+        repr_str += f'max_area_ratio={self.max_area_ratio}, '
+        repr_str += f'aspect_range={self.aspect_range}, '
+        repr_str += f'mode={self.mode}, '
+        repr_str += f'fill_color={self.fill_color}, '
+        repr_str += f'fill_std={self.fill_std})'
+        return repr_str
 
 
 @PIPELINES.register_module()
@@ -498,136 +638,9 @@ class Normalize(object):
 
 
 @PIPELINES.register_module()
-class Albu(object):
-    """Albumentation augmentation.
-
-    Adds custom transformations from Albumentations library.
-    Please, visit `https://albumentations.readthedocs.io`
-    to get more information.
-    An example of ``transforms`` is as followed:
-
-    .. code-block::
-        [
-            dict(
-                type='ShiftScaleRotate',
-                shift_limit=0.0625,
-                scale_limit=0.0,
-                rotate_limit=0,
-                interpolation=1,
-                p=0.5),
-            dict(
-                type='RandomBrightnessContrast',
-                brightness_limit=[0.1, 0.3],
-                contrast_limit=[0.1, 0.3],
-                p=0.2),
-            dict(type='ChannelShuffle', p=0.1),
-            dict(
-                type='OneOf',
-                transforms=[
-                    dict(type='Blur', blur_limit=3, p=1.0),
-                    dict(type='MedianBlur', blur_limit=3, p=1.0)
-                ],
-                p=0.1),
-        ]
-
-    Args:
-        transforms (list[dict]): A list of albu transformations
-        keymap (dict): Contains {'input key':'albumentation-style key'}
-    """
-
-    def __init__(self, transforms, keymap=None, update_pad_shape=False):
-        if Compose is None:
-            raise RuntimeError('albumentations is not installed')
-
-        self.transforms = transforms
-        self.filter_lost_elements = False
-        self.update_pad_shape = update_pad_shape
-
-        self.aug = Compose([self.albu_builder(t) for t in self.transforms])
-
-        if not keymap:
-            self.keymap_to_albu = {
-                'img': 'image',
-            }
-        else:
-            self.keymap_to_albu = keymap
-        self.keymap_back = {v: k for k, v in self.keymap_to_albu.items()}
-
-    def albu_builder(self, cfg):
-        """Import a module from albumentations.
-        It inherits some of :func:`build_from_cfg` logic.
-        Args:
-            cfg (dict): Config dict. It should at least contain the key "type".
-        Returns:
-            obj: The constructed object.
-        """
-
-        assert isinstance(cfg, dict) and 'type' in cfg
-        args = cfg.copy()
-
-        obj_type = args.pop('type')
-        if mmcv.is_str(obj_type):
-            if albumentations is None:
-                raise RuntimeError('albumentations is not installed')
-            obj_cls = getattr(albumentations, obj_type)
-        elif inspect.isclass(obj_type):
-            obj_cls = obj_type
-        else:
-            raise TypeError(
-                f'type must be a str or valid type, but got {type(obj_type)}')
-
-        if 'transforms' in args:
-            args['transforms'] = [
-                self.albu_builder(transform)
-                for transform in args['transforms']
-            ]
-
-        return obj_cls(**args)
-
-    @staticmethod
-    def mapper(d, keymap):
-        """Dictionary mapper. Renames keys according to keymap provided.
-        Args:
-            d (dict): old dict
-            keymap (dict): {'old_key':'new_key'}
-        Returns:
-            dict: new dict.
-        """
-
-        updated_dict = {}
-        for k, v in zip(d.keys(), d.values()):
-            new_k = keymap.get(k, k)
-            updated_dict[new_k] = d[k]
-        return updated_dict
-
-    def __call__(self, results):
-        # dict to albumentations format
-        results = self.mapper(results, self.keymap_to_albu)
-
-        results = self.aug(**results)
-
-        if 'gt_labels' in results:
-            if isinstance(results['gt_labels'], list):
-                results['gt_labels'] = np.array(results['gt_labels'])
-            results['gt_labels'] = results['gt_labels'].astype(np.int64)
-
-        # back to the original format
-        results = self.mapper(results, self.keymap_back)
-
-        # update final shape
-        if self.update_pad_shape:
-            results['pad_shape'] = results['img'].shape
-
-        return results
-
-    def __repr__(self):
-        repr_str = self.__class__.__name__ + f'(transforms={self.transforms})'
-        return repr_str
-
-
-@PIPELINES.register_module()
 class ColorJitter(object):
     """Randomly change the brightness, contrast and saturation of an image.
+
     Args:
         brightness (float): How much to jitter brightness.
             brightness_factor is chosen uniformly from
@@ -681,6 +694,7 @@ class ColorJitter(object):
 @PIPELINES.register_module()
 class Lighting(object):
     """Adjust images lighting using AlexNet-style PCA jitter.
+
     Args:
         eigval (list): the eigenvalue of the convariance matrix of pixel
             values, respectively.
@@ -721,4 +735,137 @@ class Lighting(object):
         repr_str += f'eigvec={self.eigvec.tolist()}, '
         repr_str += f'alphastd={self.alphastd}, '
         repr_str += f'to_rgb={self.to_rgb})'
+        return repr_str
+
+
+@PIPELINES.register_module()
+class Albu(object):
+    """Albumentation augmentation.
+
+    Adds custom transformations from Albumentations library.
+    Please, visit `https://albumentations.readthedocs.io`
+    to get more information.
+    An example of ``transforms`` is as followed:
+
+    .. code-block::
+        [
+            dict(
+                type='ShiftScaleRotate',
+                shift_limit=0.0625,
+                scale_limit=0.0,
+                rotate_limit=0,
+                interpolation=1,
+                p=0.5),
+            dict(
+                type='RandomBrightnessContrast',
+                brightness_limit=[0.1, 0.3],
+                contrast_limit=[0.1, 0.3],
+                p=0.2),
+            dict(type='ChannelShuffle', p=0.1),
+            dict(
+                type='OneOf',
+                transforms=[
+                    dict(type='Blur', blur_limit=3, p=1.0),
+                    dict(type='MedianBlur', blur_limit=3, p=1.0)
+                ],
+                p=0.1),
+        ]
+
+    Args:
+        transforms (list[dict]): A list of albu transformations
+        keymap (dict): Contains {'input key':'albumentation-style key'}
+    """
+
+    def __init__(self, transforms, keymap=None, update_pad_shape=False):
+        if albumentations is None:
+            raise RuntimeError('albumentations is not installed')
+        else:
+            from albumentations import Compose
+
+        self.transforms = transforms
+        self.filter_lost_elements = False
+        self.update_pad_shape = update_pad_shape
+
+        self.aug = Compose([self.albu_builder(t) for t in self.transforms])
+
+        if not keymap:
+            self.keymap_to_albu = {
+                'img': 'image',
+            }
+        else:
+            self.keymap_to_albu = keymap
+        self.keymap_back = {v: k for k, v in self.keymap_to_albu.items()}
+
+    def albu_builder(self, cfg):
+        """Import a module from albumentations.
+
+        It inherits some of :func:`build_from_cfg` logic.
+        Args:
+            cfg (dict): Config dict. It should at least contain the key "type".
+        Returns:
+            obj: The constructed object.
+        """
+
+        assert isinstance(cfg, dict) and 'type' in cfg
+        args = cfg.copy()
+
+        obj_type = args.pop('type')
+        if mmcv.is_str(obj_type):
+            if albumentations is None:
+                raise RuntimeError('albumentations is not installed')
+            obj_cls = getattr(albumentations, obj_type)
+        elif inspect.isclass(obj_type):
+            obj_cls = obj_type
+        else:
+            raise TypeError(
+                f'type must be a str or valid type, but got {type(obj_type)}')
+
+        if 'transforms' in args:
+            args['transforms'] = [
+                self.albu_builder(transform)
+                for transform in args['transforms']
+            ]
+
+        return obj_cls(**args)
+
+    @staticmethod
+    def mapper(d, keymap):
+        """Dictionary mapper.
+
+        Renames keys according to keymap provided.
+        Args:
+            d (dict): old dict
+            keymap (dict): {'old_key':'new_key'}
+        Returns:
+            dict: new dict.
+        """
+
+        updated_dict = {}
+        for k, v in zip(d.keys(), d.values()):
+            new_k = keymap.get(k, k)
+            updated_dict[new_k] = d[k]
+        return updated_dict
+
+    def __call__(self, results):
+        # dict to albumentations format
+        results = self.mapper(results, self.keymap_to_albu)
+
+        results = self.aug(**results)
+
+        if 'gt_labels' in results:
+            if isinstance(results['gt_labels'], list):
+                results['gt_labels'] = np.array(results['gt_labels'])
+            results['gt_labels'] = results['gt_labels'].astype(np.int64)
+
+        # back to the original format
+        results = self.mapper(results, self.keymap_back)
+
+        # update final shape
+        if self.update_pad_shape:
+            results['pad_shape'] = results['img'].shape
+
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__ + f'(transforms={self.transforms})'
         return repr_str

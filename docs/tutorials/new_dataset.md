@@ -7,6 +7,7 @@
 The simplest way is to convert your dataset to existing dataset formats (ImageNet).
 
 For training, it differentiates classes by folders. The directory of training data is as follows:
+
 ```
 imagenet
 ├── ...
@@ -58,7 +59,7 @@ from .base_dataset import BaseDataset
 
 
 @DATASETS.register_module()
-class MyDataset(BaseDataset):
+class Filelist(BaseDataset):
 
     def load_annotations(self):
         assert isinstance(self.ann_file, str)
@@ -75,10 +76,22 @@ class MyDataset(BaseDataset):
 
 ```
 
+And add this dataset class in `mmcls/datasets/__init__.py`
+
+```python
+from .base_dataset import BaseDataset
+...
+from .filelist import Filelist
+
+__all__ = [
+    'BaseDataset', ... ,'Filelist'
+]
+```
+
 Then in the config, to use `Filelist` you can modify the config as the following
 
 ```python
-dataset_A_train = dict(
+train = dict(
     type='Filelist',
     ann_file = 'image_list.txt',
     pipeline=train_pipeline
@@ -93,6 +106,7 @@ Currently it supports to concat and repeat datasets.
 ### Repeat dataset
 
 We use `RepeatDataset` as wrapper to repeat the dataset. For example, suppose the original dataset is `Dataset_A`, to repeat it, the config looks like the following
+
 ```python
 dataset_A_train = dict(
         type='RepeatDataset',
@@ -111,6 +125,7 @@ We use `ClassBalancedDataset` as wrapper to repeat the dataset based on category
 frequency. The dataset to repeat needs to instantiate function `self.get_cat_ids(idx)`
 to support `ClassBalancedDataset`.
 For example, to repeat `Dataset_A` with `oversample_thr=1e-3`, the config looks like the following
+
 ```python
 dataset_A_train = dict(
         type='ClassBalancedDataset',
@@ -122,4 +137,5 @@ dataset_A_train = dict(
         )
     )
 ```
+
 You may refer to [source code](../../mmcls/datasets/dataset_wrappers.py) for details.

@@ -11,7 +11,7 @@ from mmcls.datasets.pipelines import Compose
 from mmcls.models import build_classifier
 
 
-def init_model(config, checkpoint=None, device='cuda:0'):
+def init_model(config, checkpoint=None, device='cuda:0', options=None):
     """Initialize a classifier from config file.
 
     Args:
@@ -19,6 +19,7 @@ def init_model(config, checkpoint=None, device='cuda:0'):
             object.
         checkpoint (str, optional): Checkpoint path. If left as None, the model
             will not load any weights.
+        options (dict): Options to override some settings in the used config.
 
     Returns:
         nn.Module: The constructed classifier.
@@ -28,12 +29,14 @@ def init_model(config, checkpoint=None, device='cuda:0'):
     elif not isinstance(config, mmcv.Config):
         raise TypeError('config must be a filename or Config object, '
                         f'but got {type(config)}')
+    if options is not None:
+        config.merge_from_dict(options)
     config.model.pretrained = None
     model = build_classifier(config.model)
     if checkpoint is not None:
         map_loc = 'cpu' if device == 'cpu' else None
         checkpoint = load_checkpoint(model, checkpoint, map_location=map_loc)
-        if 'CLASSES' in checkpoint['meta']:
+        if 'CLASSES' in checkpoint.get('meta', {}):
             model.CLASSES = checkpoint['meta']['CLASSES']
         else:
             from mmcls.datasets import ImageNet
@@ -52,7 +55,7 @@ def inference_model(model, img):
 
     Args:
         model (nn.Module): The loaded classifier.
-        img (str/ndarray): The image filename.
+        img (str/ndarray): The image filename or loaded image.
 
     Returns:
         result (dict): The classification results that contains
@@ -61,9 +64,15 @@ def inference_model(model, img):
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
     # build the data pipeline
+    if isinstance(img, str):
+        if cfg.data.test.pipeline[0]['type'] != 'LoadImageFromFile':
+            cfg.data.test.pipeline.insert(0, dict(type='LoadImageFromFile'))
+        data = dict(img_info=dict(filename=img), img_prefix=None)
+    else:
+        if cfg.data.test.pipeline[0]['type'] == 'LoadImageFromFile':
+            cfg.data.test.pipeline.pop(0)
+        data = dict(img=img)
     test_pipeline = Compose(cfg.data.test.pipeline)
-    # prepare data
-    data = dict(img_info=dict(filename=img), img_prefix=None)
     data = test_pipeline(data)
     data = collate([data], samples_per_gpu=1)
     if next(model.parameters()).is_cuda:

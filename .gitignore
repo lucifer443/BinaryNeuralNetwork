@@ -1,3 +1,5 @@
+work_dirs
+data
 *pyc
 *pth
 __pycache__

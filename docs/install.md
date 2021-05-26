@@ -4,10 +4,22 @@
 
 - Python 3.6+
 - PyTorch 1.3+
-- [mmcv](https://github.com/open-mmlab/mmcv) 1.1.4+
+- [MMCV](https://github.com/open-mmlab/mmcv)
 
+The compatible MMClassification and MMCV versions are as below. Please install the correct version of MMCV to avoid installation issues.
 
-### Install mmclassification
+| MMClassification version |    MMCV version     |
+|:-------------------:|:-------------------:|
+| master              | mmcv>=1.3.0, <=1.5.0 |
+| 0.11.1              | mmcv>=1.3.0, <=1.5.0 |
+| 0.11.0              | mmcv>=1.3.0         |
+| 0.10.0              | mmcv>=1.3.0         |
+| 0.9.0               | mmcv>=1.1.4         |
+| 0.8.0               | mmcv>=1.1.4         |
+| 0.7.0               | mmcv>=1.1.4         |
+| 0.6.0               | mmcv>=1.1.4         |
+
+### Install MMClassification
 
 a. Create a conda virtual environment and activate it.
 
@@ -28,14 +40,14 @@ You can check the supported CUDA version for precompiled packages on the [PyTorc
 `E.g.1` If you have CUDA 10.1 installed under `/usr/local/cuda` and would like to install
 PyTorch 1.5, you need to install the prebuilt PyTorch with CUDA 10.1.
 
-```python
+```shell
 conda install pytorch cudatoolkit=10.1 torchvision -c pytorch
 ```
 
 `E.g.2` If you have CUDA 9.2 installed under `/usr/local/cuda` and would like to install
 PyTorch 1.3.1., you need to install the prebuilt PyTorch with CUDA 9.2.
 
-```python
+```shell
 conda install pytorch=1.3.1 cudatoolkit=9.2 torchvision=0.4.2 -c pytorch
 ```
 
@@ -60,6 +72,7 @@ Note:
 1. Following the above instructions, mmclassification is installed on `dev` mode, any local modifications made to the code will take effect without the need to reinstall it (unless you submit some commits and want to update the version number).
 
 2. If you would like to use `opencv-python-headless` instead of `opencv-python`,
+
 you can install it before installing [mmcv](https://github.com/open-mmlab/mmcv).
 
 ### Using multiple MMClassification versions
