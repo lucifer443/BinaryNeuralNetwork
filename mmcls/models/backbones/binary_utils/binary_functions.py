@@ -133,8 +133,8 @@ class BiasExpand(nn.Module):
             self.alpha.append(-1 + (i + 1) * 2 / (ratio + 1))
 
     def forward(self, inputs):
-        absmax = torch.abs(inputs).max()
+        # absmax = torch.abs(inputs).max()
         out = []
         for bias in self.alpha:
-            out.append(inputs + bias*absmax)
+            out.append(inputs + bias)
         return torch.cat(out, dim=1)
