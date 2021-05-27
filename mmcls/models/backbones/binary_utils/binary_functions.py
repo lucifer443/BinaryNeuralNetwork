@@ -100,9 +100,14 @@ class RPRelu(nn.Module):
 
 
 class LearnableBias(nn.Module):
-    def __init__(self, channels, init=0):
+    def __init__(self, channels, init=0, groups=1):
         super(LearnableBias, self).__init__()
-        self.learnable_bias = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
+        self.groups = groups
+        if groups == 1:
+            self.learnable_bias = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
+        else:
+            learnable_bias_list = [nn.Parameter(torch.ones(1, channels // groups, 1, 1) * init, requires_grad=True) for i in range(groups)]
+            self.learnable_bias = torch.cat(learnable_bias_list, dim=1)
 
     def forward(self, x):
         out = x + self.learnable_bias.expand_as(x)
@@ -148,6 +153,7 @@ class FeaExpand(nn.Module):
         3nc: 3的基础上既分输入也分通道计算均值方差
         4: 使用1的值初始化的可学习的阈值
         4c: 4的基础上分通道
+        4g*: 4的基础上分组（是4和4c的折中）
         5: 手动设置阈值
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
     """
@@ -173,6 +179,13 @@ class FeaExpand(nn.Module):
             for i in range(expansion):
                 alpha = -1 + (i + 1) * 2 / (expansion + 1)
                 self.move.append(LearnableBias(in_channels, init=alpha))
+        
+        elif '4g' in self.mode:
+            groups = int(self.mode.split('g')[-1])
+            self.move = nn.ModuleList()
+            for i in range(expansion):
+                alpha = -1 + (i + 1) * 2 / (expansion + 1)
+                self.move.append(LearnableBias(in_channels, init=alpha, groups=groups))
         
         elif '5' == self.mode:
             assert len(thres) == expansion
