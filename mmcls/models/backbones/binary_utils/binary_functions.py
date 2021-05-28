@@ -156,6 +156,7 @@ class FeaExpand(nn.Module):
         4g*: 4的基础上分组（是4和4c的折中）
         5: 手动设置阈值
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
+        7: 根据输入计算的自适应阈值
     """
     def __init__(self, expansion=3, mode='1', in_channels=None, thres=None):
         super(FeaExpand, self).__init__()
@@ -192,6 +193,7 @@ class FeaExpand(nn.Module):
             self.thres = thres
         
         elif '7' == self.mode:
+            self.scale = nn.Parameter(torch.ones(n, c, h, w), requires_grad=True)
             self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
             self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
             self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
@@ -309,7 +311,8 @@ class FeaExpand(nn.Module):
             out = [x + t for t in thres_nc_tensor]
         
         elif '72' == self.mode:
-            bias = self.avgpool(x)
+            bias = x * self.scale
+            bias = self.avgpool(bias)
             bias = self.linear1(bias)
             bias = self.tanh(bias)
 

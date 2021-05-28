@@ -26,10 +26,11 @@ model = dict(
     ))
 
 # specific to learnable bias
-paramwise_cfg = dict(
-    custom_keys={
-        '.learnable_bias': dict(lr_mult=0.0, decay_mult=0.0)
-    })
+optimizer = dict(
+    paramwise_cfg = dict(
+        custom_keys={
+            '.learnable_bias': dict(lr_mult=0.0, decay_mult=0.0)
+}))
 
 work_dir = 'work_dir/multifea/multifea_3_4/multifea_3_4_lrmult_0/multifea_3_4_lrmult_0_b128x8_step1'
 find_unused_parameters=False

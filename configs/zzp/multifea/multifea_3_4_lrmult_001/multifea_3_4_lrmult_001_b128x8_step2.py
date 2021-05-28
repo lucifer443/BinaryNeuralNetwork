@@ -26,15 +26,13 @@ model = dict(
     ))
 
 # set weight_decay to 0
-optimizer = dict(
-    weight_decay=0
-)
-
 # specific to learnable bias
-paramwise_cfg = dict(
-    custom_keys={
-        '.learnable_bias': dict(lr_mult=0.01, decay_mult=0.0)
-    })
+optimizer = dict(
+    weight_decay=0,
+    paramwise_cfg = dict(
+        custom_keys={
+            '.learnable_bias': dict(lr_mult=0.01, decay_mult=0.0)
+}))
 
 load_from = 'work_dir/multifea/multifea_3_4/multifea_3_4_lrmult_001/multifea_3_4_lrmult_001_b128x8_step1/epoch_100.pth'
 work_dir = 'work_dir/multifea/multifea_3_4/multifea_3_4_lrmult_001/multifea_3_4_lrmult_001_b128x8_step2'
