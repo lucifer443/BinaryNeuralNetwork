@@ -218,7 +218,12 @@ class MultiFea(BaseBackbone):
         self.arch = arch
         arch_split = arch.split('_')
         self.block = MultiFea_Block
-        self.fea_num = int(arch_split[1])
+        fea_num_string = arch_split[1]
+        if len(fea_num_string) == 1:
+            self.fea_num = [int(fea_num_string)] * 4
+        else:
+            self.fea_num = [int(c) for c in fea_num_string]
+        assert len(self.fea_num) == num_stages
         self.mode = arch_split[2]
         self.stage_blocks = stage_setting[:num_stages]
         self.stem_order = stem_order
@@ -254,6 +259,7 @@ class MultiFea(BaseBackbone):
         for i, num_blocks in enumerate(self.stage_blocks):
             stride = strides[i]
             dilation = dilations[i]
+            fea_num = self.fea_num[i]
             res_layer = self.make_res_layer(
                 block=self.block,
                 num_blocks=num_blocks,
@@ -268,7 +274,7 @@ class MultiFea(BaseBackbone):
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
                 nonlinear=block_act,
-                fea_num=self.fea_num,
+                fea_num=fea_num,
                 mode=self.mode,
                 thres=self.thres,
                 binary_type=binary_type,)
