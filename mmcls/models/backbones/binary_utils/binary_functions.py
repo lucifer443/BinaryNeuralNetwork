@@ -207,7 +207,6 @@ class FeaExpand(nn.Module):
         elif '8' == self.mode:
             out_channels = in_channels * expansion
             self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
-            self.bn = nn.BatchNorm2d(out_channels)
         
         elif '8b' == self.mode:
             out_channels = in_channels * expansion
