@@ -157,6 +157,11 @@ class FeaExpand(nn.Module):
         5: 手动设置阈值
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
         7: 根据输入计算的自适应阈值
+        8: 使用conv进行通道数扩增
+        8b: 在8的基础上增加bn层
+        8ab: 在8的基础上增加bn层和激活层，顺序为先激活后bn
+        8ba: 在8的基础上增加bn层和激活层，顺序为先bn后激活
+        82: 仅限于2张特征图，第1张不变，第2张使用conv计算得到
     """
     def __init__(self, expansion=3, mode='1', in_channels=None, thres=None):
         super(FeaExpand, self).__init__()
@@ -198,6 +203,27 @@ class FeaExpand(nn.Module):
             self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
             self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
             self.tanh = nn.Tanh()
+        
+        elif '8' == self.mode:
+            out_channels = in_channels * expansion
+            self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
+            self.bn = nn.BatchNorm2d(out_channels)
+        
+        elif '8b' == self.mode:
+            out_channels = in_channels * expansion
+            self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
+            self.bn = nn.BatchNorm2d(out_channels)
+        
+        elif '8ab' == self.mode or '8ba' == self.mode:
+            out_channels = in_channels * expansion
+            self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
+            self.activate = nn.PReLU(out_channels)
+            self.bn = nn.BatchNorm2d(out_channels)
+        
+        elif '82' == self.mode:
+            assert expansion == 2
+            self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, bias=False)
+
 
     def bin_id_to_thres(self, bins, bin_id, low, high):
         interval = (high - low) / bins
@@ -315,5 +341,32 @@ class FeaExpand(nn.Module):
             bias = self.avgpool(bias)
             bias = self.linear1(bias)
             bias = self.tanh(bias)
+        
+        elif '8' == self.mode:
+            out = self.conv(x)
+            return out
+        
+        elif '8b' == self.mode:
+            out = self.conv(x)
+            out = self.bn(out)
+            return out
+        
+        elif '8ab' == self.mode:
+            out = self.conv(x)
+            out = self.activate(out)
+            out = self.bn(out)
+            return out
+        
+        elif '8ba' == self.mode:
+            out = self.conv(x)
+            out = self.bn(out)
+            out = self.activate(out)
+            return out
+
+        elif '82' == self.mode:
+            out.append(x)
+            out2 = self.conv(x)
+            out.append(out2)
+        
 
         return torch.cat(out, dim=1)
