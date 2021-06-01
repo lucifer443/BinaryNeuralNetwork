@@ -18,10 +18,11 @@ from .reactnet import ReActNet
 from .irnet import IRNet
 from .baseline import Baseline
 from .multifea import MultiFea
+from .mfnet import MFNet
 
 __all__ = [
     'LeNet5', 'AlexNet', 'VGG', 'RegNet', 'ResNet', 'ResNeXt', 'ResNetV1d',
     'ResNeSt', 'ResNet_CIFAR', 'SEResNet', 'SEResNeXt', 'ShuffleNetV1',
     'ShuffleNetV2', 'MobileNetV2', 'MobileNetv3', 'ResArch',
-    'ReActNet', 'IRNet', 'Baseline', 'MultiFea',
+    'ReActNet', 'IRNet', 'Baseline', 'MultiFea', 'MFNet',
 ]
