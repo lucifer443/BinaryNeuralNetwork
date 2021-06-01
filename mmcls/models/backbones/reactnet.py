@@ -12,6 +12,7 @@ from .base_backbone import BaseBackbone
 from .binary_utils.reactnet_blocks import (ReActBlock, ReActGBa4Block, ReActGS4Block,
                                            ReActBaseBlock, ReActBaseGBa4Block, ReAct1GS4Block,
                                            ReAct1Block, ReAct1GBa4Block,
+                                           ReActMFG4Block,
                                           )
 
 
@@ -44,6 +45,7 @@ class ReActNet(BaseBackbone):
         "reactnet_baseline_gba4": ReActBaseGBa4Block,
         "reactnet_gba4": ReActGBa4Block,
         "reactnet_gs4": ReActGS4Block,
+        "reactnet_mfg4": ReActMFG4Block,
     }
 
     def __init__(self,
