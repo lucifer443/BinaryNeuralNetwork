@@ -246,7 +246,8 @@ class MobileArch(nn.Module):
     # layer, from left to right: channel, num_blocks, stride.
     arch_settings = {'ReActNet-A': (RANetBlockB, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
                      'ExpandNet-1': (EpBlockA, [[64, 2, 2], [128, 3, 2], [256, 7, 2], [1024, 1, 2]]),
-                     'ExpandNet-2': (EpBlockB, [[48, 1, 2], [96, 2, 2], [192, 3, 2], [768, 1, 2]]),
+                     'ExpandNet-2': (EpBlockA, [[48, 1, 2], [96, 2, 2], [192, 3, 2], [768, 1, 2]]),
+                     'ExpandNet-3': (EpBlockB, [[64, 1, 2], [128, 2, 2], [256, 3, 2], [1024, 1, 2]]),
                      }
 
     def __init__(self,
