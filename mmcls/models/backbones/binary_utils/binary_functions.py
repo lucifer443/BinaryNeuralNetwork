@@ -1,7 +1,7 @@
 from torch.autograd import Function
 import torch
 import torch.nn as nn
-
+import random
 
 class IRNetSign(Function):
     """Sign function from IR-Net, which can add EDE progress"""
@@ -118,3 +118,30 @@ class AttentionScale(nn.Module):
         x = self.fc1(x)
         x = self.fc2(x)
         return inputs * x[:, :, None, None]
+
+class Expandx(nn.Module):
+
+    aerfa3_settings =[[-0.5,0,0.5],[-0.618,0,0.618],[-0.9,0,0.9],[-0.9,0,0.1],
+                     [-0.3,0,0.7],[-0.1,0,0.9],[-0.1,0,0.1],[-0.33,0,0.33]]
+    
+    aerfa2_settings =[[-0.5,0.5],[-0.618,0.618],[-0.9,0.9],[-0.9,0.1],
+                     [-0.3,0.7],[-0.1,0.9],[-0.1,0.1],[-0.33,0.33]]
+    aerfa_settings = [-0.33,0.33]
+    def __init__(self, Expand_num=1,in_channels=None,):
+        super(Expandx, self).__init__()
+        self.Expand_num = Expand_num
+
+
+    def forward(self, x):
+        if self.Expand_num == 1:
+            return x
+
+        out = []
+        if self.Expand_num==2:
+            #dex = random.randint(0,7)
+            out = [x + alpha  for alpha in self.aerfa_settings]
+
+        elif self.Expand_num==3:
+            dex = random.randint(0,7)
+            out = [x + alpha  for alpha in self.aerfa3_settings[dex]]    
+        return torch.cat(out, dim=1)

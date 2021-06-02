@@ -50,6 +50,31 @@ class IRConv2d(BaseBinaryConv2d):
         self.t = t
 
 
+class IRConv2dnew(BaseBinaryConv2d):
+
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(IRConv2dnew, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        self.k = torch.tensor([10]).float().cuda()
+        self.t = torch.tensor([0.1]).float().cuda()
+        self.sign = RANetActSign()
+
+    def binary_input(self, x):
+        return self.sign(x)
+
+    def binary_weight(self, w):
+        bw = w - w.view(w.size(0), -1).mean(-1).view(w.size(0), 1, 1, 1)
+        bw = bw / bw.view(bw.size(0), -1).std(-1).view(bw.size(0), 1, 1, 1)
+        sw = torch.pow(torch.tensor([2] * bw.size(0)).cuda().float(),
+                       (torch.log(bw.abs().view(bw.size(0), -1).mean(-1)) / math.log(2)).round().float()).view(
+            bw.size(0), 1, 1, 1).detach()
+        bw = IRNetSign().apply(bw, self.k, self.t)
+        return bw * sw
+
+    def ede(self, k, t):
+        self.k = k
+        self.t = t
 class RAConv2d(BaseBinaryConv2d):
 
     def __init__(self, in_channels, out_channels, kernel_size,
@@ -263,17 +288,16 @@ class IRConv2d_bias_x2x(BaseBinaryConv2d):
 
         
         if self.training is True:
-            #with torch.no_grad():
+            with torch.no_grad():
                 output2 =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
                 err = output2 - output1
                 #print(err.shape)
                 mybias = err.mean(dim=0,keepdim=True).mean(dim=2,keepdim=True).mean(dim=3,keepdim=True)
                 #mybias = err.mean(dim=0,keepdim=True)
-                with torch.no_grad():
-                    self.bias_bi[:] = self.bias_bi[:]*self.aerfa +mybias*(1-self.aerfa)
+                self.bias_bi[:] = self.bias_bi[:]*self.aerfa +mybias*(1-self.aerfa)
             #output =output1 + self.bias_bi[:]
-                output = output1 + mybias
-                return(output)        
+            output = output1 + mybias
+            return(output)        
         else:
             output = output1 + self.bias_bi[:]
             return(output)
@@ -352,3 +376,18 @@ class StrongBaselineConv2d(BaseBinaryConv2d):
             bias = self.bias_bi
             output = boutput + bias
         return output
+
+class BLConv2d(BaseBinaryConv2d):
+
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), **kwargs):
+        super(BLConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        self.sign_a = RANetActSign()
+        self.sign_w = RANetWSign(clip=1.25)
+
+    def binary_input(self, x):
+        return self.sign_a(x)
+
+    def binary_weight(self, w):
+        return self.sign_w(w)

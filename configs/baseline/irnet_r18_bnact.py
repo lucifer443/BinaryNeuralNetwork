@@ -26,7 +26,7 @@ custom_hooks = [
     dict(type='EDEHook', total_epoch=100)
 ]
 #work_dir = 'work_dirs/tmp'
-work_dir = 'work_dirs/22testirnet_r18_bias_x2x_c_allgradreload'
+work_dir = 'work_dirs/bnact_irnet_r18_bias_x2x_c_bangradreload'
 load_from = 'work_dirs/irnet18_x2x_float/epoch_100.pth'
 find_unused_parameters=True
 seed = 166
