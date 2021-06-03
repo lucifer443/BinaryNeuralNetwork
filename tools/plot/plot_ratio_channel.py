@@ -77,7 +77,7 @@ def main():
 
     # add my own hooks
     for m in model.modules():
-        # print(type(m))
+        print(type(m))
         if isinstance(m, IRConv2d):
             m.register_forward_hook(hook=get_irconv_inout)
         if isinstance(m, RAConv2d):
@@ -87,7 +87,7 @@ def main():
 
     # test a single image
     result = inference_model(model, args.img)
-
+    breakpoint()
     # plot the results
     if 'irnet' in arch_name :
         conv_num = 16

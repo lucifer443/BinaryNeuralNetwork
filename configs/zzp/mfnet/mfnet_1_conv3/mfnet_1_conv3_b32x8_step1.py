@@ -8,7 +8,7 @@ model = dict(
         type='MFNet',
         arch='mf_1',
         binary_type=(True, False),
-        stem_conv_ks=7),
+        stem_conv_ks=3),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -37,6 +37,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = 'work_dir/mfnet/mfnet_1/mfnet_1_b32x8/mfnet_1_b32x8_step1'
+work_dir = 'work_dir/mfnet/mfnet_1_conv3/mfnet_1_conv3_b32x8/mfnet_1_conv3_b32x8_step1'
 find_unused_parameters=True
 seed = 166

@@ -6,9 +6,9 @@ model = dict(
     type='DistillingImageClassifier',
     backbone=dict(
         type='MFNet',
-        arch='mf_1',
+        arch='mf_2',
         binary_type=(True, False),
-        stem_conv_ks=7),
+        stem_conv_ks=3),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -37,6 +37,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = 'work_dir/mfnet/mfnet_1/mfnet_1_b32x8/mfnet_1_b32x8_step1'
+work_dir = 'work_dir/mfnet/mfnet_2/mfnet_2_b32x8/mfnet_2_b32x8_step1'
 find_unused_parameters=True
 seed = 166

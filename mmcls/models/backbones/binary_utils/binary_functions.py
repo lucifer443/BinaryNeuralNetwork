@@ -177,7 +177,10 @@ class FeaExpand(nn.Module):
         elif '4' == self.mode:
             self.move = nn.ModuleList()
             for i in range(expansion):
-                alpha = -1 + (i + 1) * 2 / (expansion + 1)
+                if thres == None:
+                    alpha = -1 + (i + 1) * 2 / (expansion + 1)
+                else:
+                    alpha = thres[i]
                 self.move.append(LearnableBias(channels=1, init=alpha))
 
         elif '4c' == self.mode:
@@ -192,6 +195,12 @@ class FeaExpand(nn.Module):
             for i in range(expansion):
                 alpha = -1 + (i + 1) * 2 / (expansion + 1)
                 self.move.append(LearnableBias(in_channels, init=alpha, groups=groups))
+        
+        elif '4-1' == self.mode:
+            self.move = nn.ModuleList()
+            for i in range(expansion):
+                alpha = -1 + (i + 1) * 2 / (expansion + 1)
+                self.move.append(LearnableBias(channels=1, init=alpha))
         
         elif '5' == self.mode:
             assert len(thres) == expansion

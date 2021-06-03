@@ -20,6 +20,7 @@ class MFNet(nn.Module):
     # layer, from left to right: channel, num_blocks, stride.
     arch_settings = {
         'mf_1': (MF1Block, [[64, 2, 2], [128, 3, 2], [256, 7, 2], [512, 1, 1], [1024, 1, 2]]),
+        'mf_2': (MF1Block, [[64, 2, 2], [128, 2, 2], [256, 3, 2], [512, 1, 1], [1024, 1, 2]]),
     }
 
     def __init__(self,
@@ -28,7 +29,7 @@ class MFNet(nn.Module):
                  frozen_stages=-1,
                  conv_cfg=None,
                  norm_cfg=dict(type='BN'),
-                 stem_act=None,
+                 stem_conv_ks=7,
                  in_channels=3,
                  stem_channels=32,
                  norm_eval=False,
@@ -56,9 +57,9 @@ class MFNet(nn.Module):
             self.conv_cfg,
             in_channels,
             stem_channels,
-            kernel_size=7,
+            kernel_size=stem_conv_ks,
             stride=2,
-            padding=3,
+            padding=stem_conv_ks // 2,
             bias=False)
         self.stem_act = nn.PReLU(stem_channels)
         self.stem_bn = nn.BatchNorm2d(stem_channels)
