@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py',
+    '../../../_base_/datasets/imagenet_bs128.py',
     '../../../_base_/schedules/imagenet_bs1024.py', '../../../_base_/default_runtime.py'
 ]
 
@@ -8,7 +8,8 @@ model = dict(
     backbone=dict(
         type='MultiFea',
         arch='mf13_1_3',
-        binary_type=(True, True),
+        binary_type=(True, False),
+        stage_setting=(2, 2, 8, 4),
         stem_act='prelu',
         block_act=('prelu', 'identity'),
         stem_channels=64,
@@ -25,12 +26,7 @@ model = dict(
         topk=(1, 5),
     ))
 
-# set weight_decay to 0
-optimizer = dict(
-    weight_decay=0
-)
 
-load_from = 'work_dir/multifea/multifea13_1/multifea13_1_b128x8/multifea13_1_b128x8_step1/epoch_100.pth'
-work_dir = 'work_dir/multifea/multifea13_1/multifea13_1_b128x8/multifea13_1_b128x8_step2'
+work_dir = 'work_dir/multifea/multifea13_1/multifea13_1_da/multifea13_1_da_b128x8_step1'
 find_unused_parameters=False
 seed = 166

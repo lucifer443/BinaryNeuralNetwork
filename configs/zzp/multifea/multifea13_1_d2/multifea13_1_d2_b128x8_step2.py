@@ -9,6 +9,7 @@ model = dict(
         type='MultiFea',
         arch='mf13_1_3',
         binary_type=(True, True),
+        stage_setting=(4, 4, 4, 4),
         stem_act='prelu',
         block_act=('prelu', 'identity'),
         stem_channels=64,
@@ -30,7 +31,7 @@ optimizer = dict(
     weight_decay=0
 )
 
-load_from = 'work_dir/multifea/multifea13_1/multifea13_1_b128x8/multifea13_1_b128x8_step1/epoch_100.pth'
-work_dir = 'work_dir/multifea/multifea13_1/multifea13_1_b128x8/multifea13_1_b128x8_step2'
+load_from = 'work_dir/multifea/multifea13_1/multifea13_1_d2/multifea13_1_d2_b128x8_step1/epoch_100.pth'
+work_dir = 'work_dir/multifea/multifea13_1/multifea13_1_d2/multifea13_1_d2_b128x8_step2'
 find_unused_parameters=False
 seed = 166
