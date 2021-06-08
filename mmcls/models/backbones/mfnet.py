@@ -26,6 +26,8 @@ class MFNet(nn.Module):
 
     def __init__(self,
                  arch,
+                 binary_type=(True, False),
+                 binary_type_cfg=None,
                  out_indices=(4,),
                  frozen_stages=-1,
                  conv_cfg=None,
@@ -42,9 +44,9 @@ class MFNet(nn.Module):
                 raise ValueError('the item in out_indices must in '
                                  f'range(0, 5). But received {index}')
 
-        if frozen_stages not in range(-1, 5):
-            raise ValueError('frozen_stages must be in range(-1, 8). '
-                             f'But received {frozen_stages}')
+        # if frozen_stages not in range(-1, 5):
+        #     raise ValueError('frozen_stages must be in range(-1, 8). '
+        #                      f'But received {frozen_stages}')
         self.out_indices = out_indices
         self.frozen_stages = frozen_stages
         self.conv_cfg = conv_cfg
@@ -69,14 +71,22 @@ class MFNet(nn.Module):
 
         self.block, self.layers_cfg = self.arch_settings[arch]
         for i, layer_cfg in enumerate(self.layers_cfg):
+            if binary_type_cfg:
+                stage_binary_type = binary_type_cfg[i]
+            else:
+                stage_binary_type = binary_type
             out_channels, num_blocks, stride = layer_cfg
             inverted_res_layer = self.make_layer(
                 out_channels=out_channels,
                 num_blocks=num_blocks,
-                stride=stride, **kwargs)
+                stride=stride,
+                binary_type=stage_binary_type,
+                **kwargs)
             layer_name = f'layer{i + 1}'
             self.add_module(layer_name, inverted_res_layer)
             self.layers.append(layer_name)
+        
+        self._freeze_stages()
 
     def make_layer(self, out_channels, num_blocks, stride, **kwargs):
         layers = []
@@ -117,14 +127,18 @@ class MFNet(nn.Module):
         return x
 
     def _freeze_stages(self):
-        if self.frozen_stages >= 0:
-            for param in self.conv1.parameters():
+        if self.frozen_stages != -1:
+            for param in self.stem_conv.parameters():
                 param.requires_grad = False
-        for i in range(1, self.frozen_stages + 1):
-            layer = getattr(self, f'layer{i}')
-            layer.eval()
-            for param in layer.parameters():
+            for param in self.stem_bn.parameters():
                 param.requires_grad = False
+            for param in self.stem_act.parameters():
+                param.requires_grad = False
+            for i in self.frozen_stages:
+                layer = getattr(self, f'layer{i}')
+                layer.eval()
+                for param in layer.parameters():
+                    param.requires_grad = False
 
     def train(self, mode=True):
         super(MFNet, self).train(mode)
