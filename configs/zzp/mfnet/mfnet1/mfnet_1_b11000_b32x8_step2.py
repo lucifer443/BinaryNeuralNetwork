@@ -32,10 +32,10 @@ optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='poly',
-    min_lr=4.4141e-4,
+    min_lr=0.0,
     by_epoch=False,
 )
-runner = dict(type='EpochBasedRunner', max_epochs=30)
+runner = dict(type='EpochBasedRunner', max_epochs=256)
 
 work_dir = 'work_dir/mfnet/mfnet_1/mfnet_1_b32x8/mfnet_1_b11000_b32x8_step2'
 load_from = 'work_dir/mfnet/mfnet_1/mfnet_1_b32x8/mfnet_1_b32x8_step1/epoch_256.pth'
