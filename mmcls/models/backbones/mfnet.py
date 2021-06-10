@@ -88,16 +88,22 @@ class MFNet(nn.Module):
         
         self._freeze_stages()
 
-    def make_layer(self, out_channels, num_blocks, stride, **kwargs):
+    def make_layer(self, out_channels, num_blocks, stride, binary_type=(True, False), **kwargs):
         layers = []
         for i in range(num_blocks):
+            if isinstance(binary_type[0], bool):
+                block_binary_type = binary_type
+            elif isinstance(binary_type[0], tuple):
+                block_binary_type = binary_type[i]
             if i >= 1:
                 stride = 1
             layers.append(
                 self.block(
                     self.in_channels,
                     out_channels,
-                    stride, **kwargs))
+                    stride,
+                    binary_type=block_binary_type, 
+                    **kwargs))
             self.in_channels = out_channels
 
         return nn.Sequential(*layers)
