@@ -65,6 +65,24 @@ class DistillingImageClassifier(ImageClassifier):
 
         return losses
 
+    def cuda(self, device=None):
+        """Since teacher_model is registered as a plain object, it is necessary
+        to put the teacher model to cuda when calling cuda function."""
+        self.teacher_model.cuda(device=device)
+        return super().cuda(device=device)
+    
+    def __setattr__(self, name, value):
+        """Set attribute, i.e. self.name = value
+        This reloading prevent the teacher model from being registered as a
+        nn.Module. The teacher module is registered as a plain object, so that
+        the teacher parameters will not show up when calling
+        ``self.parameters``, ``self.modules``, ``self.children`` methods.
+        """
+        if name == 'teacher_model':
+            object.__setattr__(self, name, value)
+        else:
+            super().__setattr__(name, value)
+
 
 @CLASSIFIERS.register_module()
 class ATKDImageClassifier(ImageClassifier):

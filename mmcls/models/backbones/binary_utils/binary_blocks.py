@@ -76,7 +76,7 @@ class RANetBlockA(nn.Module):
         out = self.bn2(out)
 
         out += residual
-        out = self.prelu1(out)
+        out = self.prelu2(out)
         return out
 
 

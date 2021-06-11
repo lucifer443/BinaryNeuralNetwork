@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/datasets/imagenet_bs64.py', '../../_base_/default_runtime.py'
+    '../../_base_/datasets/imagenet_bs64_pil_resize.py', '../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -9,6 +9,7 @@ model = dict(
         arch='ReActNet-18',
         num_stages=4,
         out_indices=(3, ),
+        avg_down=True,
         binary_type=(True, False),
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
