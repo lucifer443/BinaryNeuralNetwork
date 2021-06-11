@@ -7,7 +7,7 @@ model = dict(
     backbone=dict(
         type='MFNet',
         arch='mf_1',
-        binary_type=(True, True),
+        binary_type=(True, False),
         stem_conv_ks=7),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
