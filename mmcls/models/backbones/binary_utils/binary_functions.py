@@ -86,11 +86,11 @@ class STESign(nn.Module):
 
 class RPRelu(nn.Module):
     """RPRelu form ReActNet"""
-    def __init__(self, in_channels, **kwargs):
+    def __init__(self, in_channels, bias_init=0.0, prelu_init=0.25, **kwargs):
         super(RPRelu, self).__init__()
-        self.bias1 = LearnableBias(in_channels)
-        self.prelu = nn.PReLU(in_channels)
-        self.bias2 = LearnableBias(in_channels)
+        self.bias1 = LearnableBias(in_channels, init=bias_init)
+        self.prelu = nn.PReLU(in_channels, init=prelu_init)
+        self.bias2 = LearnableBias(in_channels, init=bias_init)
 
     def forward(self, x):
         x = self.bias1(x)

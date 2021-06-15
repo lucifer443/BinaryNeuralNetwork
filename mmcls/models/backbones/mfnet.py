@@ -27,6 +27,7 @@ class MFNet(nn.Module):
     def __init__(self,
                  arch,
                  binary_type=(True, False),
+                 block_act=('prelu', 'identity'),
                  binary_type_cfg=None,
                  out_indices=(4,),
                  frozen_stages=-1,
@@ -81,6 +82,7 @@ class MFNet(nn.Module):
                 num_blocks=num_blocks,
                 stride=stride,
                 binary_type=stage_binary_type,
+                nonlinear=block_act,
                 **kwargs)
             layer_name = f'layer{i + 1}'
             self.add_module(layer_name, inverted_res_layer)
@@ -102,7 +104,7 @@ class MFNet(nn.Module):
                     self.in_channels,
                     out_channels,
                     stride,
-                    binary_type=block_binary_type, 
+                    binary_type=block_binary_type,
                     **kwargs))
             self.in_channels = out_channels
 
