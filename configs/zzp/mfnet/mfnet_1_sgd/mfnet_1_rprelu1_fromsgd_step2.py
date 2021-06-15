@@ -14,4 +14,4 @@ optimizer = dict(
 
 
 load_from = 'work_dir/mfnet/mfnet_1/mfnet_1_sgd/mfnet_1_sgd_step1/epoch_100_rprelu.pth'
-work_dir = 'work_dir/mfnet/mfnet_1/mfnet_1_sgd/mfnet_1_rprelu_step2'
+work_dir = 'work_dir/mfnet/mfnet_1/mfnet_1_sgd/mfnet_1_rprelu1_fromsgd_step2'
