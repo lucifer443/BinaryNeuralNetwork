@@ -191,11 +191,11 @@ class Baseline13pBlock(nn.Module):
         self.conv1 = BLConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear1 = nn.PReLU(out_channels)
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.nonlinear12 = nn.PReLU(out_channels)
+        self.nonlinear12 = nn.PReLU(out_channels, init=1.0)
         self.conv2 = BLConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.nonlinear2 = nn.PReLU(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
-        self.nonlinear22 = nn.PReLU(out_channels)
+        self.nonlinear22 = nn.PReLU(out_channels, init=1.0)
         self.downsample = downsample
         self.stride = stride
         self.out_channels = out_channels
