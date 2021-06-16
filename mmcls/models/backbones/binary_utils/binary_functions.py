@@ -84,6 +84,21 @@ class STESign(nn.Module):
         return out
 
 
+class LearnableBias(nn.Module):
+    def __init__(self, channels, init=0, groups=1):
+        super(LearnableBias, self).__init__()
+        self.groups = groups
+        if groups == 1:
+            self.learnable_bias = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
+        else:
+            learnable_bias_list = [nn.Parameter(torch.ones(1, channels // groups, 1, 1) * init, requires_grad=True) for i in range(groups)]
+            self.learnable_bias = torch.cat(learnable_bias_list, dim=1)
+
+    def forward(self, x):
+        out = x + self.learnable_bias.expand_as(x)
+        return out
+
+
 class RPRelu(nn.Module):
     """RPRelu form ReActNet"""
     def __init__(self, in_channels, bias_init=0.0, prelu_init=0.25, **kwargs):
@@ -99,37 +114,22 @@ class RPRelu(nn.Module):
         return x
 
 
-# class RPReLUi(nn.Module):
-#     """RPRelu form ReActNet"""
-#     def __init__(self, in_channels, bias_init=0.0, prelu_init=0.25, **kwargs):
-#         super(RPReLUi, self).__init__()
-#         self.bias1 = LearnableBias(in_channels, init=bias_init)
-#         self.prelu = nn.PReLU(in_channels, init=prelu_init)
-#         self.bias2 = LearnableBias(in_channels, init=bias_init)
+class CfgLayer(nn.Module):
+    """Configurable layer"""
 
-#     def forward(self, x):
-#         identity = x
-#         out = self.bias1(x)
-#         out = self.prelu(x)
-#         out = self.bias2(x)
-#         out = out - x
-#         out += identity
-#         return out
-
-
-class LearnableBias(nn.Module):
-    def __init__(self, channels, init=0, groups=1):
-        super(LearnableBias, self).__init__()
-        self.groups = groups
-        if groups == 1:
-            self.learnable_bias = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
-        else:
-            learnable_bias_list = [nn.Parameter(torch.ones(1, channels // groups, 1, 1) * init, requires_grad=True) for i in range(groups)]
-            self.learnable_bias = torch.cat(learnable_bias_list, dim=1)
+    def __init__(self, in_channels, config, bias_init=0.0, prelu_init=0.25, **kwargs):
+        super(CfgLayer, self).__init__()
+        self.act = nn.ModuleList()
+        for c in config:
+            if c == 'b':
+                self.act.append(LearnableBias(in_channels, init=bias_init))
+            elif c == 'p':
+                self.act.append(nn.PReLU(in_channels, init=prelu_init))
 
     def forward(self, x):
-        out = x + self.learnable_bias.expand_as(x)
-        return out
+        for act in self.act:
+            x = act(x)
+        return x
 
 
 class LearnableScale(nn.Module):

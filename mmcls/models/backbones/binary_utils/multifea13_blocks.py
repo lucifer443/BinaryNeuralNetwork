@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .binary_convs import BLConv2d, BConvWS2d
-from .binary_functions import act_name_map, FeaExpand, LearnableBias, RPRelu
+from .binary_functions import act_name_map, FeaExpand, LearnableBias, RPRelu, CfgLayer
 
 
 class MultiFea_Block(nn.Module):
@@ -97,6 +97,16 @@ class MF1Block(nn.Module):
             return RPRelu(channels)
         elif act_name == 'rprelu_pi=1':
             return RPRelu(channels, prelu_init=1.0)
+        elif act_name == 'bp':
+            return CfgLayer(channels, config='bp', prelu_init=1.0)
+        elif act_name == 'pb':
+            return CfgLayer(channels, config='pb', prelu_init=1.0)
+        elif act_name == 'bias':
+            return CfgLayer(channels, config='b')
+        elif act_name == 'bpbpb':
+            return CfgLayer(channels, config='bpbpb', prelu_init=1.0)
+        elif act_name == 'bsb':
+            return CfgLayer(channels, config='bsb')
         else:
             return act_name_map[act_name]()
 
