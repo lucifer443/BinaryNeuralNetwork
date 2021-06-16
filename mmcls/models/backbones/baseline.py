@@ -13,6 +13,7 @@ from .baseline_blocks.baseline_blocks import (
     Baseline11sBlock, BaselineStrongBlock,
     Baseline13clipBlock,
     Baseline13wsBlock, Baseline14wsBlock,
+    Baseline13pBlock,
     )
 from .baseline_blocks.baseline_ste_blocks import (
     Baseline11STEBlock, Baseline12STEBlock, Baseline13STEBlock, Baseline14STEBlock, Baseline15STEBlock,
@@ -219,6 +220,7 @@ class Baseline(BaseBackbone):
         'baseline_11': (Baseline11Block, (2, 2, 2, 2)),
         'baseline_12': (Baseline12Block, (2, 2, 2, 2)),
         'baseline_13': (Baseline13Block, (2, 2, 2, 2)),
+        'baseline_13_prelu': (Baseline13pBlock, (2, 2, 2, 2)),
         'baseline_13clip': (Baseline13clipBlock, (2, 2, 2, 2)),
         'baseline_14': (Baseline14Block, (2, 2, 2, 2)),
         'baseline_15': (Baseline15Block, (2, 2, 2, 2)),
