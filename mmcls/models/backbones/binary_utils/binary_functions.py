@@ -99,6 +99,18 @@ class LearnableBias(nn.Module):
         return out
 
 
+class LearnableScale(nn.Module):
+    def __init__(self, channels, init=1.0):
+        super(LearnableScale, self).__init__()
+        self.channels = channels
+        self.learnable_scale = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
+
+    def forward(self, x):
+        out = x * self.learnable_scale.expand_as(x)
+
+        return out
+
+
 class RPRelu(nn.Module):
     """RPRelu form ReActNet"""
     def __init__(self, in_channels, bias_init=0.0, prelu_init=0.25, **kwargs):
@@ -112,6 +124,34 @@ class RPRelu(nn.Module):
         x = self.prelu(x)
         x = self.bias2(x)
         return x
+
+
+class DPReLU(nn.Module):
+    """ relu with double parameters """
+    def __init__(self, channels, init_pos=1.0, init_neg=1.0):
+        super(DPReLU, self).__init__()
+        self.channels = channels
+        self.w_pos = nn.Parameter(torch.ones(1, channels, 1, 1) * init_pos, requires_grad=True)
+        self.w_neg = nn.Parameter(torch.ones(1, channels, 1, 1) * init_neg, requires_grad=True)
+
+    def forward(self, x):
+        # w_pos * max(0, x) + w_neg * min(0, x)
+        out = self.w_pos * F.relu(x) - self.w_neg * F.relu(-x)
+
+        return out
+
+
+class NPReLU(nn.Module):
+    def __init__(self, channels, init=1.0):
+        super(NPReLU, self).__init__()
+        self.channels = channels
+        self.w_neg = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
+
+    def forward(self, x):
+        # max(0, x) + w_neg * min(0, x)
+        out = F.relu(x) - self.w_neg * F.relu(-x)
+
+        return out
 
 
 class CfgLayer(nn.Module):
@@ -132,7 +172,7 @@ class CfgLayer(nn.Module):
         return x
 
 
-class LearnableScale(nn.Module):
+class LearnableScale3(nn.Module):
     hw_settings = {
         64: 56,
         128: 28,
@@ -140,7 +180,7 @@ class LearnableScale(nn.Module):
         512: 7,
     }
     def __init__(self, channels):
-        super(LearnableScale, self).__init__()
+        super(LearnableScale3, self).__init__()
         self.channels = channels
         self.height = self.hw_settings[channels]
         self.width = self.hw_settings[channels]
