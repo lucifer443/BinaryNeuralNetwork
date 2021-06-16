@@ -93,6 +93,8 @@ class MF1Block(nn.Module):
             return torch.abs
         elif act_name == 'prelu':
             return nn.PReLU(channels)
+        elif act_name == 'prelu_pi=1':
+            return nn.PReLU(channels, init=1.0)
         elif act_name == 'rprelu':
             return RPRelu(channels)
         elif act_name == 'rprelu_pi=1':
