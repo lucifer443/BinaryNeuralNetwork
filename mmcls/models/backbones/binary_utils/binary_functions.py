@@ -67,6 +67,22 @@ class RPRelu(nn.Module):
         x = self.bias2(x)
         return x
 
+class GPRPRelu(nn.Module):
+    """RPRelu form ReActNet"""
+    def __init__(self, in_channels,gp=1,**kwargs):
+        super(GPRPRelu, self).__init__()
+        self.gp = gp
+        self.in_channels = in_channels
+        self.gprelu = RPRelu(self.in_channels//gp)
+
+
+    def forward(self, x):
+        x_sp = x.chunk(self.gp,1)
+        out_sp = []
+        for i in range(self.gp):
+            out_sp.append(self.gprelu(x_sp[i]))
+        out = torch.cat(out_sp,dim=1)
+        return out
 
 class LearnableBias(nn.Module):
     def __init__(self, out_chn):

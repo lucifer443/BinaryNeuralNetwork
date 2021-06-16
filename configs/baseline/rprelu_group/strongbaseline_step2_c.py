@@ -11,7 +11,7 @@ model = dict(
         out_indices=(3, ),
         Expand_num = 1,
         rpgroup = 2,
-        binary_type=(True, False),
+        binary_type=(True, True),
         stem_act='prelu',
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
@@ -37,7 +37,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-load_from = 'work_dirs/rprelu/strongbaseline_step1_c/epoch_75.pth'
-work_dir = 'work_dirs/rprelu/strongbaseline_step2_c'
+load_from = 'work_dirs/rprelu/strongbaseline_a_step1_c/epoch_75.pth'
+work_dir = 'work_dirs/rprelu/strongbaseline_a_step2_c'
 find_unused_parameters=False
 seed = 166

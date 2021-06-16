@@ -11,6 +11,7 @@ model = dict(
         out_indices=(3, ),
         Expand_num = 1,
         rpgroup = 2,
+        gp = 1,
         binary_type=(True, False),
         stem_act='prelu',
         style='pytorch'),
@@ -40,6 +41,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/baseline13_step1_c'
+work_dir = 'work_dirs/rprelu/baseline13_step1_c_oneact'
 find_unused_parameters=False
 seed = 166

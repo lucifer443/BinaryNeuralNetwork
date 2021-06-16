@@ -37,7 +37,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-load_from = 'work_dirs/rprelu/baseline13_step1_1/epoch_75.pth'
-work_dir = 'work_dirs/rprelu/baseline13_step2_1'
+load_from = 'work_dirs/rprelu/baseline13_a_step1_1/epoch_75.pth'
+work_dir = 'work_dirs/rprelu/baseline13_a_step2_1'
 find_unused_parameters=False
 seed = 166

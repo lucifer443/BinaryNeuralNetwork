@@ -122,23 +122,28 @@ class IRNetBlock_bias_x2x(nn.Module):
         self.downsample = downsample
         self.stride = stride
         self.out_channels = out_channels
+        self.nonlinear1 = RPRelu(out_channels)
+        self.nonlinear2 = RPRelu(out_channels)
+
 
     def forward(self, x):
         residual = x
 
         out = self.conv1(x)
         out = self.bn1(out)
+        out = self.nonlinear1(out)
 
         if self.downsample is not None:
             residual = self.downsample(x)
         out += residual
 
         out = self.nonlinear(out)
+        
 
         residual = out
         out = self.conv2(out)
         out = self.bn2(out)
-
+        out = self.nonlinear2(out)
         out += residual
         out = self.nonlinear(out)
 

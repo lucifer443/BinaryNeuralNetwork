@@ -8,7 +8,7 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
-from .binary_utils.rprelu_block import RPStrongBaselineBlock,Baseline13_Block
+from .binary_utils.rprelu_block import RPStrongBaselineBlock,Baseline13_Block,RANetBlockA,Baseline15Block
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU, 'prelu': nn.PReLU}
@@ -21,7 +21,10 @@ class RPreluArch(BaseBackbone):
 
     arch_settings = {
         "RPrestrong": (RPStrongBaselineBlock, (2, 2, 2, 2)),
-        "RPre13": (Baseline13_Block, (2, 2, 2, 2))
+        "RPre13": (Baseline13_Block, (2, 2, 2, 2)),
+        "RPrereact": (RANetBlockA, (2, 2, 2, 2)),
+        "RPre15": (Baseline15Block, (2, 2, 2, 2))
+
     }
 
     def __init__(self,
@@ -44,6 +47,7 @@ class RPreluArch(BaseBackbone):
                  with_cp=False,
                  Expand_num = 1,
                  rpgroup = 1,
+                 gp = 1,
                  binary_type=(True, True),
                  stem_act=None,
                  zero_init_residual=False):
@@ -97,6 +101,7 @@ class RPreluArch(BaseBackbone):
                 with_cp=with_cp,
                 Expand_num = Expand_num,
                 rpgroup =  rpgroup,
+                gp = gp,
                 binary_type=binary_type,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg)

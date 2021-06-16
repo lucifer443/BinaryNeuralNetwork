@@ -39,7 +39,6 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-
-work_dir = 'work_dirs/rprelu/strongbaseline_step1_c'
+work_dir = 'work_dirs/rprelu/strongbaseline_a_step1_c'
 find_unused_parameters=False
 seed = 166
