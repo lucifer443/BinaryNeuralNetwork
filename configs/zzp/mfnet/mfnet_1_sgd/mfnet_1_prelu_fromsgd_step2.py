@@ -5,7 +5,7 @@ _base_ = [
 model = dict(
     backbone=dict(
         binary_type=(True, True),
-        block_act=('prelu', 'prelu'),
+        block_act=('prelu', 'prelu_pi=1'),
 ))
 
 optimizer = dict(
