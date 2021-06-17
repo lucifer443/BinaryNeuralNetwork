@@ -80,6 +80,76 @@ class RANetBlockA(nn.Module):
         return out
 
 
+class RANetBlockB(nn.Module):
+    def __init__(self, inplanes, planes, stride=1, **kwargs):
+        super(RANetBlockB, self).__init__()
+        norm_layer = nn.BatchNorm2d
+
+        self.move1 = LearnableBias(inplanes)
+        self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.bn1 = nn.BatchNorm2d(inplanes)
+
+        self.prelu1 = RPRelu(inplanes)
+
+        self.move2 = LearnableBias(inplanes)
+
+        if inplanes == planes:
+            self.binary_pw = RAConv2d(inplanes, planes, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
+            self.bn2 = nn.BatchNorm2d(planes)
+        else:
+            self.binary_pw_down1 = RAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
+                                            **kwargs)
+            self.binary_pw_down2 = RAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
+                                            **kwargs)
+            self.bn2_1 = nn.BatchNorm2d(inplanes)
+            self.bn2_2 = nn.BatchNorm2d(inplanes)
+
+        self.prelu2 = RPRelu(planes)
+
+        self.stride = stride
+        self.inplanes = inplanes
+        self.planes = planes
+
+        if self.inplanes != self.planes:
+            self.pooling = nn.AvgPool2d(2, 2)
+
+    def forward(self, x):
+
+        out1 = self.move1(x)
+
+        out1 = self.binary_3x3(out1)
+        out1 = self.bn1(out1)
+
+        if self.stride == 2:
+            x = self.pooling(x)
+
+        out1 = x + out1
+
+        out1 = self.prelu1(out1)
+
+        out2 = self.move2(out1)
+
+        if self.inplanes == self.planes:
+            out2 = self.binary_pw(out2)
+            out2 = self.bn2(out2)
+            out2 += out1
+
+        else:
+            assert self.planes == self.inplanes * 2
+
+            out2_1 = self.binary_pw_down1(out2)
+            out2_2 = self.binary_pw_down2(out2)
+            out2_1 = self.bn2_1(out2_1)
+            out2_2 = self.bn2_2(out2_2)
+            out2_1 += out1
+            out2_2 += out1
+            out2 = torch.cat([out2_1, out2_2], dim=1)
+
+        out2 = self.prelu2(out2)
+
+        return out2
+    
+
 class StrongBaselineBlock(nn.Module):
     """Strong baseline block from real-to-binary net"""
     expansion = 1

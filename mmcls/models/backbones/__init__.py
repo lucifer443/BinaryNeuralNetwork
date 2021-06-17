@@ -14,11 +14,11 @@ from .shufflenet_v2 import ShuffleNetV2
 from .vgg import VGG
 from .vision_transformer import VisionTransformer
 
-from .binary_backbones import ResArch
+from .binary_backbones import ResArch, MobileArch
 
 __all__ = [
     'LeNet5', 'AlexNet', 'VGG', 'RegNet', 'ResNet', 'ResNeXt', 'ResNetV1d',
     'ResNeSt', 'ResNet_CIFAR', 'SEResNet', 'SEResNeXt', 'ShuffleNetV1',
     'ShuffleNetV2', 'MobileNetV2', 'MobileNetv3', 'VisionTransformer',
-    'ResArch'
+    'ResArch', 'MobileArch'
 ]
