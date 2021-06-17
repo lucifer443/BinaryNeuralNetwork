@@ -35,10 +35,10 @@ optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='poly',
     min_lr=0,
-    by_epoch=False,
+    by_epoch=True,
 )
 runner = dict(type='EpochBasedRunner', max_epochs=256)
 
 load_from = 'work_dirs/reactnet_r18_step1/epoch_256.pth'
-find_unused_parameters=True
+find_unused_parameters=False
 seed = 166
