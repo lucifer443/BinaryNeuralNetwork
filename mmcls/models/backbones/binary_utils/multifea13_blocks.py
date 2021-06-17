@@ -95,6 +95,8 @@ class MF1Block(nn.Module):
             return nn.PReLU(channels)
         elif act_name == 'prelu_pi=1':
             return nn.PReLU(channels, init=1.0)
+        elif act_name == 'prelu_one_pi=1':
+            return nn.PReLU(1, init=1.0)
         elif act_name == 'rprelu':
             return RPRelu(channels)
         elif act_name == 'rprelu_pi=1':
@@ -113,6 +115,8 @@ class MF1Block(nn.Module):
             return NPReLU(channels)
         elif act_name == 'scale':
             return LearnableScale(channels)
+        elif act_name == 'scale_one':
+            return LearnableScale(1)
         else:
             return act_name_map[act_name]()
 
