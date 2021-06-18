@@ -36,6 +36,8 @@ class MultiFea_Block(nn.Module):
             return nn.PReLU(self.out_channels)
         elif act_name == 'rprelu':
             return RPRelu(self.out_channels)
+        elif act_name == 'prelu_pi=1':
+            return nn.PReLU(self.out_channels, init=1.0)
         else:
             return act_name_map[act_name]()
 
