@@ -154,6 +154,19 @@ class NPReLU(nn.Module):
         return out
 
 
+class PReLUsc(nn.Module):
+    def __init__(self, channels, init=1.0):
+        super(PReLUsc, self).__init__()
+        self.channels = channels
+        self.prelu = nn.PReLU(channels, init=init)
+
+    def forward(self, x):
+        out = self.prelu(x)
+        out = 0.5 * x + 0.5 * out
+
+        return out
+
+
 class CfgLayer(nn.Module):
     """Configurable layer"""
 
