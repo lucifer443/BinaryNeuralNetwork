@@ -225,6 +225,10 @@ class FeaExpand(nn.Module):
         4: 使用1的值初始化的可学习的阈值
         4c: 4的基础上分通道
         4g*: 4的基础上分组（是4和4c的折中）
+        4s: 可学习的是阈值的系数，而不是阈值本身
+        4s-a: 可学习系数使用sigmoid函数计算，多个阈值共用一个系数
+        4sc-a: 4s-a的分通道版本
+        4s-a-n: 4s-a的每个阈值拥有自己的可学习系数的版本
         5: 手动设置阈值
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
         7: 根据输入计算的自适应阈值
@@ -273,6 +277,23 @@ class FeaExpand(nn.Module):
                 alpha = -1 + (i + 1) * 2 / (expansion + 1)
                 self.move.append(LearnableBias(channels=1, init=alpha))
         
+        elif '4s-a' == self.mode:
+            assert len(thres) == expansion
+            self.thres = thres
+            self.thres_alpha = nn.Parameter(torch.zeros(1, 1, 1, 1), requires_grad=True)
+        
+        elif '4sc-a' == self.mode:
+            assert len(thres) == expansion
+            self.thres = thres
+            self.thres_alpha = nn.Parameter(torch.zeros(1, in_channels, 1, 1), requires_grad=True)
+        
+        elif '4s-a-n' == self.mode:
+            assert len(thres) == expansion
+            self.thres = thres
+            self.thres_alpha = nn.ParameterList()
+            for i in range(expansion):
+                self.thres_alpha.append(nn.Parameter(torch.zeros(1, 1, 1, 1), requires_grad=True))
+
         elif '5' == self.mode:
             assert len(thres) == expansion
             self.thres = thres
@@ -386,6 +407,16 @@ class FeaExpand(nn.Module):
 
         elif '4' == self.mode or '4c' == self.mode:
             out = [self.move[i](x) for i in range(self.expansion)]
+        
+        elif '4s-a' == self.mode or '4sc-a' == self.mode:
+            # thres = thres * 2 * sigmoid(alpha)
+            # alpha is the learnalbe parameter
+            thres_scale = torch.sigmoid(self.thres_alpha) * 2
+            out = [x + t * thres_scale for t in self.thres]
+        
+        elif '4s-a-n' == self.mode:
+            thres_scale = [torch.sigmoid(ta) * 2 for ta in self.thres_alpha]
+            out = [x + t * s for t, s in zip(self.thres, thres_scale)]
         
         elif '5' == self.mode:
             out = [x + t for t in self.thres]
