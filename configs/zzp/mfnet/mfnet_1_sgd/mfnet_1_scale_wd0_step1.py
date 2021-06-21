@@ -27,6 +27,6 @@ optimizer = dict(
             '.nonlinear22': dict(decay_mult=0.0),
 }))
 
-work_dir = 'work_dir/mfnet/mfnet_1/mfnet_1_sgd/mfnet_1_prelu_wd0_step1'
+work_dir = 'work_dir/mfnet/mfnet_1/mfnet_1_sgd/mfnet_1_scale_wd0_step1'
 find_unused_parameters=True
 seed = 166
