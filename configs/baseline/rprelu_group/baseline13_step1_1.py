@@ -11,6 +11,7 @@ model = dict(
         out_indices=(3, ),
         Expand_num = 1,
         rpgroup = 1,
+        gp = 1,
         binary_type=(True, False),
         stem_act='prelu',
         style='pytorch'),

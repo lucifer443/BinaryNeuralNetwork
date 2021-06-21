@@ -10,7 +10,8 @@ model = dict(
         num_stages=4,
         out_indices=(3, ),
         Expand_num = 1,
-        rpgroup = 2,
+        rpgroup = 1,
+        gp = 1,
         binary_type=(True, False),
         stem_act='prelu',
         style='pytorch'),
@@ -27,7 +28,15 @@ optimizer = dict(
     type='Adam',
     lr=1e-3,
     weight_decay=1e-5,
-    paramwise_cfg=dict(norm_decay_mult=0))
+    paramwise_cfg=dict(
+        norm_decay_mult=0,
+        custom_keys={
+            '.stem_act': dict(decay_mult=0.0),
+            '.prelu1': dict(decay_mult=0.0),
+            '.prelu2': dict(decay_mult=0.0),
+        }
+    )
+)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -37,9 +46,10 @@ lr_config = dict(
     warmup_ratio=0.1,
     step=[40, 60, 70],
 )
+
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react18_prelu_step1_c'
+work_dir = 'work_dirs/rprelu/wd0_react18_rprelu_step1_c'
 find_unused_parameters=False
 seed = 166

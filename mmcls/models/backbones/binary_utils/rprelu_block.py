@@ -57,9 +57,9 @@ class RANetBlockA(nn.Module):
             self.prelu2 = RPRelu(self.rpmode)
         elif rpgroup == 2:
             self.rpmode = out_channels
-            if out_channels ==256:
+            if out_channels ==256 and downsample is not None:
                 self.prelu1 = GPRPRelu(self.rpmode,gp=gp)
-                self.prelu2 = GPRPRelu(self.rpmode,gp=gp)
+                self.prelu2 = RPRelu(self.rpmode)
             elif out_channels ==512 :
                 self.prelu1 = GPRPRelu(self.rpmode,gp=64)
                 self.prelu2 = GPRPRelu(self.rpmode,gp=64)
@@ -74,6 +74,10 @@ class RANetBlockA(nn.Module):
             else:
                 self.prelu1 = RPRelu(out_channels)
                 self.prelu2 = RPRelu(out_channels)
+        elif rpgroup == 4:
+            self.rpmode = out_channels
+            self.prelu1 = nn.PReLU(self.rpmode)
+            self.prelu2 = nn.PReLU(self.rpmode)
 
         self.conv1 = RAConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
@@ -151,24 +155,20 @@ class Baseline13_Block(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, Expand_num=1,  rpgroup=1,gp=1,**kwargs):
         super(Baseline13_Block, self).__init__()
         self.out_channels = out_channels
-        if rpgroup == 1:
-            self.rpmode = 1
-        elif rpgroup == 2:
-            self.rpmode = out_channels
-
         self.stride = stride
         self.downsample = downsample
         self.Expand_num = Expand_num
         self.fexpand1 = Expandx(Expand_num=Expand_num, in_channels=in_channels)
-        self.conv1 = BLConv2d(in_channels * Expand_num, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.conv1 = RAConv2d(in_channels * Expand_num, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         #self.nonlinear11 = LearnableScale(out_channels)
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.nonlinear12 = RPRelu(self.rpmode)
+        #self.nonlinear12 = RPRelu(self.rpmode)
+        self.nonlinear11 = nn.PReLU(out_channels) 
         self.fexpand2 = Expandx(Expand_num=Expand_num, in_channels=out_channels)
-        self.conv2 = BLConv2d(out_channels * Expand_num, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.conv2 = RAConv2d(out_channels * Expand_num, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         #self.nonlinear21 = LearnableScale(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
-        self.nonlinear22 = RPRelu(self.rpmode)
+        #self.nonlinear22 = RPRelu(self.rpmode)
 
 
     def forward(self, x):
@@ -176,8 +176,8 @@ class Baseline13_Block(nn.Module):
 
         out = self.fexpand1(x)
         out = self.conv1(out)   
-        #out = self.nonlinear11(out)
-        out = self.nonlinear12(out)
+        out = self.nonlinear11(out)
+        #out = self.nonlinear12(out)
         out = self.bn1(out)
         if self.downsample is not None:
             identity = self.downsample(x)
@@ -188,7 +188,7 @@ class Baseline13_Block(nn.Module):
         out = self.fexpand2(out)
         out = self.conv2(out)
         #out = self.nonlinear21(out)
-        out = self.nonlinear22(out)
+        #out = self.nonlinear22(out)
         out = self.bn2(out)
         out += identity
 

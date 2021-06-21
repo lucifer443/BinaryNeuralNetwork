@@ -324,23 +324,20 @@ class StrongBaselineConv2d(BaseBinaryConv2d):
                  binary_type=(True, True), **kwargs):
         super(StrongBaselineConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
         self.sign = RANetActSign()
-        self.sign_w = RANetWSign(clip=1.25)
-        self.bias_bi = torch.zeros(1,out_channels,1,1).cuda()
+        self.sign_w = RANetWSign(clip=1)
+        bias_bi = torch.zeros(1,out_channels,1,1).cuda()
         self.aerfa = 0.999
-        #self.register_buffer('bias_bi',bias_bi)
+        self.register_buffer('bias_bi',bias_bi)
 
     def binary_input(self, x):
         return self.sign(x)
 
     def binary_weight(self, w):
         return self.sign_w(w)
-    
-    def step_weight(self,w):
-        cliped_weights = torch.clamp(w, -1.25, 1.25)
-        return cliped_weights      
+        
     
     def float_weight(self,w):
-        cliped_weights = torch.clamp(w, -1.25, 1.25)
+        cliped_weights = torch.clamp(w, -1, 1)
         return cliped_weights
 
     def float_x(self,x):
@@ -360,20 +357,22 @@ class StrongBaselineConv2d(BaseBinaryConv2d):
         if self.mode[1]:
             w = self.binary_weight(self.weight)
         else:
-            w = self.step_weight(self.weight)
-        floatx = self.float_x(input)
-        float_w = self.float_weight(self.weight)
+            w = self.float_weight(self.weight)
+
         boutput =  F.conv2d(x, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
         
         if self.training:
-            foutput =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
-            bias = torch.mean(foutput-boutput, dim=[0, 2, 3])
-            bias = bias.reshape(1, bias.size(0), 1, 1)
+            floatx = self.float_x(input)
+            float_w = self.float_weight(self.weight)
             with torch.no_grad():
-                self.bias_bi = self.bias_bi*self.aerfa +bias*(1-self.aerfa)
+                foutput =  F.conv2d(floatx, float_w, self.bias, self.stride, self.padding, self.dilation, self.groups)
+                bias = torch.mean(foutput-boutput, dim=[0, 2, 3])
+                bias = bias.reshape(1, bias.size(0), 1, 1)
+                #with torch.no_grad():
+                self.bias_bi[:] = self.bias_bi[:]*self.aerfa +bias*(1-self.aerfa)
             output =boutput + bias   
         else:
-            bias = self.bias_bi
+            bias = self.bias_bi[:]
             output = boutput + bias
         return output
 

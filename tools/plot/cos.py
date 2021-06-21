@@ -84,7 +84,7 @@ def main():
              for j in range(i+1,chanel):
                  tens1 = torch.flatten(x[:,i,:,:])
                  tens2 = torch.flatten(x[:,j,:,:])
-                 rela =torch.cosine_similarity(tens1,tens2,dim=0)
+                 rela =torch.cosine_similarity(tens1,tens2,dim=0).abs()
                  cos_t.append(rela)
          cos_t = np.array(cos_t)
          k  = []

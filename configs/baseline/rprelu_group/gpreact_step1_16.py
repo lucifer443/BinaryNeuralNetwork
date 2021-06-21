@@ -41,6 +41,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/gpreact18_step1_16'
+work_dir = 'work_dirs/rprelu/gpreact18_step1_s3d_16'
 find_unused_parameters=False
 seed = 166

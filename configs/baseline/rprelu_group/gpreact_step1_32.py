@@ -10,7 +10,7 @@ model = dict(
         num_stages=4,
         out_indices=(3, ),
         Expand_num = 1,
-        rpgroup = 3,
+        rpgroup = 2,
         gp = 32,
         binary_type=(True, False),
         stem_act='prelu',
@@ -41,6 +41,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/gpreact18_step1_32'
+work_dir = 'work_dirs/rprelu/gpreact18_step1_s3d_32'
 find_unused_parameters=False
 seed = 166
