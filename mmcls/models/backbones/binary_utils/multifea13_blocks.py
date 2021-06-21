@@ -204,7 +204,7 @@ class MF11Block(nn.Module):
 class MF3Block(nn.Module):
     expansion = 1
 
-    def __init__(self, in_channels, out_channels, stride=1, nonlinear=('prelu', 'identity'), **kwargs):
+    def __init__(self, in_channels, out_channels, stride=1, nonlinear=('prelu', 'identity'), groups=2, **kwargs):
         super(MF3Block, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -215,7 +215,7 @@ class MF3Block(nn.Module):
             self.pooling = nn.AvgPool2d(2, 2)
         self.fexpand1 = FeaExpand(expansion=self.fea_num, mode='5', thres=(-0.55, 0.55))
         self.conv_3x3 = BLConv2d(in_channels * self.fea_num, in_channels * self.fea_num,
-                                 kernel_size=3, stride=stride, padding=1, bias=False, groups=self.fea_num, **kwargs)
+                                 kernel_size=3, stride=stride, padding=1, bias=False, groups=groups, **kwargs)
         self.nonlinear11 = self._build_act(nonlinear[0], in_channels * self.fea_num)
         self.bn1 = nn.BatchNorm2d(in_channels * self.fea_num)
         self.nonlinear12 = self._build_act(nonlinear[1], in_channels * self.fea_num)
