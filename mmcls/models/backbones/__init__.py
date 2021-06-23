@@ -17,9 +17,10 @@ from .binary_backbones import ResArch
 from .reactnet import reactnet_A
 from .expandnet import ExpandArch
 from .rprelu_group import RPreluArch
+from .reactnet_A import MobileArch
 
 __all__ = [
     'LeNet5', 'AlexNet', 'VGG', 'RegNet', 'ResNet', 'ResNeXt', 'ResNetV1d',
     'ResNeSt', 'ResNet_CIFAR', 'SEResNet', 'SEResNeXt', 'ShuffleNetV1',
-    'ShuffleNetV2', 'MobileNetV2', 'MobileNetv3', 'ResArch','reactnet_A','ExpandArch','RPreluArch'
+    'ShuffleNetV2', 'MobileNetV2', 'MobileNetv3', 'ResArch','reactnet_A','ExpandArch','RPreluArch','MobileArch'
 ]
