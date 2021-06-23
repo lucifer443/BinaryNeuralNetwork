@@ -229,6 +229,7 @@ class FeaExpand(nn.Module):
         4s-a: 可学习系数使用sigmoid函数计算，多个阈值共用一个系数
         4sc-a: 4s-a的分通道版本
         4s-a-n: 4s-a的每个阈值拥有自己的可学习系数的版本
+        4sc-b: 输入特征图先经过分通道的可学习scale，再使用固定阈值
         5: 手动设置阈值
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
         7: 根据输入计算的自适应阈值
@@ -293,6 +294,12 @@ class FeaExpand(nn.Module):
             self.thres_alpha = nn.ParameterList()
             for i in range(expansion):
                 self.thres_alpha.append(nn.Parameter(torch.zeros(1, 1, 1, 1), requires_grad=True))
+        
+        elif '4sc-b' == self.mode:
+            assert in_channels != None
+            assert len(thres) == expansion
+            self.thres = thres
+            self.scale = LearnableScale(in_channels)
 
         elif '5' == self.mode:
             assert len(thres) == expansion
@@ -418,6 +425,10 @@ class FeaExpand(nn.Module):
             thres_scale = [torch.sigmoid(ta) * 2 for ta in self.thres_alpha]
             out = [x + t * s for t, s in zip(self.thres, thres_scale)]
         
+        elif '4sc-b' == self.mode:
+            x = self.scale(x)
+            out = [x + t for t in self.thres]
+
         elif '5' == self.mode:
             out = [x + t for t in self.thres]
 
