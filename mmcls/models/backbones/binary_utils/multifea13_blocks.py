@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .binary_convs import BLConv2d, BConvWS2d
-from .binary_functions import act_name_map, FeaExpand, LearnableScale, RPRelu, CfgLayer, DPReLU, NPReLU, PReLUsc
+from .binary_functions import act_name_map, FeaExpand, LearnableScale, LearnableScale3, RPRelu, CfgLayer, DPReLU, NPReLU, PReLUsc
 
 
 class MultiFea_Block(nn.Module):
@@ -36,8 +36,14 @@ class MultiFea_Block(nn.Module):
             return nn.PReLU(self.out_channels)
         elif act_name == 'rprelu':
             return RPRelu(self.out_channels)
+        elif act_name == 'rprelu_pi=1':
+            return RPRelu(self.out_channels, prelu_init=1.0)
         elif act_name == 'prelu_pi=1':
             return nn.PReLU(self.out_channels, init=1.0)
+        elif act_name == 'scale':
+            return LearnableScale(self.out_channels)
+        elif act_name == 'scale3':
+            return LearnableScale3(self.out_channels)
         else:
             return act_name_map[act_name]()
 
@@ -117,6 +123,8 @@ class MF1Block(nn.Module):
             return NPReLU(channels)
         elif act_name == 'scale':
             return LearnableScale(channels)
+        elif act_name == 'scale3':
+            return LearnableScale3(channels)
         elif act_name == 'scale_one':
             return LearnableScale(1)
         elif act_name == 'prelu_shortcut':
