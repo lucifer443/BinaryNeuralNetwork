@@ -10,11 +10,11 @@
 | ------------------ | -------- | -------- |
 | reactnet_r18_step1 | 67.6     | 67.7     |
 | reactnet_r18_step2 | 66.1     | 65.9     |
-| reactnet_a_step1   |          | -        |
-| reactnet_a_step2   |          | 69.5     |
+| reactnet_a_step1   | 71.2     | 71.2     |
+| reactnet_a_step2   | 70.0     | 69.5     |
 
 
 | 模型名称           | 训练时长 | 官方代码训练时长 |
 | ------------------ | -------- | -------- |
 | reactnet_r18       | 43h      | 96h      |
-| reactnet_a         |          |          |
+| reactnet_a         | 90h      | 196h     |
