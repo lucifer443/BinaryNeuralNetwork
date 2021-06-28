@@ -56,9 +56,9 @@ def main():
     # and in the dir checkpoint/
     #arch_name = args.config.split('/')[-1].rstrip('.py')
     #img_name = args.img.split('/')[-1].rstrip('.JPEG')
-    img = 'data/imagenet/val/n07716358/ILSVRC2012_val_00010520.JPEG'
+    img = 'data/imagenet/val/n01530575/ILSVRC2012_val_00033092.JPEG'
     # build the model from a config file and a checkpoint file
-    model = init_model(f'configs/baseline/rprelu_group/react_step1_c.py', f'work_dirs/rprelu/react18_prelu_step1_c/epoch_75.pth', device=args.device)
+    model = init_model(f'configs/baseline/rprelu_group/react_a/adreact_a_rprelu_step1.py', f'work_dirs/rprelu/react_a/adreact_rprelu_step1/epoch_75.pth', device=args.device)
     #breakpoint()
 
     # add my own hooks
@@ -84,9 +84,10 @@ def main():
              for j in range(i+1,chanel):
                  tens1 = torch.flatten(x[:,i,:,:])
                  tens2 = torch.flatten(x[:,j,:,:])
-                 rela =torch.cosine_similarity(tens1,tens2,dim=0).abs()
+                 rela =torch.cosine_similarity(tens1,tens2,dim=0)
                  cos_t.append(rela)
          cos_t = np.array(cos_t)
+         cos_t = abs(cos_t)
          k  = []
          #k1 = np.sum(cos_t>0.5)
          k2 = np.sum(cos_t>0.75)
@@ -95,7 +96,7 @@ def main():
          k.append(k2)
          #k.append(k3)
          cos.append(k)
-    f=open('tools/plot/cos2.txt','a')
+    f=open('tools/plot/cos3.txt','a')
     f.write('\n')
     f.write(str(cos))
     f.close()

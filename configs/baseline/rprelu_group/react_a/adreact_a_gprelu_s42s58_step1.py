@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
+    '../../../_base_/datasets/imagenet_bs64_pil_resize.py', '../../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -23,7 +23,7 @@ model = dict(
 
 optimizer = dict(
     type='Adam',
-    lr=1e-3,
+    lr=2e-3,
     weight_decay=1e-5,
     paramwise_cfg=dict(
         norm_decay_mult=0,
@@ -47,6 +47,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react_a/adreact_gprelu_s42s58_step1'
+work_dir = 'work_dirs/rprelu/react_a/adreact_gprelu_s52_step1'
 find_unused_parameters=False
 seed = 166

@@ -115,12 +115,12 @@ class RANetBlockB(nn.Module):
             self.prelu1 = RPRelu(inplanes)
             self.prelu2 = RPRelu(planes)
         elif rpgroup == 2:
-            if planes == 512:
+            if planes == 51200:
                 self.prelu1 = GPRPRelu(inplanes,gp=gp)
                 self.prelu2 = GPRPRelu(planes,gp=gp)
             elif planes == 1024:
-                self.prelu1 = GPRPRelu(inplanes,gp=8)
-                self.prelu2 = GPRPRelu(planes,gp=8)
+                self.prelu1 = GPRPRelu(inplanes,gp=gp)
+                self.prelu2 = GPRPRelu(planes,gp=gp)
             else:
                 self.prelu1 = RPRelu(inplanes)
                 self.prelu2 = RPRelu(planes)
