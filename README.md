@@ -96,7 +96,7 @@ seed = 166  # 训练seed，建议设置
 **baseline模型**
 
 - [x] [IR-Net](https://arxiv.org/abs/1909.10788)
-- [ ] [ReActNet](https://arxiv.org/abs/2003.03488)
+- [x] [ReActNet](https://arxiv.org/abs/2003.03488)
 - [ ] [Real-To-Binary Net](https://arxiv.org/abs/2003.11535)
 - [ ] [High-Capcity Expert Binary Net](https://arxiv.org/abs/2010.03558)
 
