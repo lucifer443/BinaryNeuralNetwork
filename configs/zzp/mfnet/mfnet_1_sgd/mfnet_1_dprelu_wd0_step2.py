@@ -1,5 +1,5 @@
 _base_ = [
-    './mfnet_1_prelu_wd0_step1.py'
+    './mfnet_1_dprelu_wd0_step1.py'
 ]
 
 model = dict(
