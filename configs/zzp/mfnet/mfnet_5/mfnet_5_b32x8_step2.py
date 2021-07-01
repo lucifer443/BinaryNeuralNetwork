@@ -1,5 +1,5 @@
 _base_ = [
-    './mfnet_4_b32x8_step1.py'
+    './mfnet_5_b32x8_step1.py'
 ]
 
 model = dict(
@@ -15,5 +15,5 @@ optimizer = dict(
 )
 
 
-load_from = 'work_dir/mfnet/mfnet_4/mfnet_4_b32x8_step1/epoch_256.pth'
-work_dir = 'work_dir/mfnet/mfnet_4/mfnet_4_b32x8_step2'
+load_from = 'work_dir/mfnet/mfnet_5/mfnet_5_b32x8_step1/epoch_256.pth'
+work_dir = 'work_dir/mfnet/mfnet_5/mfnet_5_b32x8_step2'
