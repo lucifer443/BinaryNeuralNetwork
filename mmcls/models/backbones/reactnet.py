@@ -13,6 +13,7 @@ from .binary_utils.reactnet_blocks import (ReActBlock, ReActGBa4Block, ReActGS4B
                                            ReActBaseBlock, ReActBaseGBa4Block, ReAct1GS4Block,
                                            ReAct1Block, ReAct1GBa4Block,
                                            ReActMFG4Block,
+                                           MF1Block,
                                           )
 
 
@@ -46,12 +47,14 @@ class ReActNet(BaseBackbone):
         "reactnet_gba4": ReActGBa4Block,
         "reactnet_gs4": ReActGS4Block,
         "reactnet_mfg4": ReActMFG4Block,
+        "reactnet_mf1block": MF1Block,
     }
 
     def __init__(self,
                  arch,
                  stem_channels=32,
-                 binary_type=(True, True)):
+                 binary_type=(True, True),
+                 block_act=('prelu', 'dprelu')):
         super(ReActNet, self).__init__()
 
         if arch not in self.arch_settings:
@@ -72,10 +75,10 @@ class ReActNet(BaseBackbone):
                 # 输入输出通道数不同，需要升维
                 # 除了第一个dw的stride为2，其余stage的stride都为1
                 self.feature.append(
-                    self.block(self.out_chn[i-1], self.out_chn[i], stride=2, binary_type=binary_type))
+                    self.block(self.out_chn[i-1], self.out_chn[i], stride=2, binary_type=binary_type, block_act=block_act))
             else:
                 self.feature.append(
-                    self.block(self.out_chn[i-1], self.out_chn[i], stride=1, binary_type=binary_type))
+                    self.block(self.out_chn[i-1], self.out_chn[i], stride=1, binary_type=binary_type, block_act=block_act))
     
     def init_weights(self, pretrained=None):
         if isinstance(pretrained, str):
