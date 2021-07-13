@@ -2,19 +2,13 @@ _base_ = [
     './mfnet_2_dprelu_b32x8_step2.py'
 ]
 
-model = dict(
-    backbone=dict(
-        binary_type=(True, True),
-))
 
 optimizer = dict(
-    type='Adam',
     lr=1e-5,
-    weight_decay=0.0,
-    paramwise_cfg=dict(norm_decay_mult=0)
 )
 # learning policy
 lr_config = dict(
+    _delete_ = True,
     policy='fixed',
 )
 
