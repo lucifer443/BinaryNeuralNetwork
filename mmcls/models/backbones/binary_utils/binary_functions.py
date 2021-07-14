@@ -111,6 +111,33 @@ class LearnableScale(nn.Module):
         return out
 
 
+class ScaleSum(nn.Module):
+    def __init__(self, channels, init=1.0):
+        super(ScaleSum, self).__init__()
+        self.channels = channels
+        self.learnable_scale = nn.Parameter(torch.ones(1, channels, 1, 1) * init, requires_grad=True)
+
+    def forward(self, x):
+        scaled = x * self.learnable_scale
+        sum = scaled.sum(dim=1, keepdim=True) / self.channels
+        out = sum.expand_as(x)
+
+        return out
+
+
+class LSaddSS(nn.Module):
+    def __init__(self, channels, init=1.0):
+        super(LSaddSS, self).__init__()
+        self.channels = channels
+        self.scale = LearnableScale(channels)
+        self.scale_sum = ScaleSum(channels)
+
+    def forward(self, x):
+        out = self.scale(x) / 2 + self.scale_sum(x) / 2
+
+        return out
+
+
 class RPRelu(nn.Module):
     """RPRelu form ReActNet"""
     def __init__(self, in_channels, bias_init=0.0, prelu_init=0.25, **kwargs):
