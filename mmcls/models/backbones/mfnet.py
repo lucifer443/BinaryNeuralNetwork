@@ -9,7 +9,7 @@ from mmcv.runner import load_checkpoint
 
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
-from .binary_utils.multifea13_blocks import MF1Block, MF11Block, MF12Block, MF3Block, MF1s1Block, MF1s2Block
+from .binary_utils.multifea13_blocks import MF1Block, MF11Block, MF12Block, MF3Block, MF1s1Block, MF1s2Block, MF6Block
 
 
 @BACKBONES.register_module()
@@ -28,6 +28,8 @@ class MFNet(nn.Module):
         'mf_4': (MF1Block, [[64, 2, 2], [128, 4, 2], [256, 8, 2], [512, 1, 1], [1024, 2, 2]]),
         'mf_5': (MF1Block, [[64, 2, 2], [128, 5, 2], [256, 11, 2], [512, 1, 1], [1024, 1, 2]]),
         'mf_5_c2': (MF12Block, [[90, 2, 2], [180, 5, 2], [360, 11, 2], [720, 1, 1], [1440, 1, 2]]),
+        'mf_6': (MF12Block, [[64, 2, 2], [128, 3, 2], [256, 9, 2], [512, 1, 1], [1024, 1, 2]]),
+        'mf_6_mfg': (MF6Block, [[64, 2, 2], [128, 3, 2], [256, 9, 2], [512, 1, 1], [1024, 1, 2]]),
     }
 
     def __init__(self,
