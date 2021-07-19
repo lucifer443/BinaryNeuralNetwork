@@ -76,7 +76,9 @@ class MultiFea_Block(nn.Module):
 class MF1Block(nn.Module):
     expansion = 1
 
-    def __init__(self, in_channels, out_channels, stride=1, nonlinear=('prelu', 'identity'), shortcut='identity', **kwargs):
+    def __init__(self, in_channels, out_channels, stride=1,
+        nonlinear=('prelu', 'identity'), shortcut='identity', ahead_fexpand='identity',
+        **kwargs):
         super(MF1Block, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -86,12 +88,14 @@ class MF1Block(nn.Module):
         if self.stride == 2:
             self.pooling = nn.AvgPool2d(2, 2)
         self.shortcut1 = self._build_act(shortcut, in_channels)
+        self.ahead_fexpand1 = self._build_act(ahead_fexpand, in_channels)
         self.fexpand1 = FeaExpand(expansion=self.fea_num, mode='5', thres=(-0.55, 0.55))
         self.conv_3x3 = BLConv2d(in_channels * self.fea_num, in_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear11 = self._build_act(nonlinear[0], in_channels)
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.nonlinear12 = self._build_act(nonlinear[1], in_channels)
         self.shortcut2 = self._build_act(shortcut, out_channels)
+        self.ahead_fexpand2 = self._build_act(ahead_fexpand, in_channels)
         self.fexpand2 = FeaExpand(expansion=self.fea_num, mode='5', thres=(-0.55, 0.55))
         self.conv_1x1 = BLConv2d(in_channels * self.fea_num, out_channels, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
         self.nonlinear21 = self._build_act(nonlinear[0], out_channels)
@@ -147,7 +151,8 @@ class MF1Block(nn.Module):
         else:
             identity = x
         identity = self.shortcut1(identity)
-        out1 = self.fexpand1(x)
+        out1 = self.ahead_fexpand1(x)
+        out1 = self.fexpand1(out1)
         out1 = self.conv_3x3(out1)
         out1 = self.nonlinear11(out1)
         out1 = self.bn1(out1)
@@ -161,7 +166,8 @@ class MF1Block(nn.Module):
             assert self.in_channels * 2 == self.out_channels
             identity = torch.cat([out1] * 2, dim=1)
         identity = self.shortcut2(identity)
-        out2 = self.fexpand2(out1)
+        out2 = self.ahead_fexpand2(out1)
+        out2 = self.fexpand2(out2)
         out2 = self.conv_1x1(out2)
         out2 = self.nonlinear21(out2)
         out2 = self.bn2(out2)

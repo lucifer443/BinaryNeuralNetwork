@@ -38,6 +38,7 @@ class MFNet(nn.Module):
                  binary_type=(True, False),
                  block_act=('prelu', 'identity'),
                  shortcut_act='identity',
+                 af_act='identity',
                  binary_type_cfg=None,
                  out_indices=(4,),
                  frozen_stages=-1,
@@ -94,6 +95,7 @@ class MFNet(nn.Module):
                 binary_type=stage_binary_type,
                 nonlinear=block_act,
                 shortcut=shortcut_act,
+                ahead_fexpand=af_act,
                 **kwargs)
             layer_name = f'layer{i + 1}'
             self.add_module(layer_name, inverted_res_layer)
