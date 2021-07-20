@@ -258,6 +258,7 @@ class FeaExpand(nn.Module):
         4s-a-n: 4s-a的每个阈值拥有自己的可学习系数的版本
         4sc-b: 输入特征图先经过分通道的可学习scale，再使用固定阈值
         5: 手动设置阈值
+        5re：专门针对expand为2的情况，将负阈值得到的结果乘-1
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
         7: 根据输入计算的自适应阈值
         8: 使用conv进行通道数扩增
@@ -328,7 +329,7 @@ class FeaExpand(nn.Module):
             self.thres = thres
             self.scale = LearnableScale(in_channels)
 
-        elif '5' == self.mode:
+        elif '5' == self.mode or '5re' == self.mode:
             assert len(thres) == expansion
             self.thres = thres
         
@@ -458,6 +459,11 @@ class FeaExpand(nn.Module):
 
         elif '5' == self.mode:
             out = [x + t for t in self.thres]
+        
+        elif '5re' == self.mode:
+            assert self.expansion == 2
+            out = [x + t for t in self.thres]
+            out[1] *= -1
 
         elif '6' == self.mode:
             thres = self.compute_thres(x)
