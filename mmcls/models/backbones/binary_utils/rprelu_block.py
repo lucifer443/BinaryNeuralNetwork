@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .binary_convs import IRConv2dnew, RAConv2d ,IRConv2d_bias ,IRConv2d_bias_x2,IRConv2d_bias_x2x,BLConv2d,StrongBaselineConv2d
-from .binary_functions import RPRelu, LearnableBias, LearnableScale, AttentionScale,Expandx,GPRPRelu
+from .binary_functions import RPRelu, LearnableBias, LearnableScale, AttentionScale,Expandx,GPRPRelu,MGPRPRelu,GPLearnableBias
 
 class RPStrongBaselineBlock(nn.Module):
     """Strong baseline block from real-to-binary net"""
@@ -55,17 +55,25 @@ class RANetBlockA(nn.Module):
             self.rpmode = out_channels
             self.prelu1 = RPRelu(self.rpmode)
             self.prelu2 = RPRelu(self.rpmode)
+            self.move1 = LearnableBias(in_channels)
+            self.move2 = LearnableBias(out_channels)
         elif rpgroup == 2:
             self.rpmode = out_channels
             if out_channels ==256 and downsample is not None:
                 self.prelu1 = GPRPRelu(self.rpmode,gp=gp)
                 self.prelu2 = RPRelu(self.rpmode)
+                self.move1 = GPLearnableBias(in_channels,gp=gp)
+                self.move2 = LearnableBias(out_channels)
             elif out_channels ==512 :
                 self.prelu1 = GPRPRelu(self.rpmode,gp=64)
                 self.prelu2 = GPRPRelu(self.rpmode,gp=64)
+                self.move1 = GPLearnableBias(in_channels,gp=gp)
+                self.move2 = GPLearnableBias(out_channels,gp=gp)
             else:
                 self.prelu1 = RPRelu(self.rpmode)
                 self.prelu2 = RPRelu(self.rpmode)
+                self.move1 = LearnableBias(in_channels)
+                self.move2 = LearnableBias(out_channels)
         elif rpgroup == 3:
             self.rpmode = out_channels
             if out_channels == 512:
@@ -79,9 +87,10 @@ class RANetBlockA(nn.Module):
             self.prelu1 = nn.PReLU(self.rpmode)
             self.prelu2 = nn.PReLU(self.rpmode)
 
+        
         self.conv1 = RAConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
-
+        
         self.conv2 = RAConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         
@@ -91,7 +100,7 @@ class RANetBlockA(nn.Module):
 
     def forward(self, x):
         identity = x
- 
+        x = self.move1(x)
         out = self.conv1(x)
         out = self.bn1(out)
         if self.downsample is not None:
@@ -100,6 +109,8 @@ class RANetBlockA(nn.Module):
         out = self.prelu1(out)
 
         identity = out
+        
+        out = self.move2(out)
         out = self.conv2(out)
         out = self.bn2(out)
 
@@ -114,23 +125,35 @@ class RANetBlockB(nn.Module):
         if rpgroup == 1:
             self.prelu1 = RPRelu(inplanes)
             self.prelu2 = RPRelu(planes)
+            self.move1 = LearnableBias(inplanes)
+            self.move2 = LearnableBias(inplanes)
         elif rpgroup == 2:
             if planes == 51200:
                 self.prelu1 = GPRPRelu(inplanes,gp=gp)
                 self.prelu2 = GPRPRelu(planes,gp=gp)
-            elif planes == 1024:
-                self.prelu1 = GPRPRelu(inplanes,gp=gp)
-                self.prelu2 = GPRPRelu(planes,gp=gp)
+            elif planes == 1024 :
+                if inplanes != planes:
+                    self.prelu1 = RPRelu(inplanes)
+                    self.prelu2 = GPRPRelu(planes,gp=gp)
+                    self.move1 = LearnableBias(inplanes)
+                    self.move2 = GPLearnableBias(inplanes,gp=gp)
+                else:
+                    self.prelu1 = GPRPRelu(inplanes,gp=gp)
+                    self.prelu2 = GPRPRelu(planes,gp=gp)
+                    self.move1 = GPLearnableBias(inplanes,gp=gp)
+                    self.move2 = GPLearnableBias(inplanes,gp=gp)
             else:
                 self.prelu1 = RPRelu(inplanes)
                 self.prelu2 = RPRelu(planes)
+                self.move1 = LearnableBias(inplanes)
+                self.move2 = LearnableBias(inplanes)
 
-        self.move1 = LearnableBias(inplanes)
+        
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
 
 
-        self.move2 = LearnableBias(inplanes)
+        
 
         if inplanes == planes:
             self.binary_pw = RAConv2d(inplanes, planes, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
@@ -154,6 +177,7 @@ class RANetBlockB(nn.Module):
 
         out1 = self.move1(x)
 
+        #out1 = x
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -165,6 +189,7 @@ class RANetBlockB(nn.Module):
         out1 = self.prelu1(out1)
 
         out2 = self.move2(out1)
+        #out2 = out1
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)

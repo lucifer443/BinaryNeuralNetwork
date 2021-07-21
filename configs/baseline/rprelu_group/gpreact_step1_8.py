@@ -50,6 +50,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/wd0_gpreact18_step1_s3d_8'
+work_dir = 'work_dirs/rprelu/wd0_gpreact18_leabias_step1_s3d_8'
 find_unused_parameters=False
 seed = 166

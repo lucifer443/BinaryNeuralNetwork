@@ -1,37 +1,34 @@
 _base_ = [
-    '../../_base_/datasets/imagenet_bs32.py', '../../_base_/default_runtime.py'
+    '../../../_base_/datasets/imagenet_bs64_pil_resize.py', '../../../_base_/default_runtime.py'
 ]
 
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='RPreluArch',
-        arch='RPrereact',
-        num_stages=4,
-        out_indices=(3, ),
+        type='MobileArch',
+        arch='ReActNet-A',
         Expand_num = 1,
-        rpgroup = 1,
-        gp = 1,
+        rpgroup = 2,
+        gp = 4,
         binary_type=(True, False),
-        stem_act='prelu',
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
         num_classes=1000,
-        in_channels=512,
+        in_channels=1024,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
         topk=(1, 5),
     ))
 
 optimizer = dict(
     type='Adam',
-    lr=1e-3,
+    lr=2e-3,
     weight_decay=1e-5,
     paramwise_cfg=dict(
         norm_decay_mult=0,
         custom_keys={
-            '.stem_act': dict(decay_mult=0.0),
+            #'.stem_act': dict(decay_mult=0.0),
             '.prelu1': dict(decay_mult=0.0),
             '.prelu2': dict(decay_mult=0.0),
         }
@@ -50,6 +47,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/wd0_react18_leabias_rprelu_step1_c'
+work_dir = 'work_dirs/rprelu/react_a/adreact_gprelusign_nds54_step1'
 find_unused_parameters=False
 seed = 166

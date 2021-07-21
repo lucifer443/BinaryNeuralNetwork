@@ -47,6 +47,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react_a/adreact_gprelu_s52_step1'
+work_dir = 'work_dirs/rprelu/react_a/adreact_gprelu_nds52_step1'
 find_unused_parameters=False
 seed = 166

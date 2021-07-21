@@ -84,6 +84,27 @@ class GPRPRelu(nn.Module):
         out = torch.cat(out_sp,dim=1)
         return out
 
+class MGPRPRelu(nn.Module):
+    """RPRelu form ReActNet"""
+    def __init__(self, in_channels,gp=1,**kwargs):
+        super(MGPRPRelu, self).__init__()
+        self.gp = gp
+        self.bias1 = LearnableBias(in_channels)
+        self.bias2 = LearnableBias(in_channels)
+        self.in_channels = in_channels
+        self.gprelu = nn.PReLU(self.in_channels//gp)
+
+
+    def forward(self, x):
+        x = self.bias1(x)
+        x_sp = x.chunk(self.gp,1)
+        out_sp = []
+        for i in range(self.gp):
+            out_sp.append(self.gprelu(x_sp[i]))
+        out = torch.cat(out_sp,dim=1)
+        out = self.bias2(out)
+        return out
+
 class LearnableBias(nn.Module):
     def __init__(self, out_chn):
         super(LearnableBias, self).__init__()
@@ -91,6 +112,16 @@ class LearnableBias(nn.Module):
 
     def forward(self, x):
         out = x + self.bias.expand_as(x)
+        return out
+
+class GPLearnableBias(nn.Module):
+    def __init__(self, out_chn,gp=1):
+        super(GPLearnableBias, self).__init__()
+        self.gp = gp
+        self.bias = nn.Parameter(torch.zeros(1,out_chn//gp,1,1), requires_grad=True)
+
+    def forward(self, x):
+        out = x + (self.bias.repeat(1,self.gp,1,1)).expand_as(x)
         return out
 
 class LearnableScale(nn.Module):
