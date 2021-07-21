@@ -69,6 +69,25 @@ class RANetWSign(nn.Module):
         return binary_weights
 
 
+class TernarySign(nn.Module):
+    """ternary sign function"""
+    def __init__(self, thres=(-0.55, 0.55)):
+        super(TernarySign, self).__init__()
+        self.thres = thres
+
+    def forward(self, x):
+        out_forward = 0.5 * torch.sign(x + self.thres[0]) + 0.5 + torch.sign(x - self.thres[1])
+        mask1 = x < -1
+        mask2 = x < 0
+        mask3 = x < 1
+        out1 = (-1) * mask1.type(torch.float32) + (x*x + 2*x) * (1-mask1.type(torch.float32))
+        out2 = out1 * mask2.type(torch.float32) + (-x*x + 2*x) * (1-mask2.type(torch.float32))
+        out3 = out2 * mask3.type(torch.float32) + 1 * (1- mask3.type(torch.float32))
+        out = out_forward.detach() - out3.detach() + out3
+
+        return out
+
+
 class STESign(nn.Module):
     """a sign function using STE"""
     def __init__(self, clip=1):
@@ -259,6 +278,7 @@ class FeaExpand(nn.Module):
         4sc-b: 输入特征图先经过分通道的可学习scale，再使用固定阈值
         5: 手动设置阈值
         5re：专门针对expand为2的情况，将负阈值得到的结果乘-1
+        5-3：在5的基础上增加一份特征图，其中绝对值小的数映射为+1，绝对值大的映射为-1
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
         7: 根据输入计算的自适应阈值
         8: 使用conv进行通道数扩增
@@ -274,7 +294,7 @@ class FeaExpand(nn.Module):
         if '1' in self.mode:
             self.alpha = [-1 + (i + 1) * 2 / (expansion + 1) for i in range(expansion)]
 
-        elif '3' in self.mode or '6' in self.mode:
+        elif '3' == self.mode or '3n' == self.mode or '3c' == self.mode or '3nc' == self.mode or '6' in self.mode:
             self.alpha = [(i + 1) / (expansion + 1) for i in range(expansion)]
             self.ppf_alpha = [norm.ppf(alpha) for alpha in self.alpha]
 
@@ -331,6 +351,10 @@ class FeaExpand(nn.Module):
 
         elif '5' == self.mode or '5re' == self.mode:
             assert len(thres) == expansion
+            self.thres = thres
+        
+        elif '5-3' == self.mode:
+            assert len(thres) == 2
             self.thres = thres
         
         elif '7' == self.mode:
@@ -464,6 +488,10 @@ class FeaExpand(nn.Module):
             assert self.expansion == 2
             out = [x + t for t in self.thres]
             out[1] *= -1
+        
+        elif '5-3' == self.mode:
+            out = [x + t for t in self.thres]
+            out.append(x.abs() * -1 + abs(self.thres[0]))
 
         elif '6' == self.mode:
             thres = self.compute_thres(x)

@@ -19,6 +19,13 @@ model = dict(
         topk=(1, 5),
 ))
 
+log_config = dict(
+    interval=1,
+)
+
+optimizer = dict(lr=0.1)
+lr_config = dict(warmup_ratio=0.1)
+
 
 work_dir = 'work_dir/mfnet/mfnet_1/mfnet_1_sgd/mfnet_1_sgd_float'
 find_unused_parameters=True

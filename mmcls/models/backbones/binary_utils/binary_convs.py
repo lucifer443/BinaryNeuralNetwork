@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from .binary_functions import (IRNetSign, RANetActSign, RANetWSign, STESign,)
+from .binary_functions import (IRNetSign, RANetActSign, RANetWSign, STESign, TernarySign)
 import torch
 import math
 
@@ -213,4 +213,24 @@ class BConvWS2d(BaseBinaryConv2d):
         #                (torch.log(w.abs().view(w.size(0), -1).mean(-1)) / math.log(2)).round().float()).view(
         #     w.size(0), 1, 1, 1).detach()
 
+        return bw * sw
+
+
+class TAConv2d(BaseBinaryConv2d):
+    '''ternary weight conv'''
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 binary_type=(True, True), thres=(-0.55, 0.55), **kwargs):
+        super(TAConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
+        
+        self.sign_a = TernarySign(thres)
+        self.sign_w = RANetWSign()
+
+    def binary_input(self, x):
+        return self.sign_a(x)
+
+    def binary_weight(self, w):
+        bw = self.sign_w(w)
+        sw = w.abs().mean(dim=(1, 2, 3), keepdim=True).detach()
+        # sw = torch.mean(torch.mean(torch.mean(abs(w),dim=3,keepdim=True),dim=2,keepdim=True),dim=1,keepdim=True).detach()
         return bw * sw
