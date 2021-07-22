@@ -125,8 +125,8 @@ class RANetBlockB(nn.Module):
         if rpgroup == 1:
             self.prelu1 = RPRelu(inplanes)
             self.prelu2 = RPRelu(planes)
-            self.move1 = LearnableBias(inplanes)
-            self.move2 = LearnableBias(inplanes)
+            #self.move1 = LearnableBias(inplanes)
+            #self.move2 = LearnableBias(inplanes)
         elif rpgroup == 2:
             if planes == 51200:
                 self.prelu1 = GPRPRelu(inplanes,gp=gp)
@@ -175,9 +175,9 @@ class RANetBlockB(nn.Module):
 
     def forward(self, x):
 
-        out1 = self.move1(x)
+        #out1 = self.move1(x)
 
-        #out1 = x
+        out1 = x
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -188,8 +188,8 @@ class RANetBlockB(nn.Module):
 
         out1 = self.prelu1(out1)
 
-        out2 = self.move2(out1)
-        #out2 = out1
+        #out2 = self.move2(out1)
+        out2 = out1
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)
