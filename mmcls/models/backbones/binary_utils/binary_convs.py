@@ -220,7 +220,7 @@ class TAConv2d(BaseBinaryConv2d):
     '''ternary weight conv'''
     def __init__(self, in_channels, out_channels, kernel_size,
                  stride=1, padding=0, dilation=1, groups=1, bias=True,
-                 binary_type=(True, True), thres=(-0.55, 0.55), **kwargs):
+                 binary_type=(True, True), thres=(-0.5, 0.5), **kwargs):
         super(TAConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, binary_type, **kwargs)
         
         self.sign_a = TernarySign(thres)

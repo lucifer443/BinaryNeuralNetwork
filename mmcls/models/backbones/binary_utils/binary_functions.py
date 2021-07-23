@@ -71,19 +71,24 @@ class RANetWSign(nn.Module):
 
 class TernarySign(nn.Module):
     """ternary sign function"""
-    def __init__(self, thres=(-0.55, 0.55)):
+    def __init__(self, thres=(-0.5, 0.5)):
         super(TernarySign, self).__init__()
         self.thres = thres
 
     def forward(self, x):
         out_forward = 0.5 * torch.sign(x + self.thres[0]) + 0.5 + torch.sign(x - self.thres[1])
-        mask1 = x < -1
-        mask2 = x < 0
-        mask3 = x < 1
-        out1 = (-1) * mask1.type(torch.float32) + (x*x + 2*x) * (1-mask1.type(torch.float32))
-        out2 = out1 * mask2.type(torch.float32) + (-x*x + 2*x) * (1-mask2.type(torch.float32))
-        out3 = out2 * mask3.type(torch.float32) + 1 * (1- mask3.type(torch.float32))
-        out = out_forward.detach() - out3.detach() + out3
+        mask1 = (x < -1).float()
+        mask2 = (x < self.thres[0]).float()
+        mask3 = (x < 0).float()
+        mask4 = (x < self.thres[1]).float()
+        mask5 = (x < 1).float()
+        out1 = (-1) * mask1 + (2*x*x + 4*x + 1) * (1 - mask1)
+        out2 = out1 * mask2 + -2*x*x * (1 - mask2)
+        out3 = out2 * mask3 + 2*x*x * (1 - mask3)
+        out4 = out3 * mask4 + (-2*x*x + 4*x -1) * (1 - mask4)
+        out5 = out4 * mask5 + 1 * (1 - mask4)
+
+        out = out_forward.detach() - out5.detach() + out5
 
         return out
 

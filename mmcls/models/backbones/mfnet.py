@@ -9,7 +9,7 @@ from mmcv.runner import load_checkpoint
 
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
-from .binary_utils.multifea13_blocks import MF1Block, MF11Block, MF12Block, MF3Block, MF1s1Block, MF1s2Block, MF6Block
+from .binary_utils.multifea13_blocks import MF1Block, MF11Block, MF12Block, MF3Block, MF1s1Block, MF1s2Block, MF6Block, MF1terBlock
 
 
 @BACKBONES.register_module()
@@ -31,6 +31,7 @@ class MFNet(nn.Module):
         'mf_5_c2_wodprelu': (MF11Block, [[90, 2, 2], [180, 5, 2], [360, 11, 2], [720, 1, 1], [1440, 1, 2]]),
         'mf_6': (MF12Block, [[64, 2, 2], [128, 3, 2], [256, 9, 2], [512, 1, 1], [1024, 1, 2]]),
         'mf_6_mfg': (MF6Block, [[64, 2, 2], [128, 3, 2], [256, 9, 2], [512, 1, 1], [1024, 1, 2]]),
+        'mf_5_ter': (MF1terBlock, [[64, 2, 2], [128, 5, 2], [256, 11, 2], [512, 1, 1], [1024, 1, 2]]),
     }
 
     def __init__(self,
@@ -96,7 +97,7 @@ class MFNet(nn.Module):
                 stride=stride,
                 binary_type=stage_binary_type,
                 fea_num=fea_num,
-                mode=fexpand_mode,
+                fexpand_mode=fexpand_mode,
                 nonlinear=block_act,
                 shortcut=shortcut_act,
                 ahead_fexpand=af_act,
