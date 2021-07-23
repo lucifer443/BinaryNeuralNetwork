@@ -37,6 +37,6 @@ lr_config = dict(
 # )
 
 
-work_dir = 'work_dir/mfnet/mfnet_5/mfnet_5_sgd/mfnet_5_wodprelu_step1'
+work_dir = 'work_dir/mfnet/mfnet_5/mfnet_5_sgd/mfnet_5_8_wodprelu_step1'
 find_unused_parameters=True
 seed = 166
