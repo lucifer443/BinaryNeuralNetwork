@@ -9,7 +9,7 @@ model = dict(
         arch='ReActNet-A',
         Expand_num = 1,
         rpgroup = 2,
-        gp = 16,
+        gp = 8,
         binary_type=(True, False),
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
@@ -47,6 +47,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react_a/adreact_gprelus0.5_s516_step1'
+work_dir = 'work_dirs/rprelu/react_a/adreact_gprelusign_s58_step1'
 find_unused_parameters=False
 seed = 166

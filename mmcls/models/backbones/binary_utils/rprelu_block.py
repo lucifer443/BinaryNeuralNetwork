@@ -133,20 +133,24 @@ class RANetBlockB(nn.Module):
                 self.prelu2 = GPRPRelu(planes,gp=gp)
             elif planes == 1024 :
                 if inplanes != planes:
-                    self.prelu1 = RPRelu(inplanes)
+                    # self.prelu1 = RPRelu(inplanes)
+                    # self.prelu2 = GPRPRelu(planes,gp=gp)
+                    # self.move1 = LearnableBias(inplanes)
+                    # self.move2 = GPLearnableBias(inplanes,gp=gp)
+                    self.prelu1 = GPRPRelu(inplanes,gp=gp)
                     self.prelu2 = GPRPRelu(planes,gp=gp)
-                    self.move1 = LearnableBias(inplanes)
-                    self.move2 = GPLearnableBias(inplanes,gp=gp)
+                    #self.move1 = GPLearnableBias(inplanes,gp=gp//2)
+                    #self.move2 = GPLearnableBias(inplanes,gp=gp//2)
                 else:
                     self.prelu1 = GPRPRelu(inplanes,gp=gp)
                     self.prelu2 = GPRPRelu(planes,gp=gp)
-                    self.move1 = GPLearnableBias(inplanes,gp=gp)
-                    self.move2 = GPLearnableBias(inplanes,gp=gp)
+                    #self.move1 = GPLearnableBias(inplanes,gp=gp)
+                    #self.move2 = GPLearnableBias(inplanes,gp=gp)
             else:
                 self.prelu1 = RPRelu(inplanes)
                 self.prelu2 = RPRelu(planes)
-                self.move1 = LearnableBias(inplanes)
-                self.move2 = LearnableBias(inplanes)
+                #self.move1 = LearnableBias(inplanes)
+                #self.move2 = LearnableBias(inplanes)
 
         
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
@@ -177,7 +181,7 @@ class RANetBlockB(nn.Module):
 
         #out1 = self.move1(x)
 
-        out1 = x
+        out1 = x+0.5
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -189,7 +193,7 @@ class RANetBlockB(nn.Module):
         out1 = self.prelu1(out1)
 
         #out2 = self.move2(out1)
-        out2 = out1
+        out2 = out1+0.5
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)
