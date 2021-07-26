@@ -127,6 +127,8 @@ class MF1Block(nn.Module):
             return CfgLayer(channels, config='bpbpb', prelu_init=1.0)
         elif act_name == 'dprelu':
             return DPReLU(channels)
+        elif act_name == 'dprelu_pi=0.25_1':
+            return DPReLU(channels, init_pos=1.0, init_neg=0.25)
         elif act_name == 'nprelu':
             return NPReLU(channels)
         elif act_name == 'scale':
@@ -178,6 +180,7 @@ class MF1Block(nn.Module):
 
 
 class MF11Block(nn.Module):
+    '''不适用multifea与dprelu'''
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, **kwargs):
@@ -226,6 +229,7 @@ class MF11Block(nn.Module):
 
 
 class MF12Block(nn.Module):
+    '''不使用multifea'''
     expansion = 1
 
     def __init__(self, in_channels, out_channels, stride=1, **kwargs):
