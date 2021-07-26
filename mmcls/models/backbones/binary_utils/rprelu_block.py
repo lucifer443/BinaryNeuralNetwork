@@ -155,6 +155,7 @@ class RANetBlockB(nn.Module):
         
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
+        self.expandnum = Expand_num
 
 
         
@@ -181,7 +182,7 @@ class RANetBlockB(nn.Module):
 
         #out1 = self.move1(x)
 
-        out1 = x+0.5
+        out1 = x-self.expandnum
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -193,7 +194,7 @@ class RANetBlockB(nn.Module):
         out1 = self.prelu1(out1)
 
         #out2 = self.move2(out1)
-        out2 = out1+0.5
+        out2 = out1-self.expandnum
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)
