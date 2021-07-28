@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 from .binary_convs import BLConv2d, BConvWS2d, TAConv2d
-from .binary_functions import (act_name_map, FeaExpand,
+from .binary_functions import (act_name_map,
     LearnableScale, LearnableScale3, RPRelu, CfgLayer, DPReLU, NPReLU, PReLUsc,
     ScaleSum, LSaddSS)
+from .feature_expand import FeaExpand
 
 
 class MultiFea_Block(nn.Module):
