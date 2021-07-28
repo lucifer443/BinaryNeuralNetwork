@@ -8,7 +8,7 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
-from .binary_utils.rprelu_block import RANetBlockB
+from .binary_utils.rprelu_block import RANetBlockB,RANetBlockC
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU, 'prelu': nn.PReLU}
@@ -23,6 +23,7 @@ class MobileArch(nn.Module):
     # Parameters to build layers. 4 parameters are needed to construct a
     # layer, from left to right: channel, num_blocks, stride.
     arch_settings = {'ReActNet-A': (RANetBlockB, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
+                    'ReActNet-C': (RANetBlockC, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
                      }
 
     def __init__(self,

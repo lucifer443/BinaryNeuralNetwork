@@ -114,6 +114,26 @@ class LearnableBias(nn.Module):
         out = x + self.bias.expand_as(x)
         return out
 
+class LearnableBias(nn.Module):
+    def __init__(self, out_chn):
+        super(LearnableBias, self).__init__()
+        self.bias = nn.Parameter(torch.zeros(1,out_chn,1,1), requires_grad=True)
+
+    def forward(self, x):
+        out = x + self.bias.expand_as(x)
+        return out
+
+class scalebias(nn.Module):
+    def __init__(self,out_chn):
+        super(scalebias,self).__init__()
+        self.scale = nn.Parameter(torch.ones(1,out_chn,1,1),requires_grad=True)
+        self.bias = nn.Parameter(torch.zeros(1,out_chn,1,1), requires_grad=True)
+    
+    def forward(self,x):
+        out = x*self.scale.expand_as(x)
+        out = out + self.bias.expand_as(x)
+        return out 
+
 class GPLearnableBias(nn.Module):
     def __init__(self, out_chn,gp=1):
         super(GPLearnableBias, self).__init__()
