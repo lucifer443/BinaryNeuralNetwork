@@ -25,6 +25,20 @@ raconv_fea_out = []
 blconv_fea_in = []
 blconv_fea_out = []
 
+def compute_inner_error_v3(float_fea, bin_fea):
+    '''float_fea和bin_fea都是一个pytorch tensor'''
+    float_fea = float_fea.flatten()
+    bin_fea = bin_fea.flatten()
+    dim = float_fea.shape[0]
+
+    float_matrix = float_fea.reshape(dim, 1) - float_fea.reshape(1, dim)
+    bin_matrix = bin_fea.reshape(dim, 1) - bin_fea.reshape(1, dim)
+
+    error = (float_matrix - bin_matrix).abs().sum() / float_matrix.numel()
+
+    return error
+
+
 def get_features(module, fea_in, fea_out):
     global names
     global features
@@ -60,9 +74,9 @@ def compute_ratio(fea):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('img', help='Image file')
-    parser.add_argument('config', help='Config file',default='configs/baseline/rprelu_group/react_a/adreact_a_gprelu-0.6_scb_s516_step1.py')
-    parser.add_argument('checkpoint', help='checkpoint file',default='work_dirs/rprelu/react_a/adreact_baseline-0.75_scb_step1')
+    parser.add_argument('--img', help='Image file',default='data/imagenet/val/n01484850/ILSVRC2012_val_00002338.JPEG')
+    parser.add_argument('--config', help='Config file',default='configs/baseline/rprelu_group/react_a/adreact_a_gprelu-0.6_scb_s516_step1.py')
+    parser.add_argument('--checkpoint', help='checkpoint file',default='work_dirs/rprelu/react_a/adreact_baseline-0.75_scb_step1/latest.pth')
     parser.add_argument(
         '--device', default='cuda:0', help='Device used for inference')
     args = parser.parse_args()
@@ -98,26 +112,25 @@ def main():
         fea_in = blconv_fea_in
     else:
         print('arch not support')
-        exit()
+        #exit()
     
-    ncols = 8
-    nrows = math.ceil(conv_num / ncols)
-    fig, axs = plt.subplots(nrows, ncols, figsize=(ncols * 4, nrows * 3))
-    index = 0
-    for ax, fea in zip(axs.flat, fea_in):
-        print(f'plotting img {index}...')
-        ratio_list = [compute_ratio(fea_c).item() for fea_c in fea[0]]
-        ax.hist(ratio_list, bins=20, range=(-1, 1))
-        ax.set_title(f'conv_{index} = {compute_ratio(fea):.3f}, total = {sum([abs(a) for a in ratio_list]):.3f}')
-        ax.grid()
-        index += 1
+    fea = raconv_fea_in[13][0]
+    chn = fea.shape[0]
+    error_list=[]
+    for i in range(-20,21):
+        error = 0
+        bias  =i/10
+        for j in range(chn):
+            error+=compute_inner_error_v3(fea[j],(fea[j]+bias).sign())
+        error_list.append(error)
+    print(error_list)
+    plt.figure()
+    plt.plot(np.arange(-2, 2.1, 0.1),error_list)
 
-    print('saving...')
-    path = f'./work_dirs/plot/ratio_channel/'
-    if not os.path.exists(path):
-        os.makedirs(path)
+
     
-    plt.savefig(f'./work_dirs/plot/ratio_channel/{arch_name}_ratio_channel_{img_name}.jpg')
+    #plt.savefig(f'./work_dirs/plot/ratio_channel/{arch_name}_ratio_channel_{img_name}.jpg')
+    plt.savefig('/workspace/S/jiangfei/BinaryNeuralNetwork_debug/tools/plot/my.jpg')
 
                                                                                                                                                                                                                                                                                                                                                                       
 if __name__ == '__main__':
