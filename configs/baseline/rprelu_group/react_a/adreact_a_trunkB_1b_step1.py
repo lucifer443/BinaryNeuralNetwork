@@ -29,6 +29,8 @@ optimizer = dict(
         norm_decay_mult=0,
         custom_keys={
             #'.stem_act': dict(decay_mult=0.0),
+            '.move1':dict(decay_mult=0.0),
+            '.move2':dict(decay_mult=0.0),
             '.prelu1': dict(decay_mult=0.0),
             '.prelu2': dict(decay_mult=0.0),
         }
@@ -47,7 +49,7 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react_a/adreact_trunkB_1bias_step1'
+work_dir = 'work_dirs/rprelu/react_a/adreact_wdb_trunkB_1bias_step1'
 #resume_from = 'work_dirs/rprelu/react_a/adreact_rprelu_step1/latest.pth'
 find_unused_parameters=False
 seed = 166
