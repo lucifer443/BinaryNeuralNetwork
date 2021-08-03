@@ -76,7 +76,7 @@ class MultiFea_Block(nn.Module):
 class MF1Block(nn.Module):
     expansion = 1
 
-    def __init__(self, in_channels, out_channels, stride=1, fea_num=2, fexpand_mode='5',
+    def __init__(self, in_channels, out_channels, stride=1, fea_num=2, fexpand_mode='5', thres=(-0.55, 0.55),
         nonlinear=('prelu', 'identity'), shortcut='identity', ahead_fexpand='identity',
         **kwargs):
         super(MF1Block, self).__init__()
@@ -90,14 +90,14 @@ class MF1Block(nn.Module):
             self.pooling = nn.AvgPool2d(2, 2)
         self.shortcut1 = self._build_act(shortcut, in_channels)
         self.ahead_fexpand1 = self._build_act(ahead_fexpand, in_channels)
-        self.fexpand1 = FeaExpand(expansion=self.fea_num, mode=self.mode, in_channels=in_channels, thres=(-0.55, 0.55))
+        self.fexpand1 = FeaExpand(expansion=self.fea_num, mode=self.mode, in_channels=in_channels, thres=thres)
         self.conv_3x3 = BLConv2d(in_channels * self.fea_num, in_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.nonlinear11 = self._build_act(nonlinear[0], in_channels)
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.nonlinear12 = self._build_act(nonlinear[1], in_channels)
         self.shortcut2 = self._build_act(shortcut, out_channels)
         self.ahead_fexpand2 = self._build_act(ahead_fexpand, in_channels)
-        self.fexpand2 = FeaExpand(expansion=self.fea_num, mode=self.mode, in_channels=in_channels, thres=(-0.55, 0.55))
+        self.fexpand2 = FeaExpand(expansion=self.fea_num, mode=self.mode, in_channels=in_channels, thres=thres)
         self.conv_1x1 = BLConv2d(in_channels * self.fea_num, out_channels, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
         self.nonlinear21 = self._build_act(nonlinear[0], out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)

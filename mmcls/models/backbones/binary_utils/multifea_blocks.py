@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 from .binary_convs import BLConv2d
-from .binary_functions import FeaExpand
+# from .binary_functions import FeaExpand
+from .feature_expand import FeaExpand
 
 
 class MultiFea_1_Block(nn.Module):
