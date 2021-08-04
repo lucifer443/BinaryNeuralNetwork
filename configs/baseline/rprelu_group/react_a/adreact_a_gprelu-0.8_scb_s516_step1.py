@@ -7,7 +7,7 @@ model = dict(
     backbone=dict(
         type='MobileArch',
         arch='ReActNet-A',
-        Expand_num = 0.8,
+        Expand_num = 1,
         rpgroup = 1,
         gp = 16,
         binary_type=(True, False),
@@ -47,6 +47,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react_a/adreact_baseline-0.8_step1'
+work_dir = 'work_dirs/rprelu/react_a/adreact_baseline-1_step1'
 find_unused_parameters=False
 seed = 166
