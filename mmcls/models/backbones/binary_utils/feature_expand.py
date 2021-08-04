@@ -172,7 +172,7 @@ class FeaExpand(nn.Module):
         return thres
 
     def forward(self, x):
-        if self.expansion == 1:
+        if self.expansion == 1 and self.mode != '5':
             return x
 
         out = []
@@ -308,5 +308,4 @@ class FeaExpand(nn.Module):
             out2 = self.conv(x)
             out.append(out2)
         
-
         return torch.cat(out, dim=1)

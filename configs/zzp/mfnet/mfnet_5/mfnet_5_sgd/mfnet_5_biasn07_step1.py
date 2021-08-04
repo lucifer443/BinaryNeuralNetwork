@@ -9,7 +9,9 @@ model = dict(
         type='MFNet',
         arch='mf_5',
         binary_type=(True, False),
-        thres=(-0.7, 0.5),
+        fea_num=1,
+        fexpand_mode='5',
+        thres=(-0.7,),
         block_act=('prelu', 'dprelu'),
         stem_conv_ks=3),
     neck=dict(type='GlobalAveragePooling'),
@@ -37,6 +39,6 @@ lr_config = dict(
 # )
 
 
-work_dir = 'work_dir/mfnet/mfnet_5/mfnet_5_sgd/mfnet_5_n07_05_step1'
+work_dir = 'work_dir/mfnet/mfnet_5/mfnet_5_sgd/mfnet_5_biasn07_step1'
 find_unused_parameters=True
 seed = 166
