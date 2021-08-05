@@ -6,8 +6,8 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='MobileArch',
-        arch='ReActNet-C',
-        Expand_num = 0.85,
+        arch='ReActNet-A',
+        Expand_num = 1.4,
         rpgroup = 1,
         gp = 16,
         binary_type=(True, False),
@@ -47,6 +47,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react_a/adreact_baseline-0.85_scb_step1'
+work_dir = 'work_dirs/rprelu/react_a/adreact_baseline-1.4_step1'
 find_unused_parameters=False
 seed = 166
