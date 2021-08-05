@@ -44,7 +44,7 @@ runner = dict(type='EpochBasedRunner', max_epochs=256)
 
 
 
-work_dir = 'work_dirs/rprelu/react_a/256react_x-0.75scb_step1'
+work_dir = 'work_dirs/rprelu/react_a/256react_x-0.75scb_step2'
 load_from = 'work_dirs/rprelu/react_a/256react_x-0.75scb_step1/epoch_256.pth'
 find_unused_parameters=False
 seed = 166
