@@ -7,7 +7,7 @@ model = dict(
     backbone=dict(
         type='MobileArch',
         arch='ReActNet-E',
-        Expand_num = 1.2,
+        Expand_num = 0.75,
         rpgroup = 1,
         gp = 1,
         binary_type=(True, False),
@@ -49,7 +49,7 @@ runner = dict(type='EpochBasedRunner', max_epochs=256)
 
 
 
-work_dir = 'work_dirs/rprelu/react_a/256react_x-1.2scb_step1'
+work_dir = 'work_dirs/rprelu/react_a/256react_x-0.75scb_step1'
 #resume_from = 'work_dirs/rprelu/react_a/adreact_rprelu_step1/latest.pth'
 find_unused_parameters=False
 seed = 166
