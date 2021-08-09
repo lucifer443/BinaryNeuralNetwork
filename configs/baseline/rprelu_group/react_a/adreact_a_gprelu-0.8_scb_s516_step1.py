@@ -29,6 +29,8 @@ optimizer = dict(
         norm_decay_mult=0,
         custom_keys={
             #'.stem_act': dict(decay_mult=0.0),
+            '.move1': dict(decay_mult=0.0),
+            '.move2': dict(decay_mult=0.0),
             '.prelu1': dict(decay_mult=0.0),
             '.prelu2': dict(decay_mult=0.0),
         }
@@ -47,6 +49,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react_a/adreact_baseline-1.3_step1'
+work_dir = 'work_dirs/rprelu/react_a/adreact_baseline-1.3af_step1'
 find_unused_parameters=False
 seed = 166
