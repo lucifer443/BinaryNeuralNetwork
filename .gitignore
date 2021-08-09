@@ -13,8 +13,8 @@ work_dir/
 work_dir
 checkpoints
 
-# imagenet dir
-data/imagenet/
+# dataset dir
+data/
 
 # vscode settings
 .vscode/
