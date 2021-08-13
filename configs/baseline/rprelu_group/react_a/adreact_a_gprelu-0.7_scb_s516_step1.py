@@ -7,7 +7,7 @@ model = dict(
     backbone=dict(
         type='MobileArch',
         arch='ReActNet-A',
-        Expand_num = 1.2,
+        Expand_num = 0.75,
         rpgroup = 1,
         gp = 16,
         binary_type=(True, False),
@@ -29,8 +29,8 @@ optimizer = dict(
         norm_decay_mult=0,
         custom_keys={
             #'.stem_act': dict(decay_mult=0.0),
-            '.move1': dict(decay_mult=0.0),
-            '.move2': dict(decay_mult=0.0),
+            #'.move1': dict(decay_mult=0.0),
+            #'.move2': dict(decay_mult=0.0),
             '.prelu1': dict(decay_mult=0.0),
             '.prelu2': dict(decay_mult=0.0),
         }
@@ -49,6 +49,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 
-work_dir = 'work_dirs/rprelu/react_a/adreact_baseline-1.2af_step1'
+work_dir = 'work_dirs/rprelu/react_a/adreact_baseline-0.75_step1'
 find_unused_parameters=False
 seed = 166

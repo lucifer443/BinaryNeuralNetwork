@@ -125,8 +125,8 @@ class RANetBlockB(nn.Module):
         if rpgroup == 1:
             self.prelu1 = RPRelu(inplanes)
             self.prelu2 = RPRelu(planes)
-            self.move1 = LearnableBias(inplanes)
-            self.move2 = LearnableBias(inplanes)
+            #self.move1 = LearnableBias(inplanes)
+            #self.move2 = LearnableBias(inplanes)
         elif rpgroup == 2:
             if planes == 51200:
                 self.prelu1 = GPRPRelu(inplanes,gp=gp)
@@ -180,9 +180,9 @@ class RANetBlockB(nn.Module):
 
     def forward(self, x):
 
-        out1 = self.move1(x)
+        #out1 = self.move1(x)
 
-        out1 = out1-self.expandnum
+        out1 = x-self.expandnum
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -193,8 +193,8 @@ class RANetBlockB(nn.Module):
 
         out1 = self.prelu1(out1)
 
-        out2 = self.move2(out1)
-        out2 = out2-self.expandnum
+        #out2 = self.move2(out1)
+        out2 = out1-self.expandnum
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)
@@ -330,12 +330,12 @@ class RANetBlockD(nn.Module): ##rsign放在主干上，shortcut进行抵消
         if rpgroup == 1:
             self.prelu1 = RPRelu(inplanes)
             self.prelu2 = RPRelu(planes)
-            if Expand_num==1:
-                chn = 1
-            elif Expand_num==2:
-                chn = inplanes
-            self.move1 = nn.Parameter(torch.zeros(1,chn,1,1), requires_grad=True)
-            self.move2 = nn.Parameter(torch.zeros(1,chn,1,1), requires_grad=True)
+            # if Expand_num==1:
+            #     chn = 1
+            # elif Expand_num==2:
+            #     chn = inplanes
+            self.move1 = nn.Parameter(torch.zeros(1,inplanes,1,1), requires_grad=True)
+            self.move2 = nn.Parameter(torch.zeros(1,inplanes,1,1), requires_grad=True)
         elif rpgroup == 2:
             if planes == 51200:
                 self.prelu1 = GPRPRelu(inplanes,gp=gp)
@@ -364,7 +364,7 @@ class RANetBlockD(nn.Module): ##rsign放在主干上，shortcut进行抵消
         
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
-        #self.expandnum = Expand_num
+        self.expandnum = Expand_num
 
 
         
@@ -392,6 +392,7 @@ class RANetBlockD(nn.Module): ##rsign放在主干上，shortcut进行抵消
         x = x+self.move1.expand_as(x)
         out1 = x
         #out1 = x-self.expandnum
+        out1 = out1-self.expandnum
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -409,7 +410,7 @@ class RANetBlockD(nn.Module): ##rsign放在主干上，shortcut进行抵消
         out1 = self.prelu1(out1)
         out1 = out1 +self.move2.expand_as(out1)
         out2 = out1
-        #out2 = out1-self.expandnum
+        out2 = out2-self.expandnum
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)
