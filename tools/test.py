@@ -82,7 +82,7 @@ def main():
             broadcast_buffers=False)
         outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                  args.gpu_collect)
-
+    # breakpoint()
     rank, _ = get_dist_info()
     if rank == 0:
         if args.metric != '':
@@ -93,6 +93,10 @@ def main():
             scores = np.vstack(outputs)
             pred_score = np.max(scores, axis=1)
             pred_label = np.argmax(scores, axis=1)
+            scores_torch = torch.from_numpy(scores)
+            pred_score_top5, pred_label_top5 = scores_torch.topk(5, dim=1)
+            pred_score_top5 = pred_score_top5.numpy()
+            pred_label_top5 = pred_label_top5.numpy()
             if 'CLASSES' in checkpoint['meta']:
                 CLASSES = checkpoint['meta']['CLASSES']
             else:
@@ -103,9 +107,9 @@ def main():
                 CLASSES = ImageNet.CLASSES
             pred_class = [CLASSES[lb] for lb in pred_label]
             results = {
-                'pred_score': pred_score,
-                'pred_label': pred_label,
-                'pred_class': pred_class
+                'pred_score': pred_score_top5,
+                'pred_label_top5': pred_label_top5,
+                'pred_class_top5': pred_class
             }
             if not args.out:
                 print('\nthe predicted result for the first element is '

@@ -26,3 +26,4 @@ tools/plot/
 *.jpg
 multifea13_3_3*infer.py
 configs/zzp/multifea/multifea13_2_4_55/
+idea_verify/
