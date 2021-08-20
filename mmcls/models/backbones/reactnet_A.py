@@ -23,9 +23,9 @@ class MobileArch(nn.Module):
     # Parameters to build layers. 4 parameters are needed to construct a
     # layer, from left to right: channel, num_blocks, stride.
     arch_settings = {'ReActNet-A': (RANetBlockB, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
-                    'ReActNet-C': (RANetBlockC, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
-                    'ReActNet-D': (RANetBlockD, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
-                    'ReActNet-E': (RANetBlockE, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
+                     'ReActNet-C': (RANetBlockC, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
+                     'ReActNet-D': (RANetBlockD, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
+                     'ReActNet-E': (RANetBlockE, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
                      }
 
     def __init__(self,

@@ -168,6 +168,21 @@ class LearnableScale(nn.Module):
 
         return out
 
+class selfBias(nn.Module):
+    def __init__(self):
+        super(selfBias, self).__init__()
+        self.af1 = nn.Parameter(torch.ones(1), requires_grad=True)
+        self.af2 = nn.Parameter(torch.ones(1), requires_grad=True)
+        #self.af2 = nn.Parameter(0.1, requires_grad=True)
+
+    def forward(self, x):
+        mask1 = x<-0.5
+        mask2 = x<= 0
+        mask3 = x<0.5
+        out1 = (x) * mask1.type(torch.float32) + (x-self.af1*(4*x*x-1)) * (1-mask1.type(torch.float32))
+        out2 = out1 * mask2.type(torch.float32)+ (x-self.af2*(1-4*x*x))*(1-mask2.type(torch.float32))
+        out3 = out2 * mask3.type(torch.float32) + (x) * (1- mask3.type(torch.float32))
+        return out3
 
 class AttentionScale(nn.Module):
     """attention scale from Real-To-Binary Net"""

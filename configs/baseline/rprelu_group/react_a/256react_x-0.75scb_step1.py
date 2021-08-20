@@ -20,8 +20,8 @@ model = dict(
         loss=dict(type='CrossEntropyLoss', loss_weight=0.5),
         topk=(1, 5),),
      distill=dict(
-        teacher_cfg='configs/_base_/models/resnet34.py',
-        teacher_ckpt='work_dirs/resnet34_batch256_imagenet_20200708-32ffb4f7.pth',
+        teacher_cfg='/workspace/S/jiangfei/BinaryNeuralNetwork_debug/configs/_base_/models/resnet34.py',
+        teacher_ckpt='/workspace/S/jiangfei/BinaryNeuralNetwork_debug/work_dirs/resnet34_batch256_imagenet_20200708-32ffb4f7.pth',
         loss_weight=0.5,
         only_kdloss=False)
         )
