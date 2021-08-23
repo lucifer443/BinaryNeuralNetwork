@@ -121,6 +121,7 @@ class RANetBlockA(nn.Module):
 class RANetBlockB(nn.Module):
     def __init__(self, inplanes, planes, stride=1, Expand_num=1,rpgroup=1,gp=1,**kwargs):
         super(RANetBlockB, self).__init__()
+        print(Expand_num)
         #norm_layer = nn.BatchNorm2d
         if rpgroup == 1:
             self.prelu1 = RPRelu(inplanes)
