@@ -121,15 +121,14 @@ class RANetBlockA(nn.Module):
 class RANetBlockB(nn.Module):
     def __init__(self, inplanes, planes, stride=1, Expand_num=1,rpgroup=1,gp=1,**kwargs):
         super(RANetBlockB, self).__init__()
-        print(Expand_num)
         #norm_layer = nn.BatchNorm2d
         if rpgroup == 1:
             self.prelu1 = RPRelu(inplanes)
             self.prelu2 = RPRelu(planes)
             #self.move1 = LearnableBias(inplanes)
             #self.move2 = LearnableBias(inplanes)
-            self.sbias1 = selfBias()
-            self.sbias2 = selfBias()
+            #self.sbias1 = selfBias()
+            #self.sbias2 = selfBias()
         elif rpgroup == 2:
             if planes == 51200:
                 self.prelu1 = GPRPRelu(inplanes,gp=gp)
@@ -158,7 +157,7 @@ class RANetBlockB(nn.Module):
         
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
-        #self.expandnum = Expand_num
+        self.expandnum = Expand_num
 
 
         
@@ -183,10 +182,10 @@ class RANetBlockB(nn.Module):
 
     def forward(self, x):
 
-        out1 = self.sbias1(x)
+        #out1 = self.sbias1(x)
         #out1 = self.move1(x)
 
-        #out1 = x-self.expandnum
+        out1 = x-self.expandnum
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -197,9 +196,9 @@ class RANetBlockB(nn.Module):
 
         out1 = self.prelu1(out1)
 
-        out2 =self.sbias2(out1)
+        #out2 =self.sbias2(out1)
         #out2 = self.move2(out1)
-        #out2 = out1-self.expandnum
+        out2 = out1-self.expandnum
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)
