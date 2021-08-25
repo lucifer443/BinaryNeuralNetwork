@@ -32,6 +32,7 @@ class FeaExpand(nn.Module):
         5: 手动设置阈值
         5re：专门针对expand为2的情况，将负阈值得到的结果乘-1
         5-3：在5的基础上增加一份特征图，其中绝对值小的数映射为+1，绝对值大的映射为-1
+        5-mean: 以特征图的均值为轴对称应用手动设置的阈值
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
         7: 根据输入计算的自适应阈值
         8: 使用conv进行通道数扩增
@@ -107,7 +108,7 @@ class FeaExpand(nn.Module):
             assert len(thres) == expansion
             self.thres = thres
         
-        elif '5-3' == self.mode:
+        elif '5-3' == self.mode or '5-mean' == self.mode:
             assert len(thres) == 2
             self.thres = thres
         
@@ -250,6 +251,10 @@ class FeaExpand(nn.Module):
         elif '5-3' == self.mode:
             out = [x + t for t in self.thres]
             out.append(x.abs() * -1 + abs(self.thres[0]))
+        
+        elif '5-mean' == self.mode:
+            mean = x.mean(dim=(2, 3), keepdim=True)
+            out = [x - mean + t for t in self.thres]
 
         elif '6' == self.mode:
             thres = self.compute_thres(x)
