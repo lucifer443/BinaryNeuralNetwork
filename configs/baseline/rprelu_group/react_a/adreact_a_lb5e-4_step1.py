@@ -46,7 +46,7 @@ lr_config = dict(
     warmup_ratio=0.1,
     step=[40, 60, 70],
 )
-
+runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 work_dir = 'work_dirs/rprelu/react_a1/adreact_lb_5e-4_step1'
 find_unused_parameters=False
