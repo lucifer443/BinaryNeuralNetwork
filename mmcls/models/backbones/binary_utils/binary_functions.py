@@ -18,6 +18,23 @@ class IRNetSign(Function):
         return grad_input, None, None
 
 
+class biasadd(Function):
+    """Sign function from IR-Net, which can add EDE progress"""
+    @staticmethod
+    def forward(ctx, input, b):
+        ctx.save_for_backward(input, b)
+        out = input + b
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, b = ctx.saved_tensors
+        grad_input = grad_output
+        mask = (input+b).sign()*grad_output<0
+        dif = mask.float()*grad_input
+        grad_b = dif.sum(dim=[0,2,3],keepdim=True)
+        return grad_input, grad_b
+
 class RANetActSign(nn.Module):
     """ReActNet's activation sign function"""
     def __init__(self):
