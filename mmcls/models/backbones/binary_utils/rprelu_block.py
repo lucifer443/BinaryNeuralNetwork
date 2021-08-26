@@ -119,7 +119,7 @@ class RANetBlockA(nn.Module):
         return out
 
 class RANetBlockB(nn.Module):
-    def __init__(self, inplanes, planes, stride=1, Expand_num=1,rpgroup=1,gp=1,**kwargs):
+    def __init__(self, inplanes, planes, stride=1, Expand_num=0.001,rpgroup=1,gp=1,**kwargs):
         super(RANetBlockB, self).__init__()
         
         #norm_layer = nn.BatchNorm2d
@@ -191,6 +191,7 @@ class RANetBlockB(nn.Module):
         #out1 = self.move1(x)
 
         out1 = biasadd().apply(x,self.adbias1)
+        #out1 = x-self.expandnum
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -200,7 +201,7 @@ class RANetBlockB(nn.Module):
         out1 = x + out1
 
         out1 = self.prelu1(out1)
-
+        #out2 = out1-self.expandnum
         #out2 =self.sbias2(out1)
         #out2 = self.move2(out1)
         out2 = biasadd().apply(out1,self.adbias2)

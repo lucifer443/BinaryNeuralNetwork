@@ -32,7 +32,13 @@ class biasadd(Function):
         grad_input = grad_output
         mask = (input+b).sign()*grad_output<0
         dif = mask.float()*grad_input
-        grad_b = dif.sum(dim=[0,2,3],keepdim=True)
+        mask1 = dif>0
+        mask2 = dif<0
+        grad = mask1.float().sum(dim=[0,2,3],keepdim=True)-mask2.float().sum(dim=[0,2,3],keepdim=True)
+        grad1 = grad>0
+        grad2 = grad<0
+        grad_b = (grad1.float())-(grad2.float())
+ 
         return grad_input, grad_b
 
 class RANetActSign(nn.Module):
