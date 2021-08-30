@@ -7,6 +7,45 @@ from .binary_convs import BLConv2d
 
 from scipy.stats import norm
 
+class CopyBias2_1(Function):
+    """
+    一个(n,c,h,w)特征用两个bias复制成两个
+    并修改反传梯度计算函数
+    """
+    @staticmethod
+    def forward(ctx, x, thres):
+        # ctx.save_for_backward(input, k, t)
+        y = torch.cat(x + thres[0], x + thres[1])
+        return y
+
+    @staticmethod
+    def backward(ctx, dy):
+        dy1, dy2 = dy.chunk(chunks=2, dim=1)
+        # input, k, t = ctx.saved_tensors
+        dx = dy1 + dy2
+        mask = dy1 > 0 and dy2 < 0
+        dx[mask] = 0
+        return dx, None
+
+class CopyBias2_2(Function):
+    """
+    一个(n,c,h,w)特征用两个bias复制成两个
+    并修改反传梯度计算函数
+    """
+    @staticmethod
+    def forward(ctx, x, thres):
+        # ctx.save_for_backward(input, k, t)
+        y = torch.cat(x + thres[0], x + thres[1])
+        return y
+
+    @staticmethod
+    def backward(ctx, dy):
+        dy1, dy2 = dy.chunk(chunks=2, dim=1)
+        # input, k, t = ctx.saved_tensors
+        dx = dy1 + dy2
+        mask = dy1 > 0 and dy2 < 0 and dx < 0
+        dx[mask] = 0
+        return dx, None
 
 class FeaExpand(nn.Module):
     """expand feature map
@@ -33,6 +72,7 @@ class FeaExpand(nn.Module):
         5re：专门针对expand为2的情况，将负阈值得到的结果乘-1
         5-3：在5的基础上增加一份特征图，其中绝对值小的数映射为+1，绝对值大的映射为-1
         5-mean: 以特征图的均值为轴对称应用手动设置的阈值
+        5-bp: 将反向传播中不可能实现的情况的梯度置0
         6: 按照数值的个数均匀选择阈值，由直方图计算得到
         7: 根据输入计算的自适应阈值
         8: 使用conv进行通道数扩增
@@ -108,16 +148,17 @@ class FeaExpand(nn.Module):
             assert len(thres) == expansion
             self.thres = thres
         
-        elif '5-3' == self.mode or '5-mean' == self.mode:
+        elif '5-3' == self.mode or '5-mean' == self.mode or '5-bp' == self.mode:
             assert len(thres) == 2
             self.thres = thres
         
         elif '7' == self.mode:
-            self.scale = nn.Parameter(torch.ones(n, c, h, w), requires_grad=True)
-            self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-            self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
-            self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
-            self.tanh = nn.Tanh()
+            pass
+            # self.scale = nn.Parameter(torch.ones(n, c, h, w), requires_grad=True)
+            # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+            # self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
+            # self.linear1 = nn.Linear(in_channels, in_channels, bias=True)
+            # self.tanh = nn.Tanh()
         
         elif '8' == self.mode:
             out_channels = in_channels * expansion
@@ -255,6 +296,9 @@ class FeaExpand(nn.Module):
         elif '5-mean' == self.mode:
             mean = x.mean(dim=(2, 3), keepdim=True)
             out = [x - mean + t for t in self.thres]
+        
+        elif '5-bp' == self.mode:
+            out = CopyBias2_1().apply(x, self.thres)
 
         elif '6' == self.mode:
             thres = self.compute_thres(x)
