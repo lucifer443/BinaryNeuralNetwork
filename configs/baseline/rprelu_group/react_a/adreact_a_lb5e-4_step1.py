@@ -47,7 +47,9 @@ lr_config = dict(
     step=[40, 60, 70],
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
-
-work_dir = 'work_dirs/rprelu/react_a1/adreact_lb_5e-4_step1'
+log_config = dict(
+    interval=1,
+    )
+work_dir = 'work_dirs/rprelu/react_a1/adreact_3t1_0f5e-4_step1'
 find_unused_parameters=False
 seed = 166

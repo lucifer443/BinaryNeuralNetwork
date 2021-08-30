@@ -155,8 +155,8 @@ class RANetBlockB(nn.Module):
                 #self.move1 = LearnableBias(inplanes)
                 #self.move2 = LearnableBias(inplanes)
 
-        self.adbias1 = nn.Parameter(-1*torch.ones(1,inplanes,1,1),requires_grad=True)
-        self.adbias2 = nn.Parameter(-1*torch.ones(1,inplanes,1,1),requires_grad=True)
+        self.adbias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        self.adbias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
         #self.expandnum = Expand_num

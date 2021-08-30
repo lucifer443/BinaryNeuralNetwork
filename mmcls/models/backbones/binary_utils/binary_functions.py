@@ -31,13 +31,20 @@ class biasadd(Function):
         input, b = ctx.saved_tensors
         grad_input = grad_output
         mask = (input+b).sign()*grad_output<0
+        mask0 = (input+b).sign()*grad_output>0
         dif = mask.float()*grad_input
         mask1 = dif>0
         mask2 = dif<0
-        grad = mask1.float().sum(dim=[0,2,3],keepdim=True)-mask2.float().sum(dim=[0,2,3],keepdim=True)
-        grad1 = grad>0
-        grad2 = grad<0
-        grad_b = (grad1.float())-(grad2.float())
+        grad0 = mask0.float().sum(dim=[0,2,3],keepdim=True)
+        grad1 = mask1.float().sum(dim=[0,2,3],keepdim=True)
+        grad2 = mask2.float().sum(dim=[0,2,3],keepdim=True)
+
+        g0 = (grad0>grad1)*(grad0>grad2)
+        g1 = (grad1>grad0)*(grad1>grad2)
+        g2 = (grad2>grad0)*(grad2>grad1)
+
+
+        grad_b = 0*g0.float()+g1.float()-g2.float()
  
         return grad_input, grad_b
 
