@@ -49,5 +49,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
 work_dir = 'work_dirs/rprelu/react_a1/adreact_3t1_0f8e-6_step1'
+resume_from = 'work_dirs/rprelu/react_a1/adreact_3t1_0f8e-6_step1/latest.pth'
 find_unused_parameters=False
 seed = 166
