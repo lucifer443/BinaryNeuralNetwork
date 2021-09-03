@@ -48,6 +48,77 @@ class biasadd(Function):
  
         return grad_input, grad_b
 
+class biasadd22(Function):
+
+    @staticmethod
+    def forward(ctx, input, b):
+        ctx.save_for_backward(input, b)
+        out = input + b
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, b = ctx.saved_tensors
+        grad_input = grad_output
+        mask = (input+b).sign()*grad_output<0
+        dif = mask.float()*grad_input
+        mask1 = dif>0
+        mask2 = dif<0
+
+        maskf = grad_output>0
+        maskz = grad_output<0
+
+        grad0 =(maskf.float().sum(dim=[0,2,3],keepdim=True))>(maskz.float().sum(dim=[0,2,3],keepdim=True)) #正梯度多
+        grad1 =(maskf.float().sum(dim=[0,2,3],keepdim=True))<(maskz.float().sum(dim=[0,2,3],keepdim=True)) #负梯度多
+        
+        grad2 = grad0*((mask1.float().sum(dim=[0,2,3],keepdim=True))>(mask2.float().sum(dim=[0,2,3],keepdim=True))) #往正
+        grad3 = grad0*((mask1.float().sum(dim=[0,2,3],keepdim=True))<(mask2.float().sum(dim=[0,2,3],keepdim=True))) #不动
+        
+        grad4 = grad1*((mask1.float().sum(dim=[0,2,3],keepdim=True))>(mask2.float().sum(dim=[0,2,3],keepdim=True))) #不动
+        grad5 = grad1*((mask1.float().sum(dim=[0,2,3],keepdim=True))<(mask2.float().sum(dim=[0,2,3],keepdim=True)))  #往负
+ 
+
+
+
+        grad_b = grad2.float()+0*grad3.float()+0*grad4.float()-grad5.float()
+ 
+        return grad_input, grad_b
+
+class biasaddtry(Function):
+    """Sign function from IR-Net, which can add EDE progress"""
+    @staticmethod
+    def forward(ctx, input, b,st):
+        ctx.save_for_backward(input, b,st)
+        out = input + b
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, b,st = ctx.saved_tensors
+        grad_input = grad_output
+        bi = (input+b).sign()
+        mask1 = grad_input<-1
+        mask2 = grad_input>1
+        biz = bi>0
+        bif = bi<0
+        
+        mask3 = mask1*biz
+        mask4 = mask2*bif
+        realbi = bi-2*(mask3.float())+2*(mask4.float())
+
+        
+        maez = (realbi-(input+b+st).sign()).abs().sum(dim=[0,2,3],keepdim=True) 
+        maef = (realbi-(input+b-st).sign()).abs().sum(dim=[0,2,3],keepdim=True)
+        mae0 = (realbi-bi).abs().sum(dim=[0,2,3],keepdim=True)
+
+        gradz = (maez<maef)*(maez<mae0)
+        gradf = (maef>maez)*(maef<mae0)
+        grad0 = (mae0<maez)*(mae0<maef)
+        grad_b = gradz.float()-gradf.float()+0*grad0.float()
+
+
+ 
+        return grad_input, grad_b,None
 class RANetActSign(nn.Module):
     """ReActNet's activation sign function"""
     def __init__(self):
