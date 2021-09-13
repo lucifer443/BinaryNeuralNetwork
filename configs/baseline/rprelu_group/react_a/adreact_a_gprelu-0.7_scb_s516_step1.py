@@ -7,7 +7,7 @@ model = dict(
     backbone=dict(
         type='MobileArch',
         arch='ReActNet-A',
-        Expand_num = 1.2,
+        Expand_num = 1.3,
         rpgroup = 1,
         gp = 16,
         binary_type=(True, False),
@@ -30,8 +30,8 @@ optimizer = dict(
         custom_keys={
             #'.stem_act': dict(decay_mult=0.0),
             #'.move1': dict(decay_mult=0.0),
-            '.bias1': dict(lr_mult=1,decay_mult=0.0),
-            '.bias2': dict(lr_mult=1,decay_mult=0.0),
+            #'.bias1': dict(lr_mult=1,decay_mult=0.0),
+            #'.bias2': dict(lr_mult=1,decay_mult=0.0),
             '.prelu1': dict(decay_mult=0.0),
             '.prelu2': dict(decay_mult=0.0),
         }

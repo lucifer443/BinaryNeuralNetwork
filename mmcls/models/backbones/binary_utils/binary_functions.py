@@ -97,8 +97,8 @@ class biasaddtry(Function):
         input, b,st = ctx.saved_tensors
         grad_input = grad_output
         bi = (input+b).sign()
-        mask1 = grad_input<0
-        mask2 = grad_input>0
+        mask1 = grad_input<-0.05
+        mask2 = grad_input>0.05
         biz = bi>0
         bif = bi<0
         
