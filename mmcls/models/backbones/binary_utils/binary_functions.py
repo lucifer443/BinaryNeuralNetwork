@@ -97,22 +97,22 @@ class biasaddtry(Function):
         input, b,st = ctx.saved_tensors
         grad_input = grad_output
         bi = (input+b).sign()
-        mask1 = grad_input<-0.05
-        mask2 = grad_input>0.05
-        biz = bi>0
+        mask1 = grad_input<0  #增大
+        mask2 = grad_input>0  #减小 
         bif = bi<0
+        biz = bi>0
         
-        mask3 = mask1*biz
-        mask4 = mask2*bif
-        realbi = bi-2*(mask3.float())+2*(mask4.float())
+        mask3 = mask1*bif
+        mask4 = mask2*biz
+        realbi = bi+2*(mask3.float())-2*(mask4.float())
 
         
         maez = (realbi-(input+b+st).sign()).abs().sum(dim=[0,2,3],keepdim=True) 
         maef = (realbi-(input+b-st).sign()).abs().sum(dim=[0,2,3],keepdim=True)
         mae0 = (realbi-bi).abs().sum(dim=[0,2,3],keepdim=True)
 
-        gradz = (maez<maef)*(maez<mae0)
-        gradf = (maef<maez)*(maef<mae0)
+        gradf = (maez<maef)*(maez<mae0)
+        gradz = (maef<maez)*(maef<mae0)
         grad0 = (mae0<maez)*(mae0<maef)
         grad_b = gradz.float()-gradf.float()+0*grad0.float()
 

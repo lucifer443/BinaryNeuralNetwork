@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from .binary_convs import IRConv2dnew, RAConv2d ,IRConv2d_bias ,IRConv2d_bias_x2,IRConv2d_bias_x2x,BLConv2d,StrongBaselineConv2d
 from .binary_functions import RPRelu, LearnableBias, LearnableScale, AttentionScale,Expandx,GPRPRelu,MGPRPRelu,GPLearnableBias,scalebias,biasadd,biasadd22,biasaddtry
-
+from .bias_conv import FLRAConv2d
 class RPStrongBaselineBlock(nn.Module):
     """Strong baseline block from real-to-binary net"""
     expansion = 1
@@ -57,36 +57,6 @@ class RANetBlockA(nn.Module):
             self.prelu2 = RPRelu(self.rpmode)
             self.move1 = LearnableBias(in_channels)
             self.move2 = LearnableBias(out_channels)
-        elif rpgroup == 2:
-            self.rpmode = out_channels
-            if out_channels ==256 and downsample is not None:
-                self.prelu1 = GPRPRelu(self.rpmode,gp=gp)
-                self.prelu2 = RPRelu(self.rpmode)
-                self.move1 = GPLearnableBias(in_channels,gp=gp)
-                self.move2 = LearnableBias(out_channels)
-            elif out_channels ==512 :
-                self.prelu1 = GPRPRelu(self.rpmode,gp=64)
-                self.prelu2 = GPRPRelu(self.rpmode,gp=64)
-                self.move1 = GPLearnableBias(in_channels,gp=gp)
-                self.move2 = GPLearnableBias(out_channels,gp=gp)
-            else:
-                self.prelu1 = RPRelu(self.rpmode)
-                self.prelu2 = RPRelu(self.rpmode)
-                self.move1 = LearnableBias(in_channels)
-                self.move2 = LearnableBias(out_channels)
-        elif rpgroup == 3:
-            self.rpmode = out_channels
-            if out_channels == 512:
-                self.prelu1 = GPRPRelu(self.rpmode,gp=gp)
-                self.prelu2 = GPRPRelu(self.rpmode,gp=gp)
-            else:
-                self.prelu1 = RPRelu(out_channels)
-                self.prelu2 = RPRelu(out_channels)
-        elif rpgroup == 4:
-            self.rpmode = out_channels
-            self.prelu1 = nn.PReLU(self.rpmode)
-            self.prelu2 = nn.PReLU(self.rpmode)
-
         
         self.conv1 = RAConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
@@ -155,12 +125,14 @@ class RANetBlockB(nn.Module):
                 #self.move1 = LearnableBias(inplanes)
                 #self.move2 = LearnableBias(inplanes)
 
-        self.adbias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
-        self.adbias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        self.rebias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        self.rebias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        #self.adbias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        #self.adbias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
         #self.expandnum = Expand_num
-        self.st = torch.tensor(Expand_num).float().cuda()
+        #self.st = torch.tensor(Expand_num).float().cuda()
 
         
 
@@ -190,8 +162,9 @@ class RANetBlockB(nn.Module):
         #out1 = self.sbias1(x)
         #out1 = self.move1(x)
 
-        out1 = biasaddtry().apply(x,self.adbias1,self.st)
+        #out1 = biasaddtry().apply(x,self.adbias1,self.st)
         #out1 = x+self.expandnum
+        out1 = x+self.rebias1
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -201,10 +174,11 @@ class RANetBlockB(nn.Module):
         out1 = x + out1
 
         out1 = self.prelu1(out1)
+        out2 = out1+self.rebias2
         #out2 = out1+self.expandnum
         #out2 =self.sbias2(out1)
         #out2 = self.move2(out1)
-        out2 = biasaddtry().apply(out1,self.adbias2,self.st)
+        #out2 = biasaddtry().apply(out1,self.adbias2,self.st)
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)
@@ -226,6 +200,91 @@ class RANetBlockB(nn.Module):
 
         return out2
 
+class RANetBlockFL(nn.Module):
+    def __init__(self, inplanes, planes, stride=1, Expand_num=0.001,rpgroup=1,gp=1,**kwargs):
+        super(RANetBlockFL, self).__init__()
+        
+        #norm_layer = nn.BatchNorm2d
+        if rpgroup == 1:
+            self.prelu1 = RPRelu(inplanes)
+            self.prelu2 = RPRelu(planes)
+
+        self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        
+        #self.adbias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        #self.adbias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        self.binary_3x3 = FLRAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.bn1 = nn.BatchNorm2d(inplanes)
+        #self.expandnum = Expand_num
+        #self.st = torch.tensor(Expand_num).float().cuda()
+
+        
+
+        if inplanes == planes:
+            
+            self.binary_pw = FLRAConv2d(inplanes, planes, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
+            self.bn2 = nn.BatchNorm2d(planes)
+        else:
+            #self.bias21 = nn.Parameter(torch.ones(1,inplanes,1,1),requires_grad=True)
+            #self.bias22 = nn.Parameter(torch.ones(1,inplanes,1,1),requires_grad=True)
+            self.binary_pw_down1 = FLRAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
+                                            **kwargs)
+            self.binary_pw_down2 = FLRAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
+                                            **kwargs)
+            self.bn2_1 = nn.BatchNorm2d(inplanes)
+            self.bn2_2 = nn.BatchNorm2d(inplanes)
+
+        self.stride = stride
+        self.inplanes = inplanes
+        self.planes = planes
+
+        if self.inplanes != self.planes:
+            self.pooling = nn.AvgPool2d(2, 2)
+
+    def forward(self, x):
+
+        #out1 = self.sbias1(x)
+        #out1 = self.move1(x)
+
+        #out1 = biasaddtry().apply(x,self.adbias1,self.st)
+        #out1 = x+self.expandnum
+        out1 = x+self.rebias1
+        #out1 = x
+        out1 = self.binary_3x3(out1)
+        out1 = self.bn1(out1)
+
+        if self.stride == 2:
+            x = self.pooling(x)
+
+        out1 = x + out1
+
+        out1 = self.prelu1(out1)
+        #out2 = out1
+        out2 = out1+self.rebias2
+        #out2 = out1+self.expandnum
+        #out2 = self.move2(out1)
+        #out2 = biasaddtry().apply(out1,self.adbias2,self.st)
+
+        if self.inplanes == self.planes:
+            out2 = self.binary_pw(out2)
+            out2 = self.bn2(out2)
+            out2 += out1
+
+        else:
+            assert self.planes == self.inplanes * 2
+
+            out2_1 = self.binary_pw_down1(out2)
+            out2_2 = self.binary_pw_down2(out2)
+            out2_1 = self.bn2_1(out2_1)
+            out2_2 = self.bn2_2(out2_2)
+            out2_1 += out1
+            out2_2 += out1
+            out2 = torch.cat([out2_1, out2_2], dim=1)
+
+        out2 = self.prelu2(out2)
+
+        return out2
 class RANetBlockC(nn.Module):
     def __init__(self, inplanes, planes, stride=1, Expand_num=1,rpgroup=1,gp=1,**kwargs):
         super(RANetBlockC, self).__init__()
