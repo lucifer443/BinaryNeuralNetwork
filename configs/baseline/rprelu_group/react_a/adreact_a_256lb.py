@@ -1,5 +1,5 @@
 _base_ = [
-    '../../../_base_/datasets/imagenet_bs64_pil_resize.py', '../../../_base_/default_runtime.py'
+    '../../../_base_/datasets/imagenet_bs32.py', '../../../_base_/default_runtime.py'
 ]
 
 model = dict(
@@ -21,9 +21,12 @@ model = dict(
         topk=(1, 5),
     ))
 
+
+
+# schedules for imagenet bs256
 optimizer = dict(
     type='Adam',
-    lr=1e-3,
+    lr=5e-4,
     weight_decay=1e-5,
     paramwise_cfg=dict(
         norm_decay_mult=0,
@@ -42,9 +45,9 @@ lr_config = dict(
     min_lr=0,
     by_epoch=False,
 )
-runner = dict(type='EpochBasedRunner', max_epochs=75)
+runner = dict(type='EpochBasedRunner', max_epochs=256)
 
-work_dir = 'work_dirs/rprelu/react_a1/adreact_af75_fl_lb'
-load_from = 'work_dirs/rprelu/react_a1/adreact_af75_fl/epoch_45.pth'
+work_dir = 'work_dirs/rprelu/react_a1/adreact_256_lb'
+load_from = 'work_dirs/rprelu/react_a1/adreact_float/epoch_75.pth'
 find_unused_parameters=False
 seed = 166

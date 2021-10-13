@@ -98,8 +98,6 @@ class RANetBlockB(nn.Module):
             self.prelu2 = RPRelu(planes)
             #self.move1 = LearnableBias(inplanes)
             #self.move2 = LearnableBias(inplanes)
-            #self.sbias1 = selfBias()
-            #self.sbias2 = selfBias()
         elif rpgroup == 2:
             if planes == 51200:
                 self.prelu1 = GPRPRelu(inplanes,gp=gp)
@@ -125,8 +123,8 @@ class RANetBlockB(nn.Module):
                 #self.move1 = LearnableBias(inplanes)
                 #self.move2 = LearnableBias(inplanes)
 
-        self.rebias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
-        self.rebias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
         #self.adbias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
         #self.adbias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
@@ -209,12 +207,7 @@ class RANetBlockFL(nn.Module):
             self.prelu1 = RPRelu(inplanes)
             self.prelu2 = RPRelu(planes)
 
-        self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
-        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
-        
-        #self.adbias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
-        #self.adbias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
-        self.binary_3x3 = FLRAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
         #self.expandnum = Expand_num
         #self.st = torch.tensor(Expand_num).float().cuda()
@@ -223,14 +216,14 @@ class RANetBlockFL(nn.Module):
 
         if inplanes == planes:
             
-            self.binary_pw = FLRAConv2d(inplanes, planes, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
+            self.binary_pw = RAConv2d(inplanes, planes, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
             self.bn2 = nn.BatchNorm2d(planes)
         else:
             #self.bias21 = nn.Parameter(torch.ones(1,inplanes,1,1),requires_grad=True)
             #self.bias22 = nn.Parameter(torch.ones(1,inplanes,1,1),requires_grad=True)
-            self.binary_pw_down1 = FLRAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
+            self.binary_pw_down1 = RAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
                                             **kwargs)
-            self.binary_pw_down2 = FLRAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
+            self.binary_pw_down2 = RAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
                                             **kwargs)
             self.bn2_1 = nn.BatchNorm2d(inplanes)
             self.bn2_2 = nn.BatchNorm2d(inplanes)
@@ -249,8 +242,7 @@ class RANetBlockFL(nn.Module):
 
         #out1 = biasaddtry().apply(x,self.adbias1,self.st)
         #out1 = x+self.expandnum
-        out1 = x+self.rebias1
-        #out1 = x
+        out1 = x
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -260,9 +252,7 @@ class RANetBlockFL(nn.Module):
         out1 = x + out1
 
         out1 = self.prelu1(out1)
-        #out2 = out1
-        out2 = out1+self.rebias2
-        #out2 = out1+self.expandnum
+        out2 = out1
         #out2 = self.move2(out1)
         #out2 = biasaddtry().apply(out1,self.adbias2,self.st)
 
@@ -294,30 +284,6 @@ class RANetBlockC(nn.Module):
             self.prelu2 = RPRelu(planes)
             #self.move1 = LearnableBias(inplanes)
             #self.move2 = LearnableBias(inplanes)
-        elif rpgroup == 2:
-            if planes == 51200:
-                self.prelu1 = GPRPRelu(inplanes,gp=gp)
-                self.prelu2 = GPRPRelu(planes,gp=gp)
-            elif planes == 1024 :
-                if inplanes != planes:
-                    # self.prelu1 = RPRelu(inplanes)
-                    # self.prelu2 = GPRPRelu(planes,gp=gp)
-                    # self.move1 = LearnableBias(inplanes)
-                    # self.move2 = GPLearnableBias(inplanes,gp=gp)
-                    self.prelu1 = GPRPRelu(inplanes,gp=gp)
-                    self.prelu2 = GPRPRelu(planes,gp=gp)
-                    #self.move1 = GPLearnableBias(inplanes,gp=gp//2)
-                    #self.move2 = GPLearnableBias(inplanes,gp=gp//2)
-                else:
-                    self.prelu1 = GPRPRelu(inplanes,gp=gp)
-                    self.prelu2 = GPRPRelu(planes,gp=gp)
-                    #self.move1 = GPLearnableBias(inplanes,gp=gp)
-                    #self.move2 = GPLearnableBias(inplanes,gp=gp)
-            else:
-                self.prelu1 = RPRelu(inplanes)
-                self.prelu2 = RPRelu(planes)
-                #self.move1 = LearnableBias(inplanes)
-                #self.move2 = LearnableBias(inplanes)
 
         
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
@@ -538,8 +504,9 @@ class RANetBlockE(nn.Module):
         
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
-        self.expandnum = Expand_num
-
+        #self.expandnum = Expand_num
+        self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
         self.scalebias1 = scalebias(inplanes)
 
 
@@ -570,7 +537,7 @@ class RANetBlockE(nn.Module):
 
         #out1 = self.move1(x)
 
-        out1 = x-self.expandnum
+        out1 = x+self.rebias1
         out1 = self.binary_3x3(out1)
         out1 = self.bn1(out1)
 
@@ -583,7 +550,7 @@ class RANetBlockE(nn.Module):
         out1 = self.prelu1(out1)
 
         #out2 = self.move2(out1)
-        out2 = out1-self.expandnum
+        out2 = out1+self.rebias2
 
         if self.inplanes == self.planes:
             out2 = self.binary_pw(out2)

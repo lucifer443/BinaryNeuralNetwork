@@ -34,13 +34,14 @@ class FLRAConv2d(BaseBinaryConv2d):
 
     
     def binary_input(self, x):
-        mask1 = x < -1
-        mask2 = x < 0
-        mask3 = x < 1
-        out1 = (-1) * mask1.type(torch.float32) + (x*x + 2*x) * (1-mask1.type(torch.float32))
-        out2 = out1 * mask2.type(torch.float32) + (-x*x + 2*x) * (1-mask2.type(torch.float32))
-        out3 = out2 * mask3.type(torch.float32) + 1 * (1- mask3.type(torch.float32))
-        return out3
+        # mask1 = x < -1
+        # mask2 = x < 0
+        # mask3 = x < 1
+        # out1 = (-1) * mask1.type(torch.float32) + (x*x + 2*x) * (1-mask1.type(torch.float32))
+        # out2 = out1 * mask2.type(torch.float32) + (-x*x + 2*x) * (1-mask2.type(torch.float32))
+        # out3 = out2 * mask3.type(torch.float32) + 1 * (1- mask3.type(torch.float32))
+        # return out3
+        return x
 
 
     def binary_weight(self, w):

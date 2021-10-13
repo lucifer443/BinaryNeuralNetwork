@@ -23,7 +23,7 @@ model = dict(
 
 optimizer = dict(
     type='Adam',
-    lr=1e-3,
+    lr=2e-3,
     weight_decay=1e-5,
     paramwise_cfg=dict(
         norm_decay_mult=0,
@@ -38,13 +38,16 @@ optimizer = dict(
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
-    policy='poly',
-    min_lr=0,
-    by_epoch=False,
+    policy='step',
+    warmup='linear',
+    warmup_iters=25025,
+    warmup_ratio=0.1,
+    step=[40, 60, 70],
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-work_dir = 'work_dirs/rprelu/react_a1/adreact_af75_fl_lb'
-load_from = 'work_dirs/rprelu/react_a1/adreact_af75_fl/epoch_45.pth'
+
+work_dir = 'work_dirs/rprelu/react_a1/adreact_af75_fl_gb_lw'
+load_from = 'work_dirs/rprelu/react_a1/adreact_af75_fl_lb/epoch_45.pth'
 find_unused_parameters=False
 seed = 166

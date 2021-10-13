@@ -9,7 +9,7 @@ from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
 from .binary_utils.binary_blocks import IRNetBlock, RANetBlockA,IRNetBlock_bias,IRNetBlock_bias_x2,IRNetBlock_bias_x2x,StrongBaselineBlock, StrongBaselineFPBlock,RealToBinaryBlock, RealToBinaryFPBlock
-
+from .binary_utils.learnbias_blocks import RANetBlockAlb,RANetBlockA_fl
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU, 'prelu': nn.PReLU}
     if name.lower() not in name_map:
@@ -24,6 +24,8 @@ class ResArch(BaseBackbone):
         "IRNet-34": (IRNetBlock, (3, 4, 6, 3)),
         "ReActNet-18": (RANetBlockA, (2, 2, 2, 2)),
         "ReActNet-34": (RANetBlockA, (3, 4, 6, 3)),
+        "ReActNet-18fl": (RANetBlockA_fl, (2, 2, 2, 2)),
+        "ReActNet-18lb": (RANetBlockAlb, (3, 4, 6, 3)),
         #"CM1-18": (CM1Block, (2, 2, 2, 2)),
         #"CM1-34": (CM1Block, (3, 4, 6, 3)),
         #"CM2-18": (CM2Block, (2, 2, 2, 2)),
