@@ -124,12 +124,12 @@ def main():
 
     model = build_classifier(cfg.model)
     for k,v in model.backbone.named_parameters():
-        if 'rebias' not in k:
+        if 'rebias'  in k:
             v.requires_grad=False
-    for k,v in model.head.named_parameters():
-        v.requires_grad=False
-    for k,v in model.neck.named_parameters():
-        v.requires_grad=False
+    # for k,v in model.head.named_parameters():
+    #     v.requires_grad=False
+    # for k,v in model.neck.named_parameters():
+    #     v.requires_grad=False
     datasets = [build_dataset(cfg.data.train)]
     if len(cfg.workflow) == 2:
         val_dataset = copy.deepcopy(cfg.data.val)
