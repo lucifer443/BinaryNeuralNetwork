@@ -6,15 +6,17 @@ from .binary_functions import RPRelu, LearnableBias, LearnableScale, AttentionSc
 class RANetBlockAlb(nn.Module):
     expansion = 1
 
-    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, gbi=0,**kwargs):
         super(RANetBlockAlb, self).__init__()
 
         self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        #self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        #self.gbi=gbi
         self.conv1 = RAConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.prelu1 = nn.Mish()
-
-        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        #self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
         self.conv2 = RAConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.prelu2 = nn.Mish()

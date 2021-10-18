@@ -25,7 +25,7 @@ class ResArch(BaseBackbone):
         "ReActNet-18": (RANetBlockA, (2, 2, 2, 2)),
         "ReActNet-34": (RANetBlockA, (3, 4, 6, 3)),
         "ReActNet-18fl": (RANetBlockA_fl, (2, 2, 2, 2)),
-        "ReActNet-18lb": (RANetBlockAlb, (3, 4, 6, 3)),
+        "ReActNet-18lb": (RANetBlockAlb, (2, 2, 2, 2)),
         #"CM1-18": (CM1Block, (2, 2, 2, 2)),
         #"CM1-34": (CM1Block, (3, 4, 6, 3)),
         #"CM2-18": (CM2Block, (2, 2, 2, 2)),
@@ -59,6 +59,7 @@ class ResArch(BaseBackbone):
                  with_cp=False,
                  binary_type=(True, True),
                  stem_act=None,
+                 gbi = 0,
                  zero_init_residual=False):
         super(ResArch, self).__init__()
         if arch not in self.arch_settings:
@@ -109,6 +110,7 @@ class ResArch(BaseBackbone):
                 avg_down=self.avg_down,
                 with_cp=with_cp,
                 binary_type=binary_type,
+                gbi =gbi, #固定阈值
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg)
             _in_channels = _out_channels

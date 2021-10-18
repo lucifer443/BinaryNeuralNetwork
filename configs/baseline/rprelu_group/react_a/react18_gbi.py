@@ -5,18 +5,19 @@ _base_ = [
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='MobileArch',
-        arch='ReActNet-A',
-        Expand_num = 5e-5,
-        rpgroup = 1,
-        gp = 16,
+        type='ResArch',
+        arch='ReActNet-18lb',
+        num_stages=4,
+        out_indices=(3, ),
         binary_type=(True, False),
+        gbi = -1.5,
+        stem_act='prelu',
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
         num_classes=1000,
-        in_channels=1024,
+        in_channels=512,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
         topk=(1, 5),
     ))
@@ -28,10 +29,10 @@ optimizer = dict(
     paramwise_cfg=dict(
         norm_decay_mult=0,
         custom_keys={
-            '.rebias1': dict(decay_mult=0.0),
-            '.rebias2': dict(decay_mult=0.0),
-            '.prelu1': dict(decay_mult=0.0),
-            '.prelu2': dict(decay_mult=0.0),
+            # '.rebias1': dict(decay_mult=0.0),
+            # '.rebias2': dict(decay_mult=0.0),
+            # '.prelu1': dict(decay_mult=0.0),
+            # '.prelu2': dict(decay_mult=0.0),
         }
     )
 )
@@ -42,9 +43,8 @@ lr_config = dict(
     min_lr=0,
     by_epoch=False,
 )
-runner = dict(type='EpochBasedRunner', max_epochs=75)
+runner = dict(type='EpochBasedRunner', max_epochs=50)
 
-work_dir = 'work_dirs/rprelu/react_a1/adreact_af75_fl_cnlb'
-load_from = 'work_dirs/rprelu/react_a1/adreact_af75_fl/epoch_75.pth'
+work_dir = 'work_dirs/rprelu/react_a1/react18_gbi-1.5'
 find_unused_parameters=False
 seed = 166
