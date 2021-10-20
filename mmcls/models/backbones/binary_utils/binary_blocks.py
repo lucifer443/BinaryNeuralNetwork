@@ -40,6 +40,38 @@ class IRNetBlock(nn.Module):
         return out
 
 
+class BiRealNetBlock(nn.Module):
+    expansion = 1
+
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None, **kwargs):
+        super(BiRealNetBlock, self).__init__()
+
+        self.conv1 = RAConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+
+        self.conv2 = RAConv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False, **kwargs)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+
+        self.downsample = downsample
+        self.stride = stride
+        self.out_channels = out_channels
+
+    def forward(self, x):
+        residual = x
+        out = self.conv1(x)
+        out = self.bn1(out)
+        if self.downsample is not None:
+            residual = self.downsample(x)
+        out += residual
+
+        residual = out
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        out += residual
+        return out
+
+
 class RANetBlockA(nn.Module):
     expansion = 1
 

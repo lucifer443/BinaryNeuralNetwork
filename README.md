@@ -14,7 +14,7 @@ mmclassification安装说明：https://github.com/open-mmlab/mmclassification/bl
 
 * 1、安装torch，torchvision
 
-* 2、git clone http://gitlab.software.cambricon.com/changming/bnn
+* 2、git clone https://github.com/lucifer443/BinaryNeuralNetwork.git
 
 * 3、安装依赖项
 
@@ -97,8 +97,19 @@ seed = 166  # 训练seed，建议设置
 
 - [x] [IR-Net](https://arxiv.org/abs/1909.10788)
 - [x] [ReActNet](https://arxiv.org/abs/2003.03488)
+- [x] [Bi-Real Net](https://arxiv.org/abs/1808.00278)
 - [ ] [Real-To-Binary Net](https://arxiv.org/abs/2003.11535)
 - [ ] [High-Capcity Expert Binary Net](https://arxiv.org/abs/2010.03558)
+
+| 模型名称        | 复现精度 | 官方精度 | 来源论文           | 详细情况                         |
+| --------------- | -------- | -------- | ------------------ | -------------------------------- |
+| irnet_r18       | 58.58    | 58.1     | IR-Net             | [](configs/baseline/irnet)       |
+| reactnet_r18    | 66.1     | 65.9     | ReActNet           | [](configs/baseline/reactnet)    |
+| reactnet_a      | 70.0     | 69.5     | ReActNet           | [](configs/baseline/reactnet)    |
+| strong_baseline | 60.45    | 60.9     | Real-To-Binary Net | [](configs/baseline/real2binary) |
+| birealnet_r18   | 57.23    | 56.4     | Bi-Real Net        | [](configs/baseline/birealnet) |
+
+
 
 ### 5、功能列表
 
