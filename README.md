@@ -103,11 +103,11 @@ seed = 166  # 训练seed，建议设置
 
 | 模型名称        | 复现精度 | 官方精度 | 来源论文           | 详细情况                         |
 | --------------- | -------- | -------- | ------------------ | -------------------------------- |
-| irnet_r18       | 58.58    | 58.1     | IR-Net             | [](configs/baseline/irnet)       |
-| reactnet_r18    | 66.1     | 65.9     | ReActNet           | [](configs/baseline/reactnet)    |
-| reactnet_a      | 70.0     | 69.5     | ReActNet           | [](configs/baseline/reactnet)    |
-| strong_baseline | 60.45    | 60.9     | Real-To-Binary Net | [](configs/baseline/real2binary) |
-| birealnet_r18   | 57.23    | 56.4     | Bi-Real Net        | [](configs/baseline/birealnet) |
+| irnet_r18       | 58.58    | 58.1     | IR-Net             | [detail](configs/baseline/irnet)       |
+| reactnet_r18    | 66.1     | 65.9     | ReActNet           | [detail](configs/baseline/reactnet)    |
+| reactnet_a      | 70.0     | 69.5     | ReActNet           | [detail](configs/baseline/reactnet)    |
+| strong_baseline | 60.45    | 60.9     | Real-To-Binary Net | [detail](configs/baseline/real2binary) |
+| birealnet_r18   | 57.23    | 56.4     | Bi-Real Net        | [detail](configs/baseline/birealnet) |
 
 
 
