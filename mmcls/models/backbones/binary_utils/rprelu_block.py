@@ -505,8 +505,8 @@ class RANetBlockE(nn.Module):
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
         #self.expandnum = Expand_num
-        self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
-        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        self.rebias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        self.rebias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
         self.scalebias1 = scalebias(inplanes)
 
 
