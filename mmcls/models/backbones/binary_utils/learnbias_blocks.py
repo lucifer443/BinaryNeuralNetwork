@@ -9,10 +9,10 @@ class RANetBlockAlb(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None, gbi=0,**kwargs):
         super(RANetBlockAlb, self).__init__()
 
-        self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
-        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        #self.rebias1 = nn.Parameter(torch.zeros(1,in_channels,1,1),requires_grad=True)
+        #self.rebias2 = nn.Parameter(torch.zeros(1,out_channels,1,1),requires_grad=True)
         #self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
-        #self.gbi=gbi
+        self.gbi=gbi
         self.conv1 = RAConv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.prelu1 = nn.Mish()
@@ -27,7 +27,7 @@ class RANetBlockAlb(nn.Module):
 
     def forward(self, x):
         residual = x
-        out = x+self.rebias1
+        out = x+self.gbi
         out = self.conv1(out)
         out = self.bn1(out)
         if self.downsample is not None:
@@ -36,7 +36,7 @@ class RANetBlockAlb(nn.Module):
         out = self.prelu1(out)
 
         residual = out
-        out = out+self.rebias2
+        out = out+self.gbi
         out = self.conv2(out)
         out = self.bn2(out)
 

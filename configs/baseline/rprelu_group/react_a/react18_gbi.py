@@ -10,7 +10,7 @@ model = dict(
         num_stages=4,
         out_indices=(3, ),
         binary_type=(True, False),
-        gbi = -1.5,
+        gbi = -1,
         stem_act='prelu',
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
@@ -45,6 +45,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=50)
 
-work_dir = 'work_dirs/rprelu/react_a1/react18_gbi-1.5'
+work_dir = 'work_dirs/rprelu/react_a1/react18_gbi-1_rld'
+load_from = 'work_dirs/rprelu/react_a1/react18_lb_float/latest.pth'
 find_unused_parameters=False
 seed = 166
