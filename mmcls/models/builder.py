@@ -1,11 +1,20 @@
 import torch.nn as nn
 from mmcv.utils import Registry, build_from_cfg
 
-BACKBONES = Registry('backbone')
-CLASSIFIERS = Registry('classifier')
-HEADS = Registry('head')
-NECKS = Registry('neck')
-LOSSES = Registry('loss')
+from mmcv.cnn import MODELS as MMCV_MODELS
+MODELS = Registry('models', parent=MMCV_MODELS)
+
+# BACKBONES = Registry('backbone')
+# CLASSIFIERS = Registry('classifier')
+# HEADS = Registry('head')
+# NECKS = Registry('neck')
+# LOSSES = Registry('loss')
+
+BACKBONES = MODELS
+NECKS = MODELS
+HEADS = MODELS
+LOSSES = MODELS
+CLASSIFIERS = MODELS
 
 
 def build(cfg, registry, default_args=None):

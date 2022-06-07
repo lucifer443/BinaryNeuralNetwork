@@ -6,11 +6,11 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='MobileArch',
-        arch='ReActNet-A',
+        arch='ReActNet-DE',
         Expand_num = 5e-5,
         rpgroup = 1,
         gp = 16,
-        binary_type=(True, False),
+        binary_type=(True, True),
         style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
@@ -23,13 +23,13 @@ model = dict(
 
 optimizer = dict(
     type='Adam',
-    lr=1e-3,
-    weight_decay=1e-5,
+    lr=2e-3,
+    weight_decay=0,
     paramwise_cfg=dict(
         norm_decay_mult=0,
         custom_keys={
-            '.rebias1': dict(decay_mult=0.0),
-            '.rebias2': dict(decay_mult=0.0),
+           # '.rebias1': dict(decay_mult=0.0),
+           # '.rebias2': dict(decay_mult=0.0),
             '.prelu1': dict(decay_mult=0.0),
             '.prelu2': dict(decay_mult=0.0),
         }
@@ -44,7 +44,7 @@ lr_config = dict(
 )
 runner = dict(type='EpochBasedRunner', max_epochs=75)
 
-work_dir = 'work_dirs/rprelu/react_a1/adreact_af75_fl_cnlb'
-load_from = 'work_dirs/rprelu/react_a1/adreact_af75_fl/epoch_75.pth'
+work_dir = 'work_dirs/detect/reactnet_onestep'
+#load_from = 'work_dirs/rprelu/react_a1/adreact_af75_fl/epoch_75.pth'
 find_unused_parameters=False
 seed = 166

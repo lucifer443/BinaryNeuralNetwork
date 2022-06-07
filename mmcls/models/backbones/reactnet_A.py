@@ -8,7 +8,7 @@ from mmcv.runner import load_checkpoint
 from ..builder import BACKBONES
 from .base_backbone import BaseBackbone
 from .resnet import ResLayer
-from .binary_utils.rprelu_block import RANetBlockB,RANetBlockC,RANetBlockD,RANetBlockE,RANetBlockFL
+from .binary_utils.rprelu_block import RANetBlockB,RANetBlockC,RANetBlockD,RANetBlockE,RANetBlockFL,RANetBlockDE
 
 def build_act(name):
     name_map = {'hardtanh': nn.Hardtanh, 'relu': nn.ReLU, 'prelu': nn.PReLU}
@@ -27,6 +27,7 @@ class MobileArch(nn.Module):
                      'ReActNet-D': (RANetBlockD, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
                      'ReActNet-E': (RANetBlockE, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
                      'ReActNet-FL':(RANetBlockFL, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
+                     'ReActNet-DE':(RANetBlockDE, [[64, 1, 1], [128, 2, 2], [256, 2, 2], [512, 6, 2], [1024, 2, 2]]),
                      }
 
     def __init__(self,
@@ -130,17 +131,30 @@ class MobileArch(nn.Module):
         else:
             raise TypeError('pretrained must be a str or None')
 
+    # def forward(self, x):
+    #     x = self.conv1(x)
+    #     if self.stem_act:
+    #         x = self.stem_act(x)
+
+    #     for i, layer_name in enumerate(self.layers):
+    #         layer = getattr(self, layer_name)
+    #         x = layer(x)
+
+    #     return x
+
     def forward(self, x):
         x = self.conv1(x)
         if self.stem_act:
             x = self.stem_act(x)
 
+        outs=[]
         for i, layer_name in enumerate(self.layers):
             layer = getattr(self, layer_name)
             x = layer(x)
+            if i in self.out_indices:
+                outs.append(x)
 
-        return x
-
+        return tuple(outs)
     def _freeze_stages(self):
         if self.frozen_stages >= 0:
             for param in self.conv1.parameters():

@@ -505,8 +505,8 @@ class RANetBlockE(nn.Module):
         self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
         self.bn1 = nn.BatchNorm2d(inplanes)
         #self.expandnum = Expand_num
-        self.rebias1 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
-        self.rebias2 = nn.Parameter(torch.zeros(1,inplanes,1,1),requires_grad=True)
+        self.rebias1 = nn.Parameter(torch.zeros(1),requires_grad=True)
+        self.rebias2 = nn.Parameter(torch.zeros(1),requires_grad=True)
         self.scalebias1 = scalebias(inplanes)
 
 
@@ -661,3 +661,73 @@ class Baseline13_Block(nn.Module):
 
 
         return out
+class RANetBlockDE(nn.Module):
+    def __init__(self, inplanes, planes, stride=1, Expand_num=1,rpgroup=1,gp=1,**kwargs):
+        super(RANetBlockDE, self).__init__()
+        #norm_layer = nn.BatchNorm2d
+        if rpgroup == 1:
+            self.prelu1 = RPRelu(inplanes)
+            self.prelu2 = RPRelu(planes)
+            #self.move1 = LearnableBias(inplanes)
+            #self.move2 = LearnableBias(inplanes)
+        
+        self.binary_3x3 = RAConv2d(inplanes, inplanes, kernel_size=3, stride=stride, padding=1, bias=False, **kwargs)
+        self.bn1 = nn.BatchNorm2d(inplanes)
+
+        
+
+        if inplanes == planes:
+            self.binary_pw = RAConv2d(inplanes, planes, kernel_size=1, stride=1, padding=0, bias=False, **kwargs)
+            self.bn2 = nn.BatchNorm2d(planes)
+        else:
+            self.binary_pw_down1 = RAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
+                                            **kwargs)
+            self.binary_pw_down2 = RAConv2d(inplanes, inplanes, kernel_size=1, stride=1, padding=0, bias=False,
+                                            **kwargs)
+            self.bn2_1 = nn.BatchNorm2d(inplanes)
+            self.bn2_2 = nn.BatchNorm2d(inplanes)
+
+        self.stride = stride
+        self.inplanes = inplanes
+        self.planes = planes
+
+        if self.inplanes != self.planes:
+            self.pooling = nn.AvgPool2d(2, 2)
+
+    def forward(self, x):
+
+        #out1 = self.move1(x)
+
+        out1 = x
+        out1 = self.binary_3x3(out1)
+        out1 = self.bn1(out1)
+
+        if self.stride == 2:
+            x = self.pooling(x)
+
+        out1 = x + out1
+
+        out1 = self.prelu1(out1)
+
+        #out2 = self.move2(out1)
+        out2 = out1
+
+        if self.inplanes == self.planes:
+            out2 = self.binary_pw(out2)
+            out2 = self.bn2(out2)
+            out2 += out1
+
+        else:
+            assert self.planes == self.inplanes * 2
+
+            out2_1 = self.binary_pw_down1(out2)
+            out2_2 = self.binary_pw_down2(out2)
+            out2_1 = self.bn2_1(out2_1)
+            out2_2 = self.bn2_2(out2_2)
+            out2_1 += out1
+            out2_2 += out2
+            out2 = torch.cat([out2_1, out2_2], dim=1)
+
+        out2 = self.prelu2(out2)
+
+        return out2
